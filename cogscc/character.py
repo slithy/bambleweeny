@@ -84,6 +84,47 @@ class BaseStats:
         else:
             return 3
 
+    def get_prime(self, stat: str):
+        abbr_stat = stat.lower()[:3]
+        if abbr_stat not in STAT_ABBREVIATIONS:
+            raise ValueError(f"{stat} is not a valid stat.")
+        stat_prime = {
+            'str': self.str_p, 'dex': self.dex_p,
+            'con': self.con_p, 'int': self.int_p,
+            'wis': self.wis_p, 'cha': self.cha_p
+        }[abbr_stat]
+        if stat_prime:
+            return 6
+        else:
+            return 0
+
+    def siegeCheck(self, name: str, level: int, stat: str, bonus: int, cl: int):
+        cb = 18
+        mod = self.get_mod(stat)
+        prime = self.get_prime(stat)
+        all_mods = level + mod + prime + bonus
+        result = [roll(f"1d20{all_mods:+}", inline=True) for _ in range(1)]
+        total = result[0].total
+        if total > cb and cl == 0:
+            margin = total - cb
+            success = f"Success against CL{margin}!"
+        elif total > cb + cl:
+            success = f"Success (CL{cl})! :grinning:"
+        else:
+            success = f"Failure! :scream:"
+
+        known_cl = ''
+        if cl != 0:
+            known_cl = f"against challenge level {cl}"
+        bonuses = f"{level:+} for level"
+        if mod != 0:
+            bonuses = bonuses + f", {mod:+} modifier"
+        if prime != 0:
+            bonuses = bonuses + f", {prime:+} for prime attribute"
+        if bonus != 0:
+            bonuses = bonuses + f", {bonus:+} bonus"
+        return f"{name} makes a {stat.upper()} check {known_cl}\nBonuses are {bonuses} = {all_mods:+}\n:game_die: {result[0].skeleton}\n{success}"
+
     def __str__(self):
         return f"**STR**: {self.strength}{self.printPrime(self.str_p)}({self.get_mod('str'):+})  " \
                f"**DEX**: {self.dexterity}{self.printPrime(self.dex_p)}({self.get_mod('dex'):+})  " \
@@ -173,6 +214,9 @@ class Character(commands.Cog):
             cha_p = True
         self.stats.setPrime(str_p, dex_p, con_p, int_p, wis_p, cha_p)
 
+    async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
+        await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
+
     async def showSummary(self, ctx, message: str = ""):
         await ctx.send(f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}")
         return
@@ -244,13 +288,23 @@ class Characters(commands.Cog):
         else:
             await ctx.send(f"{ctx.author} does not have a character.")
 
-    @commands.command(name='character')
+    @commands.command(name='character', aliases=['char'])
     async def character(self, ctx):
         """Show your character's stats"""
         if ctx.author in self.characters:
             await self.characters.get(ctx.author).showCharacter(ctx)
         else:
             await ctx.send(f"{ctx.author} does not have a character.")
+
+    @commands.command(name='check', aliases=['ck'])
+    async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
+        """Make an ability check
+        Usage: !check <stat> [<bonus>] [<challenge level>]"""
+        if ctx.author in self.characters:
+            await self.characters.get(ctx.author).siegeCheck(ctx, stat, bonus, cl)
+        else:
+            await ctx.send(f"{ctx.author} does not have a character.")
+
 
 def setup(bot):
     bot.add_cog(Characters(bot))
