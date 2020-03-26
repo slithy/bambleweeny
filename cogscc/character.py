@@ -222,8 +222,8 @@ class Character(commands.Cog):
         await ctx.send(f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}")
         return
 
-    async def showCharacter(self, ctx):
-        await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level}\n{self.stats}")
+    async def showCharacter(self, ctx, message: str = ""):
+        await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n{self.stats}")
         return
 
 
@@ -299,6 +299,16 @@ class Characters(commands.Cog):
             await self.characters.get(ctx.author).showCharacter(ctx)
         else:
             await ctx.send(f"{ctx.author} does not have a character.")
+
+    @commands.command(name='party')
+    async def allCharacters(self, ctx, param: str = 'None'):
+        """Show stats for all characters
+        Usage: !party [stats]"""
+        for player, character in self.characters.items():
+            if param == 'stats':
+                await character.showCharacter(ctx, f"({player})")
+            else:
+                await character.showSummary(ctx, f"{player} is playing ")
 
     @commands.command(name='check', aliases=['ck'])
     async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
