@@ -8,18 +8,8 @@ from utils.constants import CLASS_NAMES
 
 class BaseStats:
     def __init__(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int):
-        self.strength = strength
-        self.dexterity = dexterity
-        self.constitution = constitution
-        self.intelligence = intelligence
-        self.wisdom = wisdom
-        self.charisma = charisma
-        self.str_p = False
-        self.dex_p = False
-        self.con_p = False
-        self.int_p = False
-        self.wis_p = False
-        self.cha_p = False
+        self.set(strength, dexterity, constitution, intelligence, wisdom, charisma)
+        self.resetPrimes()
 
     @classmethod
     def from_dict(cls, d):
@@ -44,13 +34,27 @@ class BaseStats:
         self.wisdom = wisdom
         self.charisma = charisma
 
-    def setPrime(self, str_p: bool, dex_p: bool, con_p: bool, int_p: bool, wis_p: bool, cha_p: bool):
-        self.str_p = str_p
-        self.dex_p = dex_p
-        self.con_p = con_p
-        self.int_p = int_p
-        self.wis_p = wis_p
-        self.cha_p = cha_p
+    def resetPrimes(self):
+        self.str_p = False
+        self.dex_p = False
+        self.con_p = False
+        self.int_p = False
+        self.wis_p = False
+        self.cha_p = False
+
+    def setPrime(self, prime: str):
+        if prime == 'str':
+            self.str_p = True
+        if prime == 'dex':
+            self.dex_p = True
+        if prime == 'con':
+            self.con_p = True
+        if prime == 'int':
+            self.int_p = True
+        if prime == 'wis':
+            self.wis_p = True
+        if prime == 'cha':
+            self.cha_p = True
 
     def printPrime(self, is_prime):
         if is_prime:
@@ -58,7 +62,7 @@ class BaseStats:
         else:
             return " "
 
-    def get_mod(self, stat: str):
+    def getMod(self, stat: str):
         abbr_stat = stat.lower()[:3]
         if abbr_stat not in STAT_ABBREVIATIONS:
             raise ValueError(f"{stat} is not a valid stat.")
@@ -84,7 +88,7 @@ class BaseStats:
         else:
             return 3
 
-    def get_prime(self, stat: str):
+    def getPrime(self, stat: str):
         abbr_stat = stat.lower()[:3]
         if abbr_stat not in STAT_ABBREVIATIONS:
             raise ValueError(f"{stat} is not a valid stat.")
@@ -100,8 +104,8 @@ class BaseStats:
 
     def siegeCheck(self, name: str, level: int, stat: str, bonus: int, cl: int):
         cb = 18
-        mod = self.get_mod(stat)
-        prime = self.get_prime(stat)
+        mod = self.getMod(stat)
+        prime = self.getPrime(stat)
         all_mods = level + mod + prime + bonus
         result = [roll(f"1d20{all_mods:+}", inline=True) for _ in range(1)]
         total = result[0].total
@@ -126,12 +130,12 @@ class BaseStats:
         return f"{name} makes a {stat.upper()} check {known_cl}\nBonuses are {bonuses} = {all_mods:+}\n:game_die: {result[0].skeleton}\n{success}"
 
     def __str__(self):
-        return f"**STR**: {self.strength}{self.printPrime(self.str_p)}({self.get_mod('str'):+})  " \
-               f"**DEX**: {self.dexterity}{self.printPrime(self.dex_p)}({self.get_mod('dex'):+})  " \
-               f"**CON**: {self.constitution}{self.printPrime(self.con_p)}({self.get_mod('con'):+})  " \
-               f"**INT**: {self.intelligence}{self.printPrime(self.int_p)}({self.get_mod('int'):+})  " \
-               f"**WIS**: {self.wisdom}{self.printPrime(self.wis_p)}({self.get_mod('wis'):+})  " \
-               f"**CHA**: {self.charisma}{self.printPrime(self.cha_p)}({self.get_mod('cha'):+})"
+        return f"**STR**: {self.strength}{self.printPrime(self.str_p)}({self.getMod('str'):+})  " \
+               f"**DEX**: {self.dexterity}{self.printPrime(self.dex_p)}({self.getMod('dex'):+})  " \
+               f"**CON**: {self.constitution}{self.printPrime(self.con_p)}({self.getMod('con'):+})  " \
+               f"**INT**: {self.intelligence}{self.printPrime(self.int_p)}({self.getMod('int'):+})  " \
+               f"**WIS**: {self.wisdom}{self.printPrime(self.wis_p)}({self.getMod('wis'):+})  " \
+               f"**CHA**: {self.charisma}{self.printPrime(self.cha_p)}({self.getMod('cha'):+})"
 
 class Character(commands.Cog):
     def __init__(self, name: str, race: str, xclass: str, level: int):
@@ -140,6 +144,7 @@ class Character(commands.Cog):
         self.setClass(xclass)
         self.setLevel(level)
         self.stats = BaseStats(10,10,10,10,10,10)
+        self.stats.setPrime(self.getClassPrime())
 
     def setRace(self, race: str):
         if race.title() not in RACE_NAMES:
@@ -161,7 +166,21 @@ class Character(commands.Cog):
         self.stats.set(strength, dexterity, constitution, intelligence, wisdom, charisma)
         return
 
-    def setPrime(self, first_prime: str, second_prime: str):
+    def getClassPrime(self):
+        if self.xclass == 'Fighter' or self.xclass == 'Ranger':
+            return 'str'
+        elif self.xclass == 'Rogue' or self.xclass == 'Assassin':
+            return 'dex'
+        elif self.xclass == 'Barbarian' or self.xclass == 'Monk':
+            return 'con'
+        elif self.xclass == 'Wizard' or self.xclass == 'Illusionist':
+            return 'int'
+        elif self.xclass == 'Cleric' or self.xclass == 'Druid':
+            return 'wis'
+        elif self.xclass == 'Knight' or self.xclass == 'Paladin' or self.xclass == 'Bard':
+            return 'cha'
+
+    def setPrimes(self, first_prime: str, second_prime: str):
         prime_1 = first_prime.lower()[:3]
         prime_2 = second_prime.lower()[:3]
         if prime_1 not in STAT_ABBREVIATIONS:
@@ -175,44 +194,17 @@ class Character(commands.Cog):
         elif second_prime != 'None':
             raise ValueError(f"Non-human characters must specify only one prime (in addition to class prime).")
 
-        if self.xclass == 'Fighter' or self.xclass == 'Ranger':
-            prime_3 = 'str'
-        elif self.xclass == 'Rogue' or self.xclass == 'Assassin':
-            prime_3 = 'dex'
-        elif self.xclass == 'Barbarian' or self.xclass == 'Monk':
-            prime_3 = 'con'
-        elif self.xclass == 'Wizard' or self.xclass == 'Illusionist':
-            prime_3 = 'int'
-        elif self.xclass == 'Cleric' or self.xclass == 'Druid':
-            prime_3 = 'wis'
-        elif self.xclass == 'Knight' or self.xclass == 'Paladin' or self.xclass == 'Bard':
-            prime_3 = 'cha'
+        prime_3 = getClassPrime()
 
         if prime_1 == prime_2 or prime_1 == prime_3:
             raise ValueError(f"{first_prime} was specified more than once!")
         elif prime_2 == prime_3:
             raise ValueError(f"{second_prime} was specified more than once!")
 
-        str_p = False
-        dex_p = False
-        con_p = False
-        int_p = False
-        wis_p = False
-        cha_p = False
-
-        if prime_1 == 'str' or prime_2 == 'str' or prime_3 == 'str':
-            str_p = True
-        if prime_1 == 'dex' or prime_2 == 'dex' or prime_3 == 'dex':
-            dex_p = True
-        if prime_1 == 'con' or prime_2 == 'con' or prime_3 == 'con':
-            con_p = True
-        if prime_1 == 'int' or prime_2 == 'int' or prime_3 == 'int':
-            int_p = True
-        if prime_1 == 'wis' or prime_2 == 'wis' or prime_3 == 'wis':
-            wis_p = True
-        if prime_1 == 'cha' or prime_2 == 'cha' or prime_3 == 'cha':
-            cha_p = True
-        self.stats.setPrime(str_p, dex_p, con_p, int_p, wis_p, cha_p)
+        self.stats.resetPrimes()
+        self.stats.setPrime(prime_1)
+        self.stats.setPrime(prime_2)
+        self.stats.setPrime(prime_3)
 
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
@@ -279,11 +271,11 @@ class Characters(commands.Cog):
             await ctx.send(f"{ctx.author} does not have a character.")
 
     @commands.command(name='prime')
-    async def setPrime(self, ctx, first_prime: str, second_prime: str = 'None'):
+    async def setPrimes(self, ctx, first_prime: str, second_prime: str = 'None'):
         """Assign prime stats
         Usage: !assign <first prime> [<second prime>]"""
         if ctx.author in self.characters:
-            self.characters.get(ctx.author).setPrime(first_prime, second_prime)
+            self.characters.get(ctx.author).setPrimes(first_prime, second_prime)
             await self.characters.get(ctx.author).showCharacter(ctx)
         else:
             await ctx.send(f"{ctx.author} does not have a character.")
