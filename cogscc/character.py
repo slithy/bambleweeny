@@ -180,26 +180,35 @@ class Character(commands.Cog):
         elif self.xclass == 'Knight' or self.xclass == 'Paladin' or self.xclass == 'Bard':
             return 'cha'
 
-    def setPrimes(self, first_prime: str, second_prime: str):
+    def setPrimes(self, first_prime: str, second_prime: str, third_prime: str):
         prime_1 = first_prime.lower()[:3]
         prime_2 = second_prime.lower()[:3]
+        prime_3 = third_prime.lower()[:3]
         if prime_1 not in STAT_ABBREVIATIONS:
             raise ValueError(f"{first_prime} is not a valid stat.")
 
         if self.race == 'Human':
             if second_prime == 'None':
-                raise ValueError(f"Human characters need to specify two primes (in addition to class prime).")
+                raise ValueError(f"Human characters must specify two primes (in addition to class prime).")
             if prime_2 not in STAT_ABBREVIATIONS:
                 raise ValueError(f"{second_prime} is not a valid stat.")
-        elif second_prime != 'None':
-            raise ValueError(f"Non-human characters must specify only one prime (in addition to class prime).")
+            if third_prime == 'None':
+                prime_3 = self.getClassPrime()
+            elif prime_3 not in STAT_ABBREVIATIONS:
+                raise ValueError(f"{third_prime} is not a valid stat.")
+        else:
+            if second_prime == 'None':
+                prime_2 = self.getClassPrime()
+            elif prime_2 not in STAT_ABBREVIATIONS:
+                raise ValueError(f"{second_prime} is not a valid stat.")
+            if third_prime != 'None':
+                raise ValueError(f"Non-human characters must specify one prime (in addition to class prime).")
 
-        prime_3 = getClassPrime()
+        if prime_1 != self.getClassPrime() and prime_2 != self.getClassPrime() and prime_3 != self.getClassPrime():
+            raise ValueError(f"One of your primes must be your class prime ({self.getClassPrime()})")
 
-        if prime_1 == prime_2 or prime_1 == prime_3:
-            raise ValueError(f"{first_prime} was specified more than once!")
-        elif prime_2 == prime_3:
-            raise ValueError(f"{second_prime} was specified more than once!")
+        if prime_1 == prime_2 or prime_1 == prime_3 or prime_2 == prime_3:
+            raise ValueError(f"Can't set primes for a {self.race} {self.xclass} to {prime_1} {prime_2} {prime_3}")
 
         self.stats.resetPrimes()
         self.stats.setPrime(prime_1)
@@ -271,11 +280,14 @@ class Characters(commands.Cog):
             await ctx.send(f"{ctx.author} does not have a character.")
 
     @commands.command(name='prime')
-    async def setPrimes(self, ctx, first_prime: str, second_prime: str = 'None'):
+    async def setPrimes(self, ctx, first_prime: str, second_prime: str = 'None', third_prime: str = 'None'):
         """Assign prime stats
+        Humans have three prime attributes; non-humans have two. One prime attribute is
+        determined by the character class and will be assigned automatically (it is
+        not necessary to pass it to the command).
         Usage: !assign <first prime> [<second prime>]"""
         if ctx.author in self.characters:
-            self.characters.get(ctx.author).setPrimes(first_prime, second_prime)
+            self.characters.get(ctx.author).setPrimes(first_prime, second_prime, third_prime)
             await self.characters.get(ctx.author).showCharacter(ctx)
         else:
             await ctx.send(f"{ctx.author} does not have a character.")
