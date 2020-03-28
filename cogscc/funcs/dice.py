@@ -118,7 +118,7 @@ class Roll(object):
             except SyntaxError:
                 raise errors.InvalidArgument("No dice found to roll.")
             rolled = ' '.join(str(res) for res in self.parts if not isinstance(res, Comment))
-            if rollFor is '':
+            if rollFor == '':
                 rollFor = ''.join(str(c) for c in self.parts if isinstance(c, Comment))
             # return final solution
             if not inline:
@@ -127,7 +127,7 @@ class Roll(object):
                     str(res) for res in self.parts if not isinstance(res, Comment)) + '\n**Total:** ' + str(
                     floor(total))
                 skeletonReply = reply
-                rollFor = rollFor if rollFor is not '' else 'Result'
+                rollFor = rollFor if rollFor != '' else 'Result'
                 reply = '**{}:** '.format(rollFor) + reply
                 if show_blurbs:
                     if adv == 1:
@@ -145,7 +145,7 @@ class Roll(object):
                 reply = ' '.join(str(res) for res in self.parts if not isinstance(res, Comment)) + ' = `' + str(
                     floor(total)) + '`'
                 skeletonReply = reply
-                rollFor = rollFor if rollFor is not '' else 'Result'
+                rollFor = rollFor if rollFor != '' else 'Result'
                 reply = '**{}:** '.format(rollFor) + reply
                 if show_blurbs:
                     if adv == 1:
@@ -183,14 +183,14 @@ class Roll(object):
                 raise errors.InvalidArgument('Please pass in the value of the dice.')
             numDice = 1
             dice_size = obj[0]
-            if adv is not 0 and dice_size == 20:
+            if adv != 0 and dice_size == 20:
                 numDice = 2
-                ops = ['k', 'h1'] if adv is 1 else ['k', 'l1']
+                ops = ['k', 'h1'] if adv == 1 else ['k', 'l1']
         elif numArgs == 2:
             numDice = obj[0]
             dice_size = obj[-1]
-            if adv is not 0 and dice_size == 20:
-                ops = ['k', 'h' + str(numDice)] if adv is 1 else ['k', 'l' + str(numDice)]
+            if adv != 0 and dice_size == 20:
+                ops = ['k', 'h' + str(numDice)] if adv == 1 else ['k', 'l' + str(numDice)]
                 numDice = numDice * 2
         else:  # split into xdy and operators
             numDice = obj[0]
@@ -470,16 +470,16 @@ class Comment(Part):
 def parse_selectors(opts, res, greedy=False, inverse=False):
     """Returns a list of ints."""
     for o in range(len(opts)):
-        if opts[o][0] is 'h':
+        if opts[o][0] == 'h':
             opts[o] = nlargest(int(opts[o].split('h')[1]), (d.value for d in res.rolled if d.kept))
-        elif opts[o][0] is 'l':
+        elif opts[o][0] == 'l':
             opts[o] = nsmallest(int(opts[o].split('l')[1]), (d.value for d in res.rolled if d.kept))
-        elif opts[o][0] is '>':
+        elif opts[o][0] == '>':
             if greedy:
                 opts[o] = list(range(int(opts[o].split('>')[1]) + 1, res.max_value + 1))
             else:
                 opts[o] = [d.value for d in res.rolled if d.value > int(opts[o].split('>')[1])]
-        elif opts[o][0] is '<':
+        elif opts[o][0] == '<':
             if greedy:
                 opts[o] = list(range(1, int(opts[o].split('<')[1])))
             else:
@@ -515,7 +515,7 @@ class DiceResult:
         self.result = verbose_result
         self.crit = crit
         self.rolled = rolled
-        self.skeleton = skeleton if skeleton is not '' else verbose_result
+        self.skeleton = skeleton if skeleton != '' else verbose_result
         self.raw_dice = raw_dice  # Roll
 
     def __str__(self):
