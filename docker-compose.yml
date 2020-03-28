@@ -2,7 +2,7 @@ version: '2'
 
 services:
   bot:
-    image: avrae
+    image: bambleweeny
     build:
       context: .
       args:
