@@ -7,7 +7,7 @@
 
 *.avrae
 
-save/
+/save
 
 venv/
 /venv*/
