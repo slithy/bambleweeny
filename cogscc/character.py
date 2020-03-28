@@ -15,7 +15,10 @@ class ToJson(json.JSONEncoder):
 
 
 class BaseStats:
-    def __init__(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, str_p: bool = False, dex_p: bool = False, con_p: bool = False, int_p: bool = False, wis_p: bool = False, cha_p: bool = False):
+    def __init__(self, strength: int, dexterity: int, constitution: int,
+                       intelligence: int, wisdom: int, charisma: int,
+                       str_p: bool = False, dex_p: bool = False, con_p: bool = False,
+                       int_p: bool = False, wis_p: bool = False, cha_p: bool = False):
         self.set(strength, dexterity, constitution, intelligence, wisdom, charisma)
         self.setPrimes(str_p, dex_p, con_p, int_p, wis_p, cha_p)
 
@@ -33,7 +36,10 @@ class BaseStats:
 
     # ---------- main funcs ----------
     def set(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int):
-        if strength < 1 or dexterity < 1 or constitution < 1 or intelligence < 1 or wisdom < 1 or charisma < 1 or strength > 19 or dexterity > 19 or constitution > 19 or intelligence > 19 or wisdom > 19 or charisma > 19:
+        if strength < 1 or dexterity < 1 or constitution < 1 or \
+           intelligence < 1 or wisdom < 1 or charisma < 1 or \
+           strength > 19 or dexterity > 19 or constitution > 19 or \
+           intelligence > 19 or wisdom > 19 or charisma > 19:
             raise ValueError(f"The valid range for stats is 1-19.")
         self.strength = strength
         self.dexterity = dexterity
@@ -42,7 +48,8 @@ class BaseStats:
         self.wisdom = wisdom
         self.charisma = charisma
 
-    def setPrimes(self, str_p: bool = False, dex_p: bool = False, con_p: bool = False, int_p: bool = False, wis_p: bool = False, cha_p: bool = False):
+    def setPrimes(self, str_p: bool = False, dex_p: bool = False, con_p: bool = False,
+                        int_p: bool = False, wis_p: bool = False, cha_p: bool = False):
         self.str_p = str_p
         self.dex_p = dex_p
         self.con_p = con_p
@@ -256,7 +263,6 @@ class Characters(commands.Cog):
         with open(filename, 'r') as f:
             chars = json.load(f)
             for player, character in chars.items():
-                await ctx.send(f"Loading {character}")
                 self.characters[player] = Character.__from_dict__(character)
         await ctx.send(f"Characters loaded from {filename}")
 
