@@ -1,0 +1,14 @@
+#!/bin/sh
+
+cd $1
+
+NUM_TO_KEEP=5
+NUM_SAVES=$(ls characters.json.* | wc -l)
+if [ $NUM_SAVES -gt ${NUM_TO_KEEP} ]
+then
+  for f in $(ls characters.json.* | head -$((${NUM_SAVES}-${NUM_TO_KEEP})))
+  do
+    echo Deleting ${f}
+    rm -f ${f}
+  done
+fi

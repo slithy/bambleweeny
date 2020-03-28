@@ -1,5 +1,7 @@
 import random
 import json
+import time
+from os.path import basename
 from discord.ext import commands
 from cogscc.funcs.dice import roll
 from utils.constants import STAT_ABBREVIATIONS
@@ -254,24 +256,28 @@ class Character(commands.Cog):
 class Characters(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.filename = '/save/characters.json'
         self.characters = {}
 
     @commands.command(name='load')
-    async def loadJson(self, ctx, filename = '/save/characters.json'):
+    async def loadJson(self, ctx, filename: str = 'characters.json'):
         """Load characters from a JSON-formatted file."""
-        with open(filename, 'r') as f:
+        with open(f"/save/{basename(filename)}", 'r') as f:
             chars = json.load(f)
             for player, character in chars.items():
                 self.characters[player] = Character.__from_dict__(character)
         await ctx.send(f"Characters loaded from {filename}")
 
     @commands.command(name='save')
-    async def saveJson(self, ctx):
+    async def saveJson(self, ctx, filename: str = 'characters.json'):
         """Save characters to a file in JSON format."""
-        with open(self.filename, 'w') as f:
+        with open(f"/save/{basename(filename)}", 'w') as f:
             json.dump(self.characters, f, cls=ToJson)
-        await ctx.send(f"Characters saved as {self.filename}")
+        ts = time.gmtime()
+        timestamp = time.strftime("%Y%m%d%H%M%S", ts)
+        filename_backup = f"{basename(filename)}.{timestamp}"
+        with open(f"/save/{filename_backup}", 'w') as f:
+            json.dump(self.characters, f, cls=ToJson)
+        await ctx.send(f"Characters saved as {filename_backup}")
 
     @commands.command(name='generate')
     async def randStats(self, ctx):
@@ -355,6 +361,12 @@ class Characters(commands.Cog):
             await self.characters.get(player).siegeCheck(ctx, stat, bonus, cl)
         else:
             await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='delete_character')
+    async def deletePlayer(self, ctx, player):
+        """Deletes the character belonging to the specified player"""
+        del self.characters[player]
+        await ctx.send(f"{player}'s character was removed from the list.")
 
     @commands.command(name='party')
     async def allCharacters(self, ctx, param: str = 'None'):
