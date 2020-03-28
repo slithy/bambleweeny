@@ -1,9 +1,17 @@
 import random
+import json
 from discord.ext import commands
 from cogscc.funcs.dice import roll
 from utils.constants import STAT_ABBREVIATIONS
 from utils.constants import RACE_NAMES
 from utils.constants import CLASS_NAMES
+
+
+class ToJson(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, "__to_json__"):
+            return obj.__to_json__()
+        return json.JSONEncoder.default(self, obj)
 
 
 class BaseStats:
@@ -146,6 +154,14 @@ class Character(commands.Cog):
         self.stats = BaseStats(10,10,10,10,10,10)
         self.stats.setPrime(self.getClassPrime())
 
+    def __to_json__(self):
+        return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level }
+
+    @classmethod
+    def __from_dict__(cls, d):
+        c = Character(d['Name'], d['Race'], d['Class'], d['Level'])
+        return c
+
     def setRace(self, race: str):
         if race.title() not in RACE_NAMES:
             raise ValueError(f"{race} is not a valid race.")
@@ -230,7 +246,24 @@ class Character(commands.Cog):
 class Characters(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.filename = '/tmp/characters.json'
         self.characters = {}
+
+    @commands.command(name='load')
+    async def loadJson(self, ctx, filename = '/tmp/characters.json'):
+        """Load characters from a JSON-formatted file."""
+        with open(filename, 'r') as f:
+            chars = json.load(f)
+            for player, character in chars.items():
+                self.characters[player] = Character.__from_dict__(character)
+        await ctx.send(f"Characters loaded from {filename}")
+
+    @commands.command(name='save')
+    async def saveJson(self, ctx):
+        """Save characters to a file in JSON format."""
+        with open(self.filename, 'w') as f:
+            json.dump(self.characters, f, cls=ToJson)
+        await ctx.send(f"Characters saved as {self.filename}")
 
     @commands.command(name='generate')
     async def randStats(self, ctx):
@@ -246,19 +279,21 @@ class Characters(commands.Cog):
     async def create(self, ctx, name: str, race: str, xclass: str, level: int = 1):
         """Create a new character.
         Usage: !create 'Character Name' <race> <class> [<level>]"""
-        if ctx.author in self.characters:
-            await self.characters.get(ctx.author).showSummary(ctx, "You already have a character: ")
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).showSummary(ctx, "You already have a character: ")
             return
-        self.characters[ctx.author] = Character(name, race, xclass, level)
-        await self.characters.get(ctx.author).showSummary(ctx, f"{ctx.author} is playing ")
+        self.characters[player] = Character(name, race, xclass, level)
+        await self.characters.get(player).showSummary(ctx, f"{player} is playing ")
         return
 
     @commands.command(name='suicide')
     async def suicide(self, ctx):
         """Kill your character (allowing you to create a new one)."""
-        if ctx.author in self.characters:
-            name = self.characters[ctx.author].name
-            del self.characters[ctx.author]
+        player = str(ctx.author)
+        if player in self.characters:
+            name = self.characters[player].name
+            del self.characters[player]
             random_death = random.choice(["drinks poison and fails their saving throw",
                 "is crushed by falling rocks", "opens a chest filled with poison gas",
                 "is shot in the back by a comrade", "goes to explore the Tomb of Horrors and is never seen again", 
@@ -267,17 +302,18 @@ class Characters(commands.Cog):
                 "decides to read the Necronomicon"])
             await ctx.send(f"{name} {random_death}. :skull:")
         else:
-            await ctx.send(f"{ctx.author} does not have a character.")
+            await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='assign')
     async def assignStats(self, ctx, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int):
         """Assign character's stats
         Usage: !assign <str> <dex> <con> <int> <wis> <cha>"""
-        if ctx.author in self.characters:
-            self.characters.get(ctx.author).assignStats(strength, dexterity, constitution, intelligence, wisdom, charisma)
-            await self.characters.get(ctx.author).showCharacter(ctx)
+        player = str(ctx.author)
+        if player in self.characters:
+            self.characters.get(player).assignStats(strength, dexterity, constitution, intelligence, wisdom, charisma)
+            await self.characters.get(player).showCharacter(ctx)
         else:
-            await ctx.send(f"{ctx.author} does not have a character.")
+            await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='prime')
     async def setPrimes(self, ctx, first_prime: str, second_prime: str = 'None', third_prime: str = 'None'):
@@ -286,19 +322,31 @@ class Characters(commands.Cog):
         determined by the character class and will be assigned automatically (it is
         not necessary to pass it to the command).
         Usage: !assign <first prime> [<second prime>]"""
-        if ctx.author in self.characters:
-            self.characters.get(ctx.author).setPrimes(first_prime, second_prime, third_prime)
-            await self.characters.get(ctx.author).showCharacter(ctx)
+        player = str(ctx.author)
+        if player in self.characters:
+            self.characters.get(player).setPrimes(first_prime, second_prime, third_prime)
+            await self.characters.get(player).showCharacter(ctx)
         else:
-            await ctx.send(f"{ctx.author} does not have a character.")
+            await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='character', aliases=['char'])
     async def character(self, ctx):
         """Show your character's stats"""
-        if ctx.author in self.characters:
-            await self.characters.get(ctx.author).showCharacter(ctx)
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).showCharacter(ctx)
         else:
-            await ctx.send(f"{ctx.author} does not have a character.")
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='check', aliases=['ck'])
+    async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
+        """Make an ability check
+        Usage: !check <stat> [<bonus>] [<challenge level>]"""
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).siegeCheck(ctx, stat, bonus, cl)
+        else:
+            await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='party')
     async def allCharacters(self, ctx, param: str = 'None'):
@@ -309,15 +357,6 @@ class Characters(commands.Cog):
                 await character.showCharacter(ctx, f"({player})")
             else:
                 await character.showSummary(ctx, f"{player} is playing ")
-
-    @commands.command(name='check', aliases=['ck'])
-    async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
-        """Make an ability check
-        Usage: !check <stat> [<bonus>] [<challenge level>]"""
-        if ctx.author in self.characters:
-            await self.characters.get(ctx.author).siegeCheck(ctx, stat, bonus, cl)
-        else:
-            await ctx.send(f"{ctx.author} does not have a character.")
 
 
 def setup(bot):
