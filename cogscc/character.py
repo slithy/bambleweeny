@@ -15,15 +15,15 @@ class ToJson(json.JSONEncoder):
 
 
 class BaseStats:
-    def __init__(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int):
+    def __init__(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, str_p: bool = False, dex_p: bool = False, con_p: bool = False, int_p: bool = False, wis_p: bool = False, cha_p: bool = False):
         self.set(strength, dexterity, constitution, intelligence, wisdom, charisma)
-        self.resetPrimes()
+        self.setPrimes(str_p, dex_p, con_p, int_p, wis_p, cha_p)
 
     @classmethod
-    def from_dict(cls, d):
+    def __from_dict__(cls, d):
         return cls(**d)
 
-    def to_dict(self):
+    def __to_json__(self):
         return {
             "strength": self.strength, "dexterity": self.dexterity, "constitution": self.constitution,
             "intelligence": self.intelligence, "wisdom": self.wisdom, "charisma": self.charisma,
@@ -42,13 +42,13 @@ class BaseStats:
         self.wisdom = wisdom
         self.charisma = charisma
 
-    def resetPrimes(self):
-        self.str_p = False
-        self.dex_p = False
-        self.con_p = False
-        self.int_p = False
-        self.wis_p = False
-        self.cha_p = False
+    def setPrimes(self, str_p: bool = False, dex_p: bool = False, con_p: bool = False, int_p: bool = False, wis_p: bool = False, cha_p: bool = False):
+        self.str_p = str_p
+        self.dex_p = dex_p
+        self.con_p = con_p
+        self.int_p = int_p
+        self.wis_p = wis_p
+        self.cha_p = cha_p
 
     def setPrime(self, prime: str):
         if prime == 'str':
@@ -155,11 +155,12 @@ class Character(commands.Cog):
         self.stats.setPrime(self.getClassPrime())
 
     def __to_json__(self):
-        return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level }
+        return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level, 'Stats': self.stats }
 
     @classmethod
     def __from_dict__(cls, d):
         c = Character(d['Name'], d['Race'], d['Class'], d['Level'])
+        c.stats = BaseStats.__from_dict__(d['Stats'])
         return c
 
     def setRace(self, race: str):
@@ -226,7 +227,7 @@ class Character(commands.Cog):
         if prime_1 == prime_2 or prime_1 == prime_3 or prime_2 == prime_3:
             raise ValueError(f"Can't set primes for a {self.race} {self.xclass} to {prime_1} {prime_2} {prime_3}")
 
-        self.stats.resetPrimes()
+        self.stats.setPrimes()
         self.stats.setPrime(prime_1)
         self.stats.setPrime(prime_2)
         self.stats.setPrime(prime_3)
@@ -255,6 +256,7 @@ class Characters(commands.Cog):
         with open(filename, 'r') as f:
             chars = json.load(f)
             for player, character in chars.items():
+                await ctx.send(f"Loading {character}")
                 self.characters[player] = Character.__from_dict__(character)
         await ctx.send(f"Characters loaded from {filename}")
 
