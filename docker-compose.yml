@@ -17,6 +17,8 @@ services:
     environment:
       DBOT_ARGS: test
       ENVIRONMENT: development
+    volumes:
+      - ./save:/save
 
   mongo:
     image: mongo

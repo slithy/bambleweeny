@@ -254,11 +254,11 @@ class Character(commands.Cog):
 class Characters(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.filename = '/tmp/characters.json'
+        self.filename = '/save/characters.json'
         self.characters = {}
 
     @commands.command(name='load')
-    async def loadJson(self, ctx, filename = '/tmp/characters.json'):
+    async def loadJson(self, ctx, filename = '/save/characters.json'):
         """Load characters from a JSON-formatted file."""
         with open(filename, 'r') as f:
             chars = json.load(f)
