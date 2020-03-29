@@ -20,8 +20,7 @@ from discord.errors import Forbidden, HTTPException, InvalidArgument, NotFound
 from discord.ext import commands
 from discord.ext.commands.errors import CommandInvokeError
 
-#from cogscc.funcs.lookupFuncs import compendium
-from cogscc.models.errors import AvraeException, EvaluationError
+from cogscc.models.errors import BambleweenyException, EvaluationError
 from utils.help import help_command
 from utils.redisIO import RedisIO
 
@@ -169,7 +168,7 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
         return
 
-    elif isinstance(error, AvraeException):
+    elif isinstance(error, BambleweenyException):
         return await ctx.send(str(error))
 
     elif isinstance(error, (commands.UserInputError, commands.NoPrivateMessage, ValueError)):
@@ -191,7 +190,7 @@ async def on_command_error(ctx, error):
         original = error.original
         if isinstance(original, EvaluationError):  # PM an alias author tiny traceback
             e = original.original
-            if not isinstance(e, AvraeException):
+            if not isinstance(e, BambleweenyException):
                 tb = f"```py\nError when parsing expression {original.expression}:\n" \
                      f"{''.join(traceback.format_exception(type(e), e, e.__traceback__, limit=0, chain=False))}\n```"
                 try:
@@ -200,7 +199,7 @@ async def on_command_error(ctx, error):
                     log.info(f"Error sending traceback: {e}")
             return await ctx.send(str(original))
 
-        elif isinstance(original, AvraeException):
+        elif isinstance(original, BambleweenyException):
             return await ctx.send(str(original))
 
         elif isinstance(original, Forbidden):

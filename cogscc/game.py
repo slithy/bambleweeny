@@ -4,6 +4,7 @@ import json
 from os.path import basename
 from discord.ext import commands
 from cogscc.character import Character
+from cogscc.models.errors import NotAllowed
 
 
 class ToJson(json.JSONEncoder):
@@ -17,10 +18,18 @@ class Game(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.characters = {}
+        self.gm_roles = [ 'Castle Keeper', 'Game Master', 'Dungeon Master' ]
+
+    def gm_only(self, ctx):
+        for role in ctx.author.roles:
+            if role.name in self.gm_roles:
+                return
+        raise NotAllowed(f"Only the Game Master can do that!")
 
     @commands.command(name='load')
     async def loadJson(self, ctx, filename: str = 'characters.json'):
         """Load characters from a JSON-formatted file."""
+        self.gm_only(ctx)
         with open(f"/save/{basename(filename)}", 'r') as f:
             chars = json.load(f)
             for player, character in chars.items():
@@ -117,11 +126,12 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='delete_character')
-    async def deletePlayer(self, ctx, player):
-        """Deletes the character belonging to the specified player"""
+    @commands.command(name='euthanise')
+    async def deleteCharacter(self, ctx, player):
+        """Ends the suffering of the character belonging to the specified player"""
+        self.gm_only(ctx)
         del self.characters[player]
-        await ctx.send(f"{player}'s character was removed from the list.")
+        await ctx.send(f"The suffering of {player}'s character has been ended.")
 
     @commands.command(name='party')
     async def allCharacters(self, ctx, param: str = 'None'):

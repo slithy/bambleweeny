@@ -1,42 +1,35 @@
-class AvraeException(Exception):
+class BambleweenyException(Exception):
     """A base exception class."""
 
     def __init__(self, msg):
         super().__init__(msg)
 
 
-class NoCharacter(AvraeException):
+class NoCharacter(BambleweenyException):
     """Raised when a user has no active character."""
 
     def __init__(self):
         super().__init__("You have no character active.")
 
 
-class NoActiveBrew(AvraeException):
-    """Raised when a user has no active homebrew of a certain type."""
-
-    def __init__(self):
-        super().__init__("You have no homebrew of this type active.")
-
-
-class ExternalImportError(AvraeException):
+class ExternalImportError(BambleweenyException):
     """Raised when something fails to import."""
 
     def __init__(self, msg):
         super().__init__(msg)
 
 
-class InvalidArgument(AvraeException):
+class InvalidArgument(BambleweenyException):
     """Raised when an argument is invalid."""
     pass
 
 
-class NotAllowed(AvraeException):
+class NotAllowed(BambleweenyException):
     """Raised when a user tries to do something they are not allowed to do by role or dependency."""
     pass
 
 
-class EvaluationError(AvraeException):
+class EvaluationError(BambleweenyException):
     """Raised when a cvar evaluation causes an error."""
 
     def __init__(self, original, expression=None):
@@ -45,7 +38,7 @@ class EvaluationError(AvraeException):
         self.expression = expression
 
 
-class FunctionRequiresCharacter(AvraeException):
+class FunctionRequiresCharacter(BambleweenyException):
     """
     Raised when a function that requires a character is called without one.
     """
@@ -54,19 +47,12 @@ class FunctionRequiresCharacter(AvraeException):
         super().__init__(msg or "This alias requires an active character.")
 
 
-class OutdatedSheet(AvraeException):
-    """Raised when a feature is used that requires an updated sheet."""
-
-    def __init__(self, msg=None):
-        super().__init__(msg or "This command requires an updated character sheet. Try running `!update`.")
-
-
-class InvalidSaveType(AvraeException):
+class InvalidSaveType(BambleweenyException):
     def __init__(self):
         super().__init__("Invalid save type.")
 
 
-class ConsumableException(AvraeException):
+class ConsumableException(BambleweenyException):
     """A base exception for consumable exceptions to stem from."""
     pass
 
@@ -92,7 +78,7 @@ class InvalidSpellLevel(ConsumableException):
         super().__init__("The spell level is invalid.")
 
 
-class SelectionException(AvraeException):
+class SelectionException(BambleweenyException):
     """A base exception for message awaiting exceptions to stem from."""
     pass
 
@@ -111,7 +97,7 @@ class SelectionCancelled(SelectionException):
         super().__init__("Selection timed out or was cancelled.")
 
 
-class CombatException(AvraeException):
+class CombatException(BambleweenyException):
     """A base exception for combat-related exceptions to stem from."""
     pass
 

@@ -2,6 +2,7 @@ from cogscc.funcs.dice import roll
 from utils.constants import STAT_ABBREVIATIONS
 from utils.constants import RACE_NAMES
 from utils.constants import CLASS_NAMES
+from cogscc.models.errors import InvalidArgument
 
 
 class BaseStats:
@@ -30,7 +31,7 @@ class BaseStats:
            intelligence < 1 or wisdom < 1 or charisma < 1 or \
            strength > 19 or dexterity > 19 or constitution > 19 or \
            intelligence > 19 or wisdom > 19 or charisma > 19:
-            raise ValueError(f"The valid range for stats is 1-19.")
+            raise InvalidArgument(f"The valid range for stats is 1-19.")
         self.strength = strength
         self.dexterity = dexterity
         self.constitution = constitution
@@ -70,7 +71,7 @@ class BaseStats:
     def getMod(self, stat: str):
         abbr_stat = stat.lower()[:3]
         if abbr_stat not in STAT_ABBREVIATIONS:
-            raise ValueError(f"{stat} is not a valid stat.")
+            raise InvalidArgument(f"{stat} is not a valid stat.")
         stat_val = {
             'str': self.strength, 'dex': self.dexterity,
             'con': self.constitution, 'int': self.intelligence,
@@ -96,7 +97,7 @@ class BaseStats:
     def getPrime(self, stat: str):
         abbr_stat = stat.lower()[:3]
         if abbr_stat not in STAT_ABBREVIATIONS:
-            raise ValueError(f"{stat} is not a valid stat.")
+            raise InvalidArgument(f"{stat} is not a valid stat.")
         stat_prime = {
             'str': self.str_p, 'dex': self.dex_p,
             'con': self.con_p, 'int': self.int_p,
@@ -172,13 +173,13 @@ class Character:
 
     def setRace(self, race: str):
         if race.title() not in RACE_NAMES:
-            raise ValueError(f"{race} is not a valid race.")
+            raise InvalidArgument(f"{race} is not a valid race.")
         self.race = race.title()
         return
         
     def setClass(self, xclass: str):
         if xclass.title() not in CLASS_NAMES:
-            raise ValueError(f"{xclass} is not a valid class.")
+            raise InvalidArgument(f"{xclass} is not a valid class.")
         self.xclass = xclass.title()
         return
 
@@ -209,30 +210,30 @@ class Character:
         prime_2 = second_prime.lower()[:3]
         prime_3 = third_prime.lower()[:3]
         if prime_1 not in STAT_ABBREVIATIONS:
-            raise ValueError(f"{first_prime} is not a valid stat.")
+            raise InvalidArgument(f"{first_prime} is not a valid stat.")
 
         if self.race == 'Human':
             if second_prime == 'None':
-                raise ValueError(f"Human characters must specify two primes (in addition to class prime).")
+                raise InvalidArgument(f"Human characters must specify two primes (in addition to class prime).")
             if prime_2 not in STAT_ABBREVIATIONS:
-                raise ValueError(f"{second_prime} is not a valid stat.")
+                raise InvalidArgument(f"{second_prime} is not a valid stat.")
             if third_prime == 'None':
                 prime_3 = self.getClassPrime()
             elif prime_3 not in STAT_ABBREVIATIONS:
-                raise ValueError(f"{third_prime} is not a valid stat.")
+                raise InvalidArgument(f"{third_prime} is not a valid stat.")
         else:
             if second_prime == 'None':
                 prime_2 = self.getClassPrime()
             elif prime_2 not in STAT_ABBREVIATIONS:
-                raise ValueError(f"{second_prime} is not a valid stat.")
+                raise InvalidArgument(f"{second_prime} is not a valid stat.")
             if third_prime != 'None':
-                raise ValueError(f"Non-human characters must specify one prime (in addition to class prime).")
+                raise InvalidArgument(f"Non-human characters must specify one prime (in addition to class prime).")
 
         if prime_1 != self.getClassPrime() and prime_2 != self.getClassPrime() and prime_3 != self.getClassPrime():
-            raise ValueError(f"One of your primes must be your class prime ({self.getClassPrime()})")
+            raise InvalidArgument(f"One of your primes must be your class prime ({self.getClassPrime()})")
 
         if prime_1 == prime_2 or prime_1 == prime_3 or prime_2 == prime_3:
-            raise ValueError(f"Can't set primes for a {self.race} {self.xclass} to {prime_1} {prime_2} {prime_3}")
+            raise InvalidArgument(f"Can't set primes for a {self.race} {self.xclass} to {prime_1} {prime_2} {prime_3}")
 
         self.stats.setPrimes()
         self.stats.setPrime(prime_1)
