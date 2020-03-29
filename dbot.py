@@ -25,15 +25,8 @@ from cogscc.models.errors import AvraeException, EvaluationError
 from utils.help import help_command
 from utils.redisIO import RedisIO
 
-# -----COGS-----
-#COGS = (
-#    "cogs5e.dice", "cogs5e.charGen", "cogs5e.homebrew", "cogs5e.lookup", "cogs5e.pbpUtils",
-#    "cogs5e.gametrack", "cogs5e.initTracker", "cogs5e.sheetManager", "cogsmisc.customization", "cogsmisc.core",
-#    "cogsmisc.publicity", "cogsmisc.stats", "cogsmisc.repl", "cogsmisc.adminUtils"
-#)
-
 COGS = (
-    "cogscc.dice", "cogscc.character", "cogsmisc.core"
+    "cogscc.dice", "cogscc.game", "cogsmisc.core"
 )
 
 
