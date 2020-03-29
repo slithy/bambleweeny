@@ -4,6 +4,7 @@ import json
 from os.path import basename
 from discord.ext import commands
 from cogscc.character import Character
+from cogscc.monster import Monster
 from cogscc.models.errors import NotAllowed
 
 
@@ -17,8 +18,9 @@ class ToJson(json.JSONEncoder):
 class Game(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.characters = {}
         self.gm_roles = [ 'Castle Keeper', 'Game Master', 'Dungeon Master' ]
+        self.characters = {}
+        self.monsters = []
 
     def gm_only(self, ctx):
         for role in ctx.author.roles:
@@ -126,13 +128,6 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='euthanise')
-    async def deleteCharacter(self, ctx, player):
-        """Ends the suffering of the character belonging to the specified player"""
-        self.gm_only(ctx)
-        del self.characters[player]
-        await ctx.send(f"The suffering of {player}'s character has been ended.")
-
     @commands.command(name='party')
     async def allCharacters(self, ctx, param: str = 'None'):
         """Show stats for all characters
@@ -143,6 +138,42 @@ class Game(commands.Cog):
             else:
                 await character.showSummary(ctx, f"{player} is playing ")
 
+    @commands.command(name='initiative', aliases=['init'])
+    async def rollForInitiative(self, ctx):
+        initList = []
+        for player, character in self.characters.items():
+            init = await character.rollForInitiative(ctx)
+            initList.append((init, character.name))
+        for monster in self.monsters:
+            init = await monster.rollForInitiative(ctx)
+            initList.append((init, monster.name))
+        initOrder = "**Initiative Order**\n"
+        for i in sorted(initList, reverse=True):
+            initOrder += f"{i[0]}\t{i[1]}\n"
+        await ctx.send(initOrder)
+
+    ### GM-only commands ###
+
+    @commands.command(name='euthanise')
+    async def deleteCharacter(self, ctx, player):
+        """Ends the suffering of the character belonging to the specified player"""
+        self.gm_only(ctx)
+        del self.characters[player]
+        await ctx.send(f"The suffering of {player}'s character has been ended.")
+
+    @commands.command(name='monster_reset', aliases=['mr'])
+    async def monsterReset(self, ctx):
+        """Resets monsters at the start of a new combat"""
+        self.gm_only(ctx)
+        self.monsters = []
+        await ctx.send(f"Monsters reset.")
+
+    @commands.command(name='monster_add', aliases=['ma'])
+    async def monsterAdd(self, ctx, name: str, init_mod = 0):
+        """Adds a new monster to the combat"""
+        self.gm_only(ctx)
+        self.monsters.append(Monster(name, init_mod))
+        await ctx.send(f"Added {name} to combat.")
 
 def setup(bot):
     bot.add_cog(Game(bot))

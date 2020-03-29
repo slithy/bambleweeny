@@ -250,3 +250,10 @@ class Character:
     async def showCharacter(self, ctx, message: str = ""):
         await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n{self.stats}")
         return
+
+    async def rollForInitiative(self, ctx):
+        dex_mod = self.stats.getMod('dex')
+        result = [roll(f"2d6{dex_mod:+}", inline=True) for _ in range(1)]
+        init = result[0].total
+        await ctx.send(f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}")
+        return init
