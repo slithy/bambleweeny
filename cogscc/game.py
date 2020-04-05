@@ -154,6 +154,12 @@ class Game(commands.Cog):
 
     ### GM-only commands ###
 
+    @commands.command(name='level_up')
+    async def levelUp(self, ctx, player):
+        """Levels up the character belonging to the specified player"""
+        self.gm_only(ctx)
+        await self.characters[player].levelUp(ctx)
+
     @commands.command(name='euthanise')
     async def deleteCharacter(self, ctx, player):
         """Ends the suffering of the character belonging to the specified player"""

@@ -221,9 +221,9 @@ class Character:
         """Randomly generate the six base stats for a new character."""
         rolls = [roll("4d6kh3", inline=True) for _ in range(6)]
         #self.stats.set(rolls[0].total, rolls[1].total, rolls[2].total, rolls[3].total, rolls[4].total, rolls[5].total)
-        stat_summary = '\n'.join(r.skeleton for r in rolls)
+        stat_summary = '\n:game_die: '.join(r.skeleton for r in rolls)
         total = sum([r.total for r in rolls])
-        await ctx.send(f"{ctx.message.author.mention}\nGenerated random stats:\n{stat_summary}\nTotal = `{total}`")
+        await ctx.send(f"{ctx.message.author.mention}\nGenerated random stats:\n:game_die: {stat_summary}\nTotal = `{total}`")
         return
 
     def setRace(self, race: str):
@@ -298,7 +298,7 @@ class Character:
     def getBtH(self):
         if self.xclass == 'Fighter':
             return self.level
-        elif self.xclass == 'Ranger' or self.xclass == 'Barbarian' or self.xclass == 'Monk'
+        elif self.xclass == 'Ranger' or self.xclass == 'Barbarian' or self.xclass == 'Monk' \
           or self.xclass == 'Knight' or self.xclass == 'Paladin'   or self.xclass == 'Bard':
             return self.level-1
         elif self.xclass == 'Cleric' or self.xclass == 'Druid':
@@ -310,6 +310,35 @@ class Character:
         else:
             raise InvalidArgument(f"{self.xclass} is not a valid class.")
 
+    async def levelUp(self, ctx):
+        """Level up and roll new hit points."""
+        hd: int
+        if self.xclass == 'Barbarian' or self.xclass == 'Monk':
+            hd = 12
+        elif self.xclass == 'Fighter' or self.xclass == 'Ranger' or self.xclass == 'Knight' \
+          or self.xclass == 'Paladin' or self.xclass == 'Bard':
+            hd = 10
+        elif self.xclass == 'Cleric' or self.xclass == 'Druid':
+            hd = 8
+        elif self.xclass == 'Rogue' or self.xclass == 'Assassin':
+            hd = 6
+        elif self.xclass == 'Wizard' or self.xclass == 'Illusionist':
+            hd = 4
+        else:
+            raise InvalidArgument(f"{self.xclass} is not a valid class.")
+        con_mod = self.stats.getMod('con')
+        result = [roll(f"1d{hd}{con_mod:+}", inline=True) for _ in range(1)]
+        total = result[0].total
+        if total < 1:
+            total = 1
+        self.hp.max += total
+        self.hp.current += total
+        self.level += 1
+        hptxt = 'hit points'
+        if total == 1:
+            hptxt = 'hit point'
+        await ctx.send(f"{self.name} levels up! :partying_face:\n:game_die: {result[0].skeleton}\n{self.name} advances to level {self.level} and gains {total} {hptxt} (total hp: {self.hp.max}).")
+
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
 
@@ -318,7 +347,7 @@ class Character:
         return
 
     async def showCharacter(self, ctx, message: str = ""):
-        await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n**BtH: {self.getBtH()}:+  {self.hp}\n{self.stats}")
+        await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n**BtH:** {self.getBtH():+}  {self.hp}\n{self.stats}")
         return
 
     async def rollForInitiative(self, ctx):
