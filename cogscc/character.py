@@ -156,24 +156,33 @@ class Wound(Enum):
     MORTAL = 3
     DEAD = 4
 
+
+class Bleeding(Enum):
+    GRACE = 1
+    BLEEDING = 2
+    NOT_BLEEDING = 3
+
+
 class HP:
-    def __init__(self, max: int, current: int = 999, wound: Wound = Wound.NORMAL, conscious: bool = True):
+    def __init__(self, max: int, current: int = 999, wound: Wound = Wound.NORMAL, bleeding = Bleeding.NOT_BLEEDING, conscious: bool = True):
         self.max = max
         self.current = max
         if current < max:
             self.current = current
         self.wound = wound
+        self.bleeding = bleeding
         self.conscious = conscious
 
     @classmethod
     def __from_dict__(cls, d):
         hp = cls(**d)
         hp.wound = getattr(Wound, hp.wound)
+        hp.bleeding = getattr(Bleeding, hp.bleeding)
         return hp
 
     def __to_json__(self):
         return {
-            'max': self.max, 'current': self.current, 'wound': self.wound.name, 'conscious': self.conscious
+            'max': self.max, 'current': self.current, 'wound': self.wound.name, 'bleeding': self.bleeding.name, 'conscious': self.conscious
         }
 
     # ---------- main funcs ----------
@@ -193,6 +202,7 @@ class HP:
         elif self.current < -6 and self.wound != Wound.MORTAL:
             consequence += f"\n{name} is mortally wounded! :grimacing:"
             self.wound = Wound.MORTAL
+            self.bleeding = Bleeding.GRACE
         elif self.current < 0 and self.wound == Wound.NORMAL:
             consequence += f"\n{name} is grievously wounded! :grimacing:"
             self.wound = Wound.GRIEVOUS
@@ -200,6 +210,26 @@ class HP:
             consequence += f"\n{name} loses consciousness! :dizzy_face:"
             self.conscious = False
         return consequence
+
+    def bleed(self, name):
+        status = ''
+        if self.wound == Wound.DEAD:
+            status = f"{name} is dead."
+        elif self.conscious:
+            status = f"{name} is conscious."
+        elif self.wound == Wound.MORTAL:
+            status = f"{name} is unconscious and bleeding out."
+            if self.bleeding == Bleeding.GRACE:
+                self.bleeding = Bleeding.BLEEDING
+            elif self.bleeding == Bleeding.BLEEDING:
+                self.current -= 1
+                status += f"\n{name} loses 1 hit point. :scream:  **HP**: {self.current}/{self.max}"
+            if self.current < -9:
+                status += f"\n{name} dies! :skull:"
+                self.wound = Wound.DEAD
+        else:
+            status = f"{name} is unconscious."
+        return status
 
     def __str__(self):
         if self.conscious:
@@ -369,10 +399,7 @@ class Character:
         return self.hp.conscious and self.hp.wound != Wound.DEAD
 
     async def inactiveStatus(self, ctx):
-        if self.hp.wound == Wound.DEAD:
-            await ctx.send(f"{self.name} is dead.")
-        elif not self.hp.conscious:
-            await ctx.send(f"{self.name} is unconscious.")
+        await ctx.send(f"{self.hp.bleed(self.name)}")
 
     async def damage(self, ctx, dmg: str):
         dmg_roll = ''
