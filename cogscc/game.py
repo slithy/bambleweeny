@@ -177,7 +177,7 @@ class Game(commands.Cog):
         Usage: damage <character> <damage_dice>"""
         self.gm_only(ctx)
         player = self.getPlayer(character)
-        await ctx.send(f"Found {player}.")
+        await self.characters[player].damage(ctx, dmg)
 
     @commands.command(name='level_up')
     async def levelUp(self, ctx, character: str):

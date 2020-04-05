@@ -177,12 +177,38 @@ class HP:
         }
 
     # ---------- main funcs ----------
+    def lose(self, name: str, dmg: int):
+        dmgtxt = f"{dmg} points"
+        if dmg < 1:
+            return f"{name} takes no damage!"
+        elif dmg == 1:
+            dmgtxt = "1 point"
+        self.current -= dmg
+        consequence = f"{name} takes {dmgtxt} of damage! :scream:  **HP**: {self.current}/{self.max}"
+        if self.wound == Wound.DEAD:
+            consequence += f"\n{name} does not care because they are already dead."
+        elif self.current < -9:
+            consequence += f"\n{name} dies! :skull:"
+            self.wound = Wound.DEAD
+        elif self.current < -6 and self.wound != Wound.MORTAL:
+            consequence += f"\n{name} is mortally wounded! :grimacing:"
+            self.wound = Wound.MORTAL
+        elif self.current < 0 and self.wound == Wound.NORMAL:
+            consequence += f"\n{name} is grievously wounded! :grimacing:"
+            self.wound = Wound.GRIEVOUS
+        if self.conscious and self.current < 1:
+            consequence += f"\n{name} loses consciousness! :dizzy_face:"
+            self.conscious = False
+        return consequence
+
     def __str__(self):
-        if self.conscious == True:
+        if self.conscious:
             unconscious = ':grimacing:'
         else:
             unconscious = '(unconscious) :dizzy_face:'
-        if self.wound == Wound.GRIEVOUS:
+        if self.wound == Wound.NORMAL and not self.conscious:
+            wounded = f"{unconscious}"
+        elif self.wound == Wound.GRIEVOUS:
             wounded = f"Grievously wounded {unconscious}"
         elif self.wound == Wound.MORTAL:
             wounded = f"Mortally wounded {unconscious}"
@@ -338,6 +364,18 @@ class Character:
         if total == 1:
             hptxt = 'hit point'
         await ctx.send(f"{self.name} levels up! :partying_face:\n:game_die: {result[0].skeleton}\n{self.name} advances to level {self.level} and gains {total} {hptxt} (total hp: {self.hp.max}).")
+
+    async def damage(self, ctx, dmg: str):
+        dmg_roll = ''
+        dmg_amt: int
+        try:
+            int(dmg)
+            dmg_amt = int(dmg)
+        except ValueError:
+            result = [roll(f"{dmg}", inline=True) for _ in range(1)]
+            dmg_amt = result[0].total
+            dmg_roll = f":game_die: {result[0].skeleton}\n"
+        await ctx.send(f"{dmg_roll}{self.hp.lose(self.name, dmg_amt)}")
 
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
