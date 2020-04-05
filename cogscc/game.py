@@ -163,6 +163,14 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await self.characters[player].heal(ctx, hp)
 
+    @commands.command(name='first_aid', aliases=['aid'])
+    async def firstAid(self, ctx, character: str):
+        """Perform first aid on the specified character.
+        First aid does not restore any hit points, but can stop bleeding and restore unconscious characters to consciousness.
+        Usage: !first_aid <character>"""
+        player = self.getPlayer(character)
+        await self.characters[player].first_aid(ctx)
+
     ### GM-only commands ###
 
     def getPlayer(self, character_name: str):

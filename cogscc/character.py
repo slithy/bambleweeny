@@ -186,6 +186,20 @@ class HP:
         }
 
     # ---------- main funcs ----------
+    def first_aid(self, name: str, status: str, success: bool):
+        if self.bleeding != Bleeding.NOT_BLEEDING and success:
+            self.bleeding = Bleeding.NOT_BLEEDING
+            return f"{status}\n{name} has stopped bleeding."
+        elif self.bleeding != Bleeding.NOT_BLEEDING:
+            return f"{status}\nFirst aid was unsuccessful. {name} is still bleeding."
+        elif not self.conscious and success:
+            self.conscious = True
+            return f"{status}\n{name} has regained consciousness."
+        elif not self.conscious:
+            return f"{status}\nFirst aid was unsuccessful. {name} is still unconscious."
+        else:
+            return f"{name} is in a stable condition. Nothing more can be achieved with first aid."
+
     def heal(self, name: str, hp_healed: int):
         consequence = ''
         if self.wound == Wound.DEAD:
@@ -261,12 +275,14 @@ class HP:
         elif self.conscious:
             status = f"{name} is conscious but too badly wounded to act."
         elif self.wound == Wound.MORTAL:
-            status = f"{name} is unconscious and bleeding out."
+            status = f"{name} is mortally wounded, unconscious and bleeding out."
             if self.bleeding == Bleeding.GRACE:
                 self.bleeding = Bleeding.BLEEDING
             elif self.bleeding == Bleeding.BLEEDING:
                 self.current -= 1
                 status += f"\n{name} loses 1 hit point. :scream:  **HP**: {self.current}/{self.max}"
+            elif self.bleeding == Bleeding.NOT_BLEEDING:
+                status = f"{name} is mortally wounded and unconscious but the bleeding has stopped."
             if self.current < -9:
                 status += f"\n{name} dies! :skull:"
                 self.wound = Wound.DEAD
@@ -467,6 +483,15 @@ class Character:
             heal_amt = result[0].total
             heal_roll = f":game_die: {result[0].skeleton}\n"
         await ctx.send(f"{heal_roll}{self.hp.heal(self.name, heal_amt)}")
+
+    async def first_aid(self, ctx):
+        all_mods = self.level + self.stats.getMod('con') + self.stats.getPrime('con')
+        result = [roll(f"1d20{all_mods:+}", inline=True) for _ in range(1)]
+        total = result[0].total
+        success = total > 18
+        check = f"{self.name} makes a Constitution check.\n:game_die: {result[0].skeleton}"
+        result = self.hp.first_aid(self.name, check, success)
+        await ctx.send(f"{result}")
 
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
