@@ -5,6 +5,13 @@ class BambleweenyException(Exception):
         super().__init__(msg)
 
 
+class CharacterNotFound(BambleweenyException):
+    """Raised when a character can't be found in the list of active characters."""
+
+    def __init__(self, msg: str = "Character not found in the active list."):
+        super().__init__(msg)
+
+
 class NoCharacter(BambleweenyException):
     """Raised when a user has no active character."""
 

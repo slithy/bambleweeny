@@ -6,6 +6,7 @@ from discord.ext import commands
 from cogscc.character import Character
 from cogscc.monster import Monster
 from cogscc.models.errors import NotAllowed
+from cogscc.models.errors import CharacterNotFound
 
 
 class ToJson(json.JSONEncoder):
@@ -86,7 +87,7 @@ class Game(commands.Cog):
 
     @commands.command(name='assign')
     async def assignStats(self, ctx, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int):
-        """Assign character's stats
+        """Assign character's stats.
         Usage: !assign <str> <dex> <con> <int> <wis> <cha>"""
         player = str(ctx.author)
         if player in self.characters:
@@ -97,7 +98,7 @@ class Game(commands.Cog):
 
     @commands.command(name='prime')
     async def setPrimes(self, ctx, first_prime: str, second_prime: str = 'None', third_prime: str = 'None'):
-        """Assign prime stats
+        """Assign prime stats.
         Humans have three prime attributes; non-humans have two. One prime attribute is
         determined by the character class and will be assigned automatically (it is
         not necessary to pass it to the command).
@@ -111,7 +112,7 @@ class Game(commands.Cog):
 
     @commands.command(name='character', aliases=['char'])
     async def character(self, ctx):
-        """Show your character's stats"""
+        """Show your character's stats."""
         player = str(ctx.author)
         if player in self.characters:
             await self.characters.get(player).showCharacter(ctx)
@@ -120,7 +121,7 @@ class Game(commands.Cog):
 
     @commands.command(name='check', aliases=['ck'])
     async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
-        """Make an ability check
+        """Make an ability check.
         Usage: !check <stat> [<bonus>] [<challenge level>]"""
         player = str(ctx.author)
         if player in self.characters:
@@ -130,7 +131,7 @@ class Game(commands.Cog):
 
     @commands.command(name='party')
     async def allCharacters(self, ctx, param: str = 'None'):
-        """Show stats for all characters
+        """Show stats for all characters.
         Usage: !party [stats]"""
         for player, character in self.characters.items():
             if param == 'stats':
@@ -154,29 +155,54 @@ class Game(commands.Cog):
 
     ### GM-only commands ###
 
-    @commands.command(name='level_up')
-    async def levelUp(self, ctx, player):
-        """Levels up the character belonging to the specified player"""
+    def getPlayer(self, character_name: str):
+        if character_name in self.characters:
+            return character_name
+        num_results = 0
+        player_found: str
+        for player, character in self.characters.items():
+            if character.name.lower().startswith(character_name.lower()):
+                num_results += 1
+                player_found = player
+        if num_results == 0:
+            raise CharacterNotFound(f"No match found for {character_name}.")
+        elif num_results == 1:
+            return player_found
+        else:
+            raise CharacterNotFound(f"{character_name} is ambiguous, be more specific or use the player ID.")
+
+    @commands.command(name='damage', aliases=['dmg'])
+    async def damage(self, ctx, character: str, dmg: str):
+        """Does damage to the specified character.
+        Usage: damage <character> <damage_dice>"""
         self.gm_only(ctx)
+        player = self.getPlayer(character)
+        await ctx.send(f"Found {player}.")
+
+    @commands.command(name='level_up')
+    async def levelUp(self, ctx, character: str):
+        """Levels up the specified character."""
+        self.gm_only(ctx)
+        player = self.getPlayer(character)
         await self.characters[player].levelUp(ctx)
 
     @commands.command(name='euthanise')
-    async def deleteCharacter(self, ctx, player):
-        """Ends the suffering of the character belonging to the specified player"""
+    async def deleteCharacter(self, ctx, player: str):
+        """Ends the suffering of the character belonging to the specified player."""
         self.gm_only(ctx)
         del self.characters[player]
         await ctx.send(f"The suffering of {player}'s character has been ended.")
 
     @commands.command(name='monster_reset', aliases=['mr'])
     async def monsterReset(self, ctx):
-        """Resets monsters at the start of a new combat"""
+        """Resets monsters at the start of a new combat."""
         self.gm_only(ctx)
         self.monsters = []
         await ctx.send(f"Monsters reset.")
 
     @commands.command(name='monster_add', aliases=['ma'])
-    async def monsterAdd(self, ctx, name: str, init_mod = 0):
-        """Adds a new monster to the combat"""
+    async def monsterAdd(self, ctx, name: str, init_mod: int = 0):
+        """Adds a new monster to the combat."""
         self.gm_only(ctx)
         self.monsters.append(Monster(name, init_mod))
         await ctx.send(f"Added {name} to combat.")
