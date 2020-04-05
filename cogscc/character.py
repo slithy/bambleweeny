@@ -196,7 +196,7 @@ class HP:
         elif self.current < 0 and self.wound == Wound.NORMAL:
             consequence += f"\n{name} is grievously wounded! :grimacing:"
             self.wound = Wound.GRIEVOUS
-        if self.conscious and self.current < 1:
+        if self.conscious and self.current < 1 and self.wound != Wound.DEAD:
             consequence += f"\n{name} loses consciousness! :dizzy_face:"
             self.conscious = False
         return consequence
@@ -364,6 +364,15 @@ class Character:
         if total == 1:
             hptxt = 'hit point'
         await ctx.send(f"{self.name} levels up! :partying_face:\n:game_die: {result[0].skeleton}\n{self.name} advances to level {self.level} and gains {total} {hptxt} (total hp: {self.hp.max}).")
+
+    def isActive(self):
+        return self.hp.conscious and self.hp.wound != Wound.DEAD
+
+    async def inactiveStatus(self, ctx):
+        if self.hp.wound == Wound.DEAD:
+            await ctx.send(f"{self.name} is dead.")
+        elif not self.hp.conscious:
+            await ctx.send(f"{self.name} is unconscious.")
 
     async def damage(self, ctx, dmg: str):
         dmg_roll = ''

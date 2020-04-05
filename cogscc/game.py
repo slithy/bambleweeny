@@ -143,8 +143,11 @@ class Game(commands.Cog):
     async def rollForInitiative(self, ctx):
         initList = []
         for player, character in self.characters.items():
-            init = await character.rollForInitiative(ctx)
-            initList.append((init, character.name))
+            if character.isActive():
+                init = await character.rollForInitiative(ctx)
+                initList.append((init, character.name))
+            else:
+                await character.inactiveStatus(ctx)
         for monster in self.monsters:
             init = await monster.rollForInitiative(ctx)
             initList.append((init, monster.name))
