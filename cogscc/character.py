@@ -1,9 +1,12 @@
+from enum import Enum
 from cogscc.funcs.dice import roll
 from utils.constants import STAT_ABBREVIATIONS
 from utils.constants import RACE_NAMES
 from utils.constants import CLASS_NAMES
 from cogscc.models.errors import InvalidArgument
 
+
+##### STATS #####
 
 class BaseStats:
     def __init__(self, strength: int, dexterity: int, constitution: int,
@@ -143,6 +146,54 @@ class BaseStats:
                f"**WIS**: {self.wisdom}{self.printPrime(self.wis_p)}({self.getMod('wis'):+})  " \
                f"**CHA**: {self.charisma}{self.printPrime(self.cha_p)}({self.getMod('cha'):+})"
 
+
+##### HIT POINTS #####
+
+class Wound(Enum):
+    NORMAL = 1
+    GRIEVOUS = 2
+    MORTAL = 3
+    DEAD = 4
+
+class HP:
+    def __init__(self, max: int, current: int = 999, wound: Wound = Wound.NORMAL, conscious: bool = True):
+        self.max = max
+        self.current = max
+        if current < max:
+            self.current = current
+        self.wound = wound
+        self.conscious = conscious
+
+    @classmethod
+    def __from_dict__(cls, d):
+        hp = cls(**d)
+        hp.wound = getattr(Wound, hp.wound)
+        return hp
+
+    def __to_json__(self):
+        return {
+            'max': self.max, 'current': self.current, 'wound': self.wound.name, 'conscious': self.conscious
+        }
+
+    # ---------- main funcs ----------
+    def __str__(self):
+        if self.conscious == True:
+            unconscious = ':grimacing:'
+        else:
+            unconscious = '(unconscious) :dizzy_face:'
+        if self.wound == Wound.GRIEVOUS:
+            wounded = f"Grievously wounded {unconscious}"
+        elif self.wound == Wound.MORTAL:
+            wounded = f"Mortally wounded {unconscious}"
+        elif self.wound == Wound.DEAD:
+            wounded = f"DEAD :skull:"
+        else:
+            wounded = ''
+        return f"**HP**: {self.current}/{self.max} {wounded}"
+
+
+##### CHARACTER #####
+
 class Character:
     def __init__(self, name: str, race: str, xclass: str, level: int):
         self.name = name
@@ -151,13 +202,16 @@ class Character:
         self.setLevel(level)
         self.stats = BaseStats(10,10,10,10,10,10)
         self.stats.setPrime(self.getClassPrime())
+        self.hp = HP(0)
 
     def __to_json__(self):
-        return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level, 'Stats': self.stats }
+        return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
+                 'HP': self.hp, 'Stats': self.stats }
 
     @classmethod
     def __from_dict__(cls, d):
         c = Character(d['Name'], d['Race'], d['Class'], d['Level'])
+        c.hp = HP.__from_dict__(d['HP'])
         c.stats = BaseStats.__from_dict__(d['Stats'])
         return c
 
@@ -248,7 +302,7 @@ class Character:
         return
 
     async def showCharacter(self, ctx, message: str = ""):
-        await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n{self.stats}")
+        await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n{self.hp}\n{self.stats}")
         return
 
     async def rollForInitiative(self, ctx):
