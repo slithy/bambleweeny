@@ -259,7 +259,7 @@ class HP:
         if self.wound == Wound.DEAD:
             status = f"{name} is dead."
         elif self.conscious:
-            status = f"{name} is conscious."
+            status = f"{name} is conscious but too badly wounded to act."
         elif self.wound == Wound.MORTAL:
             status = f"{name} is unconscious and bleeding out."
             if self.bleeding == Bleeding.GRACE:
@@ -439,7 +439,7 @@ class Character:
         await ctx.send(f"{self.name} levels up! :partying_face:\n:game_die: {result[0].skeleton}\n{self.name} advances to level {self.level} and gains {total} {hptxt} (total hp: {self.hp.max}).")
 
     def isActive(self):
-        return self.hp.conscious and self.hp.wound != Wound.DEAD
+        return self.hp.current > 0
 
     async def inactiveStatus(self, ctx):
         await ctx.send(f"{self.hp.bleed(self.name)}")
