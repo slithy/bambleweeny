@@ -186,6 +186,49 @@ class HP:
         }
 
     # ---------- main funcs ----------
+    def heal(self, name: str, hp_healed: int):
+        consequence = ''
+        if self.wound == Wound.DEAD:
+            consequence = f"Unfortunately that doesn't really help. {name} is dead."
+        elif self.wound == Wound.MORTAL:
+            if self.current + hp_healed > -6:
+                hp_healed = -6 - self.current
+            self.current += hp_healed
+            consequence = f"{name} regains {hp_healed} hit points. :medical_symbol:  **HP**: {self.current}/{self.max}"
+            if self.bleeding != Bleeding.NOT_BLEEDING:
+                self.bleeding = Bleeding.NOT_BLEEDING
+                consequence += f"\n{name} has stopped bleeding."
+            if not self.conscious:
+                self.conscious = True
+                consequence += f"\n{name} regains consciousness."
+            if self.current == -6:
+                self.wound = Wound.GRIEVOUS
+                consequence += f"\n{name} is grievously wounded."
+        elif self.wound == Wound.GRIEVOUS:
+            if self.current + hp_healed > 0:
+                hp_healed = 0 - self.current
+            self.current += hp_healed
+            consequence = f"{name} regains {hp_healed} hit points. :medical_symbol:  **HP**: {self.current}/{self.max}"
+            if not self.conscious:
+                self.conscious = True
+                consequence += f"\n{name} regains consciousness."
+            if self.current == 0:
+                self.wound = Wound.NORMAL
+                consequence += f"\n{name} is no longer grievously wounded."
+        elif self.current == self.max:
+            consequence = f"{name} is already at full hit points."
+            self.wound = Wound.NORMAL
+            self.conscious = True
+        else:
+            if self.current + hp_healed > self.max:
+                hp_healed = self.max - self.current
+            self.current += hp_healed
+            consequence = f"{name} regains {hp_healed} hit points. :medical_symbol:  **HP**: {self.current}/{self.max}"
+            if not self.conscious:
+                self.conscious = True
+                consequence += f"\n{name} regains consciousness."
+        return consequence
+
     def lose(self, name: str, dmg: int):
         dmgtxt = f"{dmg} points"
         if dmg < 1:
@@ -259,7 +302,7 @@ class Character:
         self.setLevel(level)
         self.stats = BaseStats(10,10,10,10,10,10)
         self.stats.setPrime(self.getClassPrime())
-        self.hp = HP(0)
+        self.hp = HP(1)
 
     def __to_json__(self):
         return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
@@ -412,6 +455,18 @@ class Character:
             dmg_amt = result[0].total
             dmg_roll = f":game_die: {result[0].skeleton}\n"
         await ctx.send(f"{dmg_roll}{self.hp.lose(self.name, dmg_amt)}")
+
+    async def heal(self, ctx, heal: str):
+        heal_roll = ''
+        heal_amt: int
+        try:
+            int(heal)
+            heal_amt = int(heal)
+        except ValueError:
+            result = [roll(f"{heal}", inline=True) for _ in range(1)]
+            heal_amt = result[0].total
+            heal_roll = f":game_die: {result[0].skeleton}\n"
+        await ctx.send(f"{heal_roll}{self.hp.heal(self.name, heal_amt)}")
 
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))

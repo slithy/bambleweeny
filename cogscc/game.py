@@ -156,6 +156,13 @@ class Game(commands.Cog):
             initOrder += f"{i[0]}\t{i[1]}\n"
         await ctx.send(initOrder)
 
+    @commands.command(name='heal')
+    async def heal(self, ctx, character: str, hp: str):
+        """Heals the specified character.
+        Usage: !heal <character> <healing_dice>"""
+        player = self.getPlayer(character)
+        await self.characters[player].heal(ctx, hp)
+
     ### GM-only commands ###
 
     def getPlayer(self, character_name: str):
@@ -177,7 +184,7 @@ class Game(commands.Cog):
     @commands.command(name='damage', aliases=['dmg'])
     async def damage(self, ctx, character: str, dmg: str):
         """Does damage to the specified character.
-        Usage: damage <character> <damage_dice>"""
+        Usage: !damage <character> <damage_dice>"""
         self.gm_only(ctx)
         player = self.getPlayer(character)
         await self.characters[player].damage(ctx, dmg)
