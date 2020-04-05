@@ -86,12 +86,12 @@ class Game(commands.Cog):
             await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='assign')
-    async def assignStats(self, ctx, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int):
-        """Assign character's stats.
-        Usage: !assign <str> <dex> <con> <int> <wis> <cha>"""
+    async def assignStats(self, ctx, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, hp: int = 0):
+        """Assign character's stats and optionally hit points.
+        Usage: !assign <str> <dex> <con> <int> <wis> <cha> [<hp>]"""
         player = str(ctx.author)
         if player in self.characters:
-            self.characters.get(player).assignStats(strength, dexterity, constitution, intelligence, wisdom, charisma)
+            self.characters.get(player).assignStats(strength, dexterity, constitution, intelligence, wisdom, charisma, hp)
             await self.characters.get(player).showCharacter(ctx)
         else:
             await ctx.send(f"{player} does not have a character.")

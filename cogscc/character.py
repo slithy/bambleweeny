@@ -200,6 +200,8 @@ class HP:
             return f"\n{name} recovers to full strength. :medical_symbol:  **HP**: {self.current}/{self.max}"
 
     def rest(self, name: str, conMod: int, duration: int):
+        if self.wound == Wound.DEAD:
+            return f"{name} gets rigor mortis."
         result = ''
         if not self.conscious:
             self.conscious = True
@@ -230,6 +232,8 @@ class HP:
         return result
 
     def first_aid(self, name: str, status: str, success: bool):
+        if self.wound == Wound.DEAD:
+            return f"Unfortunately that doesn't really help. {name} is dead."
         if self.bleeding != Bleeding.NOT_BLEEDING and success:
             self.bleeding = Bleeding.NOT_BLEEDING
             return f"{status}\n{name} has stopped bleeding."
@@ -382,27 +386,24 @@ class Character:
         stat_summary = '\n:game_die: '.join(r.skeleton for r in rolls)
         total = sum([r.total for r in rolls])
         await ctx.send(f"{ctx.message.author.mention}\nGenerated random stats:\n:game_die: {stat_summary}\nTotal = `{total}`")
-        return
 
     def setRace(self, race: str):
         if race.title() not in RACE_NAMES:
             raise InvalidArgument(f"{race} is not a valid race.")
         self.race = race.title()
-        return
         
     def setClass(self, xclass: str):
         if xclass.title() not in CLASS_NAMES:
             raise InvalidArgument(f"{xclass} is not a valid class.")
         self.xclass = xclass.title()
-        return
 
     def setLevel(self, level: int):
         self.level = level
-        return
 
-    def assignStats(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int):
+    def assignStats(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, hp: int):
         self.stats.set(strength, dexterity, constitution, intelligence, wisdom, charisma)
-        return
+        if hp != 0:
+            self.hp = HP(hp)
 
     def getClassPrime(self):
         if self.xclass == 'Fighter' or self.xclass == 'Ranger':
@@ -544,11 +545,9 @@ class Character:
 
     async def showSummary(self, ctx, message: str = ""):
         await ctx.send(f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}")
-        return
 
     async def showCharacter(self, ctx, message: str = ""):
         await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n**BtH:** {self.getBtH():+}  {self.hp}\n{self.stats}")
-        return
 
     async def rollForInitiative(self, ctx):
         dex_mod = self.stats.getMod('dex')
