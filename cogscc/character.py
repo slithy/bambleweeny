@@ -1,4 +1,5 @@
 from enum import Enum
+from math import ceil
 from cogscc.funcs.dice import roll
 from utils.constants import STAT_ABBREVIATIONS
 from utils.constants import RACE_NAMES
@@ -294,6 +295,21 @@ class Character:
         self.stats.setPrime(prime_2)
         self.stats.setPrime(prime_3)
 
+    def getBtH(self):
+        if self.xclass == 'Fighter':
+            return self.level
+        elif self.xclass == 'Ranger' or self.xclass == 'Barbarian' or self.xclass == 'Monk'
+          or self.xclass == 'Knight' or self.xclass == 'Paladin'   or self.xclass == 'Bard':
+            return self.level-1
+        elif self.xclass == 'Cleric' or self.xclass == 'Druid':
+            return ceil((self.level-1)/2)
+        elif self.xclass == 'Rogue' or self.xclass == 'Assassin':
+            return ceil((self.level-1)/3)
+        elif self.xclass == 'Wizard' or self.xclass == 'Illusionist':
+            return ceil((self.level-1)/4)
+        else:
+            raise InvalidArgument(f"{self.xclass} is not a valid class.")
+
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
 
@@ -302,7 +318,7 @@ class Character:
         return
 
     async def showCharacter(self, ctx, message: str = ""):
-        await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n{self.hp}\n{self.stats}")
+        await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n**BtH: {self.getBtH()}:+  {self.hp}\n{self.stats}")
         return
 
     async def rollForInitiative(self, ctx):
