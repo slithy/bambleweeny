@@ -186,6 +186,49 @@ class HP:
         }
 
     # ---------- main funcs ----------
+    def recover(self, name: str, hp: int):
+        if self.current == self.max:
+            return ''
+        hp_text = f"{hp} hit points"
+        if hp == 1:
+           hp_text = "1 hit point"
+        if self.current + hp <= self.max:
+            self.current += hp
+            return f"\n{name} recovers {hp_text}. :medical_symbol:  **HP**: {self.current}/{self.max}"
+        else:
+            self.current = self.max
+            return f"\n{name} recovers to full strength. :medical_symbol:  **HP**: {self.current}/{self.max}"
+
+    def rest(self, name: str, conMod: int, duration: int):
+        result = ''
+        if not self.conscious:
+            self.conscious = True
+            hours = [roll("1d6", inline=True) for _ in range(1)]
+            result = f"{name} recovers consciousness after {hours[0].total} hours."
+        if self.wound == Wound.MORTAL:
+            self.wound = Wound.GRIEVOUS
+            result += f"\n{name} is no longer mortally wounded."
+            duration -= 1
+        if duration > 0 and self.wound == Wound.GRIEVOUS:
+            self.wound = Wound.NORMAL
+            result += f"\n{name} is no longer greviously wounded."
+            duration -= 1
+
+        if duration > 0 and duration < 7:
+            result += self.recover(name, duration)
+            duration = 0
+        elif duration > 0:
+            result += self.recover(name, 7)
+            duration -= 7
+
+        if duration > 0:
+            heal_rate = 1
+            if conMod > 0:
+                heal_rate += conMod
+            result += self.recover(name, duration * heal_rate)
+
+        return result
+
     def first_aid(self, name: str, status: str, success: bool):
         if self.bleeding != Bleeding.NOT_BLEEDING and success:
             self.bleeding = Bleeding.NOT_BLEEDING
@@ -492,6 +535,9 @@ class Character:
         check = f"{self.name} makes a Constitution check.\n:game_die: {result[0].skeleton}"
         result = self.hp.first_aid(self.name, check, success)
         await ctx.send(f"{result}")
+
+    def rest(self, duration: int):
+        return self.hp.rest(self.name, self.stats.getMod('con'), duration)
 
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))

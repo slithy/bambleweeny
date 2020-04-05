@@ -141,6 +141,7 @@ class Game(commands.Cog):
 
     @commands.command(name='initiative', aliases=['init'])
     async def rollForInitiative(self, ctx):
+        """Roll for initiative!"""
         initList = []
         for player, character in self.characters.items():
             if character.isActive():
@@ -196,6 +197,20 @@ class Game(commands.Cog):
         self.gm_only(ctx)
         player = self.getPlayer(character)
         await self.characters[player].damage(ctx, dmg)
+
+    @commands.command(name='rest')
+    async def rest(self, ctx, duration: int = 1):
+        """Rest for 1 or more days."""
+        self.gm_only(ctx)
+        duration_text = f"{duration} days have passed."
+        if duration < 2:
+            duration = 1
+            duration_text = "1 day has passed."
+        for player, character in self.characters.items():
+            result = character.rest(duration)
+            if result != '':
+                await ctx.send(result)
+        await ctx.send(duration_text)
 
     @commands.command(name='level_up')
     async def levelUp(self, ctx, character: str):
