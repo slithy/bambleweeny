@@ -375,6 +375,7 @@ class Character:
     @classmethod
     def __from_dict__(cls, d):
         c = Character(d['Name'], d['Race'], d['Class'], d['Level'])
+        c.alignment = d['Alignment']
         c.hp = HP.__from_dict__(d['HP'])
         c.stats = BaseStats.__from_dict__(d['Stats'])
         return c
