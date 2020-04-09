@@ -110,6 +110,19 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
+    @commands.command(name='alignment', aliases=['al'])
+    async def setAlignment(self, ctx, alignment: str):
+        """Sets character alignment.
+        Characters can be Lawful, Neutral or Chaotic and Good, Neutral or Evil.
+        Usage: !alignment <alignment>
+               where alignment is one of: LG, LN, LE, NG, N, NE, CG, CN, CE"""
+        player = str(ctx.author)
+        if player in self.characters:
+            self.characters.get(player).setAlignment(alignment)
+            await ctx.send(f"{self.characters.get(player).name} is {self.characters.get(player).getAlignment()}")
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
     @commands.command(name='character', aliases=['char'])
     async def character(self, ctx):
         """Show your character's stats."""

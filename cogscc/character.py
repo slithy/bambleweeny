@@ -363,13 +363,14 @@ class Character:
         self.setRace(race)
         self.setClass(xclass)
         self.setLevel(level)
+        self.setAlignment('XX')
         self.stats = BaseStats(10,10,10,10,10,10)
         self.stats.setPrime(self.getClassPrime())
         self.hp = HP(1)
 
     def __to_json__(self):
         return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
-                 'HP': self.hp, 'Stats': self.stats }
+                 'Alignment': self.alignment, 'HP': self.hp, 'Stats': self.stats }
 
     @classmethod
     def __from_dict__(cls, d):
@@ -399,6 +400,49 @@ class Character:
 
     def setLevel(self, level: int):
         self.level = level
+
+    def setAlignment(self, alignment: str):
+        if alignment == 'XX':
+            if self.xclass == 'Paladin':
+                alignment = 'LG'
+            elif self.xclass == 'Monk':
+                alignment = 'LN'
+            else:
+                alignment = 'NN'
+        elif alignment.upper() == 'N':
+            alignment = 'NN'
+        if len(alignment) != 2:
+            raise InvalidArgument(f"Alignment must be specified as two letters: [L]awful/[N]eutral/[C]haotic + [G]ood/[N]eutral/[E]vil")
+        law_axis = alignment[0].upper()
+        evil_axis = alignment[1].upper()
+        if law_axis != 'L' and law_axis != 'N' and law_axis != 'C':
+            raise InvalidArgument("First letter of alignment must be [L]awful/[N]eutral/[C]haotic")
+        if evil_axis != 'G' and evil_axis != 'N' and evil_axis != 'E':
+            raise InvalidArgument("Second letter of alignment must be [G]ood/[N]eutral/[E]vil")
+        if self.xclass == 'Assassin' and evil_axis == 'G':
+            raise InvalidArgument("Assassins cannot be Good")
+        if self.xclass == 'Monk' and law_axis != 'L':
+            raise InvalidArgument("Monks must be Lawful")
+        if self.xclass == 'Druid' and (law_axis != 'N' or evil_axis != 'N'):
+            raise InvalidArgument("Druids must be Neutral")
+        if self.xclass == 'Paladin' and (law_axis != 'L' or evil_axis != 'G'):
+            raise InvalidArgument("Paladins must be Lawful Good")
+        self.alignment = law_axis + evil_axis
+
+    def getAlignment(self):
+        if self.alignment == 'NN':
+            return 'Neutral'
+        law_axis = 'Neutral'
+        evil_axis = 'Neutral'
+        if self.alignment[0] == 'L':
+            law_axis = 'Lawful'
+        elif self.alignment[0] == 'C':
+            law_axis = 'Chaotic'
+        if self.alignment[1] == 'G':
+            evil_axis = 'Good'
+        elif self.alignment[1] == 'E':
+            evil_axis = 'Evil'
+        return law_axis + ' ' + evil_axis
 
     def assignStats(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, hp: int):
         self.stats.set(strength, dexterity, constitution, intelligence, wisdom, charisma)
@@ -547,7 +591,7 @@ class Character:
         await ctx.send(f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}")
 
     async def showCharacter(self, ctx, message: str = ""):
-        await ctx.send(f"{self.name}, {self.race} {self.xclass} Level {self.level} {message}\n**BtH:** {self.getBtH():+}  {self.hp}\n{self.stats}")
+        await ctx.send(f"{self.name}, {self.race} {self.xclass}, {self.getAlignment()}, Level {self.level} {message}\n**BtH:** {self.getBtH():+}  {self.hp}\n{self.stats}")
 
     async def rollForInitiative(self, ctx):
         dex_mod = self.stats.getMod('dex')
