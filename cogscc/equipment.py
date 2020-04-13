@@ -1,17 +1,31 @@
 class Equipment:
-    def __init__(self, description: str, ev: int, count: int = 1):
+    def __init__(self, description: str, ev: float, count: int = 1):
         self.description = description
         self.ev = ev
         self.count = count
 
+    def show(self):
+        article = 'a'
+        desc = self.description
+        if self.count > 1:
+            article = f"{self.count}"
+            if desc[-1] == 'y':
+                desc = self.description[:-1] + 'ies'
+            elif desc[-1] != 's':
+                desc += 's'
+        elif self.description[0].lower() in ('a', 'e', 'i', 'o', 'u'):
+            article = 'an'
+        return f"{article} {desc}"
+
+
 class Container:
-    def __init__(self, description: str, ev: int, capacity: int):
+    def __init__(self, description: str, ev: float, capacity: int):
         self = Equipment(description, ev, 1)
         self.capacity = capacity
         self.contents = []
 
 class Wearable(Equipment):
-    def __init__(self, description: str, ac: int, ev: int):
+    def __init__(self, description: str, ac: int, ev: float):
         self = Equipment(description, ev, 1)
         self.ac = ac
         self.save = 0
@@ -19,7 +33,7 @@ class Wearable(Equipment):
             self.save = ac
 
 class Weapon(Equipment):
-    def __init__(self, description: str, dmg: str, range: int, ev: int):
+    def __init__(self, description: str, dmg: str, range: int, ev: float):
         self = Equipment(description, ev, 1)
         self.dmg = dmg
         self.range = range

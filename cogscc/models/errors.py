@@ -12,6 +12,13 @@ class CharacterNotFound(BambleweenyException):
         super().__init__(msg)
 
 
+class AmbiguousMatch(BambleweenyException):
+    """Raised when a search expression matches more than one item."""
+
+    def __init__(self, msg: str = "Search expression is ambiguous, more than one result matches."):
+        super().__init__(msg)
+
+
 class NoCharacter(BambleweenyException):
     """Raised when a user has no active character."""
 

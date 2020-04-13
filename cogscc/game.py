@@ -49,7 +49,7 @@ class Game(commands.Cog):
     @commands.command(name='create')
     async def create(self, ctx, name: str, race: str, xclass: str, level: int = 1):
         """Create a new character.
-        Usage: !create 'Character Name' <race> <class> [<level>]"""
+        Usage: !create "Character Name" <race> <class> [<level>]"""
         player = str(ctx.author)
         if player in self.characters:
             await self.characters.get(player).showSummary(ctx, "You already have a character: ")
@@ -115,7 +115,7 @@ class Game(commands.Cog):
 
     @commands.command(name='character', aliases=['char'])
     async def character(self, ctx, character: str = ''):
-        """Show your character's stats."""
+        """Show your character sheet."""
         if character == '':
             player = str(ctx.author)
             if player not in self.characters:
@@ -125,6 +125,15 @@ class Game(commands.Cog):
             self.gm_only(ctx)
             player = self.getPlayer(character)
         await self.characters.get(player).showCharacter(ctx)
+        await self.characters.get(player).showInventory(ctx)
+
+    @commands.command(name='inventory', aliases=['inv'])
+    async def inventory(self, ctx):
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).showInventory(ctx)
+        else:
+            await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='check', aliases=['ck'])
     async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
@@ -179,6 +188,29 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await self.characters[player].first_aid(ctx)
 
+    @commands.command(name='equip', aliases=['pick','get'])
+    async def addEquipment(self, ctx, description: str, ev: float, count: int = 1):
+        """Add an item to your equipment list.
+        Usage: !equip "Item Description" <ev> [<count>]
+               where ev is the Encumbrance Value from the Player's Handbook
+                 and count is the number of this item you are carrying (default: 1)"""
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).addEquipment(ctx, description, ev, count)
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='drop')
+    async def dropEquipment(self, ctx, description: str, count: int = 9999999):
+        """Remove an item to your equipment list.
+        Usage: !drop 'Description' [<count>]
+               where count is the number of this item you want to drop (default: all)"""
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).dropEquipment(ctx, description, count)
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
     ### GM-only commands ###
 
     @commands.command(name='load')
@@ -205,7 +237,7 @@ class Game(commands.Cog):
         elif num_results == 1:
             return player_found
         else:
-            raise CharacterNotFound(f"{character_name} is ambiguous, be more specific or use the player ID.")
+            raise AmbiguousMatch(f"{character_name} is ambiguous, be more specific or use the player ID.")
 
     @commands.command(name='damage', aliases=['dmg'])
     async def damage(self, ctx, character: str, dmg: str):
