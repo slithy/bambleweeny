@@ -189,11 +189,11 @@ class Game(commands.Cog):
         await self.characters[player].first_aid(ctx)
 
     @commands.command(name='equip', aliases=['pick','get'])
-    async def addEquipment(self, ctx, description: str, ev: float, count: int = 1):
+    async def addEquipment(self, ctx, description: str, count: int = 1, ev: float = 0):
         """Add an item to your equipment list.
-        Usage: !equip "Item Description" <ev> [<count>]
-               where ev is the Encumbrance Value from the Player's Handbook
-                 and count is the number of this item you are carrying (default: 1)"""
+        Usage: !equip "Item Description" [<count>] [<ev>]
+               where count is the number of this item you are carrying (default: 1)
+                 and ev is the Encumbrance Value from the Player's Handbook"""
         player = str(ctx.author)
         if player in self.characters:
             await self.characters.get(player).addEquipment(ctx, description, ev, count)
