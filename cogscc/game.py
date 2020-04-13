@@ -29,16 +29,6 @@ class Game(commands.Cog):
                 return
         raise NotAllowed(f"Only the Game Master can do that!")
 
-    @commands.command(name='load')
-    async def loadJson(self, ctx, filename: str = 'characters.json'):
-        """Load characters from a JSON-formatted file."""
-        self.gm_only(ctx)
-        with open(f"/save/{basename(filename)}", 'r') as f:
-            chars = json.load(f)
-            for player, character in chars.items():
-                self.characters[player] = Character.__from_dict__(character)
-        await ctx.send(f"Characters loaded from {filename}")
-
     @commands.command(name='save')
     async def saveJson(self, ctx, filename: str = 'characters.json'):
         """Save characters to a file in JSON format."""
@@ -124,13 +114,17 @@ class Game(commands.Cog):
             await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='character', aliases=['char'])
-    async def character(self, ctx):
+    async def character(self, ctx, character: str = ''):
         """Show your character's stats."""
-        player = str(ctx.author)
-        if player in self.characters:
-            await self.characters.get(player).showCharacter(ctx)
+        if character == '':
+            player = str(ctx.author)
+            if player not in self.characters:
+                await ctx.send(f"{player} does not have a character.")
+                return
         else:
-            await ctx.send(f"{player} does not have a character.")
+            self.gm_only(ctx)
+            player = self.getPlayer(character)
+        await self.characters.get(player).showCharacter(ctx)
 
     @commands.command(name='check', aliases=['ck'])
     async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
@@ -186,6 +180,16 @@ class Game(commands.Cog):
         await self.characters[player].first_aid(ctx)
 
     ### GM-only commands ###
+
+    @commands.command(name='load')
+    async def loadJson(self, ctx, filename: str = 'characters.json'):
+        """Load characters from a JSON-formatted file."""
+        self.gm_only(ctx)
+        with open(f"/save/{basename(filename)}", 'r') as f:
+            chars = json.load(f)
+            for player, character in chars.items():
+                self.characters[player] = Character.__from_dict__(character)
+        await ctx.send(f"Characters loaded from {filename}")
 
     def getPlayer(self, character_name: str):
         if character_name in self.characters:
