@@ -5,8 +5,9 @@ from os.path import basename
 from discord.ext import commands
 from cogscc.character import Character
 from cogscc.monster import Monster
-from cogscc.models.errors import NotAllowed
+from cogscc.models.errors import AmbiguousMatch
 from cogscc.models.errors import CharacterNotFound
+from cogscc.models.errors import NotAllowed
 
 
 class ToJson(json.JSONEncoder):

@@ -5,11 +5,8 @@ from utils.constants import STAT_ABBREVIATIONS
 from utils.constants import RACE_NAMES
 from utils.constants import CLASS_NAMES
 from cogscc.models.errors import InvalidArgument
-from cogscc.models.errors import AmbiguousMatch
 from cogscc.equipment import Equipment
-from cogscc.equipment import Container
-from cogscc.equipment import Wearable
-from cogscc.equipment import Weapon
+from cogscc.equipment import EquipmentList
 
 
 ##### STATS #####
@@ -372,12 +369,11 @@ class Character:
         self.stats = BaseStats(10,10,10,10,10,10)
         self.stats.setPrime(self.getClassPrime())
         self.hp = HP(1)
-        self.equipment = []
-        self.wearing = []
+        self.equipment = EquipmentList()
 
     def __to_json__(self):
         return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
-                 'Alignment': self.alignment, 'HP': self.hp, 'Stats': self.stats }
+                 'Alignment': self.alignment, 'HP': self.hp, 'Stats': self.stats, 'Equipment': self.equipment }
 
     @classmethod
     def __from_dict__(cls, d):
@@ -385,6 +381,7 @@ class Character:
         c.alignment = d['Alignment']
         c.hp = HP.__from_dict__(d['HP'])
         c.stats = BaseStats.__from_dict__(d['Stats'])
+        c.equipment = EquipmentList()
         return c
 
     @classmethod
@@ -595,54 +592,22 @@ class Character:
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
 
-    def findEquipment(self, description: str, exactMatch: bool = False):
-        num_results = 0
-        found_item = -1
-        for item_no in range(len(self.equipment)):
-            if self.equipment[item_no].description.lower() == description.lower() or \
-               (not exactMatch and self.equipment[item_no].description.lower().startswith(description.lower())):
-                num_results += 1
-                found_item = item_no
-        if num_results == 0:
-            return -1
-        elif num_results == 1:
-            return item_no
-        else:
-            raise AmbiguousMatch(f"{description} matches more than one item, please be more specific.")
-
     async def addEquipment(self, ctx, description: str, ev: float, count: int):
-        itemno = self.findEquipment(description, True)
-        if itemno < 0:
-            newitem = Equipment(description, ev, count)
-            self.equipment.append(newitem)
-            await ctx.send(f"{self.name} gets {newitem.show()}.")
-        else:
-            self.equipment[itemno].count += count 
-            await ctx.send(f"{self.name} now has {self.equipment[itemno].show()}.")
+        await ctx.send(f"{self.name} {self.equipment.add(description, ev, count)}")
 
     async def dropEquipment(self, ctx, description: str, count: int):
-        itemno = self.findEquipment(description)
-        if itemno < 0:
-            await ctx.send(f"{self.name} doesn't have any {description}.")
-        elif count >= self.equipment[itemno].count:
-            await ctx.send(f"{self.name} drops {self.equipment[itemno].show()}")
-            del self.equipment[itemno]
-        else:
-            self.equipment[itemno].count -= count
-            await ctx.send(f"{self.name} now has {self.equipment[itemno].show()}.")
+        await ctx.send(f"{self.name} {self.equipment.drop(description, count)}")
+
+    async def showInventory(self, ctx):
+        inventory = self.equipment.inventory()
+        if inventory:
+            await ctx.send(inventory)
 
     async def showSummary(self, ctx, message: str = ""):
         await ctx.send(f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}")
 
     async def showCharacter(self, ctx, message: str = ""):
         await ctx.send(f"{self.name}, {self.race} {self.xclass}, {self.getAlignment()}, Level {self.level} {message}\n**BtH:** {self.getBtH():+}  {self.hp}\n{self.stats}")
-
-    async def showInventory(self, ctx):
-        if self.equipment:
-            equip_list = "**Equipment**\n"
-            for item in self.equipment:
-                equip_list += f"{item.show()}\n"
-            await ctx.send(equip_list)
 
     async def rollForInitiative(self, ctx):
         dex_mod = self.stats.getMod('dex')
