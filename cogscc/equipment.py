@@ -79,11 +79,14 @@ class EquipmentList:
         self.equipment = []
 
     def __to_json__(self):
-        return self.equipment
+        return { 'equipment': self.equipment }
 
-    #@classmethod
-    #def __from_dict__(cls, d):
-        #return cls(**d)
+    @classmethod
+    def __from_dict__(cls, d):
+        e = EquipmentList()
+        for equipitem in d['equipment']:
+            e.equipment.append(Equipment.__from_dict__(equipitem))
+        return e
 
     def add(self, description: str, ev: float, count: int):
         itemno = self.find(description, True)

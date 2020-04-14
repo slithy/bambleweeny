@@ -373,7 +373,7 @@ class Character:
 
     def __to_json__(self):
         return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
-                 'Alignment': self.alignment, 'HP': self.hp, 'Stats': self.stats, 'Equipment': self.equipment }
+                 'Alignment': self.alignment, 'HP': self.hp, 'Stats': self.stats, 'EquipmentList': self.equipment }
 
     @classmethod
     def __from_dict__(cls, d):
@@ -381,7 +381,7 @@ class Character:
         c.alignment = d['Alignment']
         c.hp = HP.__from_dict__(d['HP'])
         c.stats = BaseStats.__from_dict__(d['Stats'])
-        c.equipment = EquipmentList()
+        c.equipment = EquipmentList.__from_dict__(d['EquipmentList'])
         return c
 
     @classmethod
