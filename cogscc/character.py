@@ -381,7 +381,7 @@ class Character:
         c.alignment = d['Alignment']
         c.hp = HP.__from_dict__(d['HP'])
         c.stats = BaseStats.__from_dict__(d['Stats'])
-        c.equipment = EquipmentList.__from_dict__(d['EquipmentList'])
+        c.equipment = EquipmentList.__from_dict__({ 'equipment': d['Equipment'] })
         return c
 
     @classmethod

@@ -19,7 +19,11 @@ class Equipment:
         desc = self.description
         if self.count > 1:
             article = f"{self.count}"
-            if desc[-1] == 'y':
+            if desc.lower()[-5:] == "tooth":
+                desc = desc[:-5] + "teeth"
+            if desc.lower()[-2:] == "ch":
+                desc = desc + "es"
+            elif desc[-1] == 'y':
                 desc = self.description[:-1] + 'ies'
             elif desc[-1] != 's':
                 desc += 's'
