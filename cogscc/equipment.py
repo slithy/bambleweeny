@@ -92,6 +92,28 @@ class EquipmentList:
             e.equipment.append(Equipment.__from_dict__(equipitem))
         return e
 
+    def find(self, description: str, exactMatch: bool = False):
+        num_results = 0
+        found_item = -1
+        # Search for exact matches first
+        for item_no in range(len(self.equipment)):
+            if self.equipment[item_no].description.lower() == description.lower():
+                num_results = 1
+                found_item = item_no
+        # If we didn't find one, try partial matches
+        if num_results == 0 and not exactMatch:
+          for item_no in range(len(self.equipment)):
+            if self.equipment[item_no].description.lower().startswith(description.lower()):
+                num_results += 1
+                found_item = item_no
+
+        if num_results == 0:
+            return -1
+        elif num_results == 1:
+            return found_item
+        else:
+            raise AmbiguousMatch(f"{description} matches more than one item, please be more specific.")
+
     def add(self, description: str, ev: float, count: int):
         itemno = self.find(description, True)
         if itemno < 0:
@@ -102,7 +124,7 @@ class EquipmentList:
             self.equipment[itemno].count += count 
             return f"now has {self.equipment[itemno].show()}."
 
-    def drop(self, description: str, count: int):
+    def drop(self, description: str, count: int = 1):
         itemno = self.find(description)
         if itemno < 0:
             return f"doesn't have any {description}."
@@ -113,21 +135,6 @@ class EquipmentList:
         else:
             self.equipment[itemno].count -= count
             return f"now has {self.equipment[itemno].show()}."
-
-    def find(self, description: str, exactMatch: bool = False):
-        num_results = 0
-        found_item = -1
-        for item_no in range(len(self.equipment)):
-            if self.equipment[item_no].description.lower() == description.lower() or \
-               (not exactMatch and self.equipment[item_no].description.lower().startswith(description.lower())):
-                num_results += 1
-                found_item = item_no
-        if num_results == 0:
-            return -1
-        elif num_results == 1:
-            return found_item
-        else:
-            raise AmbiguousMatch(f"{description} matches more than one item, please be more specific.")
 
     def inventory(self):
         equip_list = ''
