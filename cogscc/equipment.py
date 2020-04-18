@@ -3,14 +3,18 @@ from cogscc.models.errors import AmbiguousMatch
 
 
 class Equipment:
-    def __init__(self, description: str, ev: float, count: int = 1):
+    def __init__(self, description: str, ev: float, count: int, value: int):
+        # 1 cp is 1/500 of an EV, that's the lightest thing that can be carried
+        if ev < 0.002:
+            raise InvalidItem(f"EV cannot be zero. Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
         if count < 1:
             raise InvalidItem(f"Number of items must be a positive integer.")
-        if ev <= 0.01:
-            raise InvalidItem(f"EV cannot be zero. Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
+        if value < 0:
+            raise InvalidItem(f"Value must be a positive integer.")
         self.description = description
         self.ev = ev
         self.count = count
+        self.value = value
 
     def __to_json__(self):
         return { 'description': self.description, 'ev': self.ev, 'count': self.count }
@@ -39,7 +43,10 @@ class Equipment:
         elif self.description[0].lower() in ('a', 'e', 'i', 'o', 'u'):
             article = 'an'
         if showDetail:
-            detail = f" (EV {int(self.getEV() + 0.5)})"
+            valueS = ''
+            if self.value > 0:
+                valueS = f"{self.value} gp, "
+            detail = f" ({valueS}EV {int(self.getEV() + 0.5)})"
         return f"{article} {desc}{detail}"
 
 
@@ -73,11 +80,6 @@ class Weapon(Equipment):
             self.ammo = 'stone'
 
 
-class TreasureItem(Equipment):
-    def __init__(self, description: str, value: int, ev: float = 0.01, count: int = 1):
-        self = Equipment(description, ev, count)
-        self.value = value
-
 class Treasure:
     # 1 EV = 500 cp = 300 sp = 150 gp
     def __init__(self):
@@ -86,7 +88,6 @@ class Treasure:
         self.ep = 0
         self.sp = 0
         self.cp = 0
-        self.valuables = []
 
 
 class EquipmentList:
@@ -125,10 +126,10 @@ class EquipmentList:
         else:
             raise AmbiguousMatch(f"{description} matches more than one item, please be more specific.")
 
-    def add(self, description: str, ev: float, count: int):
+    def add(self, description: str, ev: float, count: int = 1, value: int = 0):
         itemno = self.find(description, True)
         if itemno < 0:
-            newitem = Equipment(description, ev, count)
+            newitem = Equipment(description, ev, count, value)
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
         else:

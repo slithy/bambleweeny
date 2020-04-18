@@ -39,3 +39,8 @@ eqList.drop("arrow", 5)
 eqList.add("Beetroot", 1, 2)
 print(eqList.inventory())
 
+print("Valuables")
+eqList.add("golden snakeshead amulet with ruby eyes", 0.1, 1, 500)
+eqList.add("gleaming diamond", 0.01, 12, 1000)
+print(eqList.inventory(True))
+
