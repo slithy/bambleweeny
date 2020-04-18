@@ -23,6 +23,12 @@ class Equipment:
     def __from_dict__(cls, d):
         return cls(**d)
 
+    def isEquipment(self):
+        return self.value == 0
+
+    def isTreasure(self):
+        return self.value > 0
+
     def getEV(self):
         return self.ev * self.count
 
@@ -149,10 +155,19 @@ class EquipmentList:
             return f"now has {self.equipment[itemno].show()}."
 
     def inventory(self, showDetail: bool = False):
-        equip_list = ''
-        if self.equipment:
-            equip_list += "**Equipment**\n"
-            for item in self.equipment:
+        equip_list = "**Equipment**\n"
+        has_equipment = False
+        treasure_list = "**Treasure**\n"
+        has_treasure = False
+
+        for item in self.equipment:
+            if item.isEquipment():
+                has_equipment = True
                 equip_list += f"{item.show(showDetail)}\n"
-        return equip_list
+            elif item.isTreasure():
+                has_treasure = True
+                treasure_list += f"{item.show(showDetail)}\n"
+        inventory = (equip_list if has_equipment else '') + \
+                    (treasure_list if has_treasure else '')
+        return inventory
 
