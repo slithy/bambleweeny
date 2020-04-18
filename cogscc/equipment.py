@@ -1,16 +1,18 @@
-from cogscc.models.errors import InvalidItem
 from cogscc.models.errors import AmbiguousMatch
+from cogscc.models.errors import CreditLimitExceeded
+from cogscc.models.errors import InvalidCoinType
+from cogscc.models.errors import OutOfRange
 
 
 class Equipment:
     def __init__(self, description: str, ev: float, count: int, value: int):
         # 1 cp is 1/500 of an EV, that's the lightest thing that can be carried
         if ev < 0.002:
-            raise InvalidItem(f"EV cannot be zero. Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
+            raise OutOfRange(f"Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
         if count < 1:
-            raise InvalidItem(f"Number of items must be a positive integer.")
+            raise OutOfRange(f"Number of items must be a positive integer.")
         if value < 0:
-            raise InvalidItem(f"Value must be a positive integer.")
+            raise OutOfRange(f"Value must be a positive integer.")
         self.description = description
         self.ev = ev
         self.count = count
@@ -32,7 +34,7 @@ class Equipment:
     def getEV(self):
         return self.ev * self.count
 
-    def show(self, showDetail: bool = False):
+    def show(self, showEV: bool = False):
         article = 'a'
         detail = ''
         desc = self.description
@@ -48,11 +50,12 @@ class Equipment:
                 desc += 's'
         elif self.description[0].lower() in ('a', 'e', 'i', 'o', 'u'):
             article = 'an'
-        if showDetail:
-            valueS = ''
-            if self.value > 0:
-                valueS = f"{self.value} gp, "
-            detail = f" ({valueS}EV {int(self.getEV() + 0.5)})"
+
+        if self.value > 0:
+            ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
+            detail = f" ({self.value} gp{ev})"
+        elif showEV:
+            detail = f" (EV {int(self.getEV() + 0.5)})"
         return f"{article} {desc}{detail}"
 
 
@@ -86,19 +89,77 @@ class Weapon(Equipment):
             self.ammo = 'stone'
 
 
-class Treasure:
+class Coin:
     # 1 EV = 500 cp = 300 sp = 150 gp
+    coin_ev = {
+        'pp': 0.00740, # 1 EV = 135 pp
+        'gp': 0.00666, # 1 EV = 150 gp
+        'ep': 0.00444, # 1 EV = 225 ep
+        'sp': 0.00333, # 1 EV = 300 sp
+        'cp': 0.00200  # 1 EV = 500 cp
+    }
+
     def __init__(self):
-        self.pp = 0
-        self.gp = 0
-        self.ep = 0
-        self.sp = 0
-        self.cp = 0
+        self.coin = {
+            'pp': 0,
+            'gp': 0,
+            'sp': 0,
+            'ep': 0,
+            'cp': 0
+        }
+
+    def empty(self):
+        return self.coin['pp'] + self.coin['gp'] + self.coin['ep'] + self.coin['sp'] + self.coin['cp'] == 0
+
+    def add(self, amount: int, denomination: str):
+        if denomination not in self.coin:
+            raise InvalidCoinType(f"{denomination} is not recognised as coinage.")
+        if amount < 1:
+            raise OutOfRange("Coin value must be a positive integer.")
+        self.coin[denomination] += amount
+
+    def drop(self, amount: int, denomination: str):
+        if denomination not in self.coin:
+            raise InvalidCoinType(f"{denomination} is not recognised as coinage.")
+        if amount < 1:
+            raise OutOfRange("Coin value must be a positive integer.")
+        if self.coin[denomination] == 0:
+            raise CreditLimitExceeded(f"You look in your purse but find no {denomination}")
+        elif self.coin[denomination] < amount:
+            raise CreditLimitExceeded(f"Your purse contains only {self.coin[denomination]} {denomination}")
+        else:
+            self.coin[denomination] -= amount
+
+    def getEV(self, denomination: str = '', amount: int = 0):
+        if denomination == '':
+            ev = 0
+            for den, amt in self.coin.items():
+                ev += amt * Coin.coin_ev[den]
+            return ev
+        elif denomination not in Coin.coin_ev:
+            raise InvalidCoinType()
+        if amount > 0:
+            return amount * Coin.coin_ev[denomination]
+        else:
+            return self.coin[denomination] * Coin.coin_ev[denomination]
+
+    def show(self, showEV: bool = False):
+        total_ev = f" (EV {int(self.getEV()+0.5)})" if showEV else ''
+        coin = f"**Coin{total_ev}:**"
+        has_coin = False
+        for den, amt in self.coin.items():
+            if amt > 0:
+                has_coin = True
+                ev = f" (EV {int(self.getEV(den)+0.5)})" if showEV else ''
+                coin += f"  {amt} {den}{ev}"
+        coin += '\n'
+        return coin if has_coin else ''
 
 
 class EquipmentList:
     def __init__(self):
         self.equipment = []
+        self.coin = Coin()
 
     def __to_json__(self):
         return { 'equipment': self.equipment }
@@ -142,6 +203,12 @@ class EquipmentList:
             self.equipment[itemno].count += count 
             return f"now has {self.equipment[itemno].show()}."
 
+    def addCoin(self, amount: int, denomination: str):
+        self.coin.add(amount, denomination)
+
+    def dropCoin(self, amount: int, denomination: str):
+        self.coin.drop(amount, denomination)
+
     def drop(self, description: str, count: int = 1):
         itemno = self.find(description)
         if itemno < 0:
@@ -154,7 +221,7 @@ class EquipmentList:
             self.equipment[itemno].count -= count
             return f"now has {self.equipment[itemno].show()}."
 
-    def inventory(self, showDetail: bool = False):
+    def inventory(self, showEV: bool = False):
         equip_list = "**Equipment**\n"
         has_equipment = False
         treasure_list = "**Treasure**\n"
@@ -163,10 +230,13 @@ class EquipmentList:
         for item in self.equipment:
             if item.isEquipment():
                 has_equipment = True
-                equip_list += f"{item.show(showDetail)}\n"
+                equip_list += f"{item.show(showEV)}\n"
             elif item.isTreasure():
                 has_treasure = True
-                treasure_list += f"{item.show(showDetail)}\n"
+                treasure_list += f"{item.show(showEV)}\n"
+        if not self.coin.empty():
+            has_treasure = True
+            treasure_list += f"{self.coin.show(showEV)}\n"
         inventory = (equip_list if has_equipment else '') + \
                     (treasure_list if has_treasure else '')
         return inventory

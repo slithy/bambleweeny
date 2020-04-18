@@ -1,28 +1,36 @@
 class BambleweenyException(Exception):
     """A base exception class."""
-
     def __init__(self, msg):
         super().__init__(msg)
 
 
 class CharacterNotFound(BambleweenyException):
     """Raised when a character can't be found in the list of active characters."""
-
     def __init__(self, msg: str = "Character not found in the active list."):
         super().__init__(msg)
 
 
 class AmbiguousMatch(BambleweenyException):
     """Raised when a search expression matches more than one item."""
-
     def __init__(self, msg: str = "Search expression is ambiguous, more than one result matches."):
         super().__init__(msg)
 
 
-class InvalidItem(BambleweenyException):
-    """Raised when an item is created with invalid parameters."""
+class CreditLimitExceeded(BambleweenyException):
+    """Raised when there is insufficient funds."""
+    def __init__(self, msg: str = "You do not have enough money."):
+        super().__init__(msg)
 
-    def __init__(self, msg: str = "Item is invalid."):
+
+class InvalidCoinType(BambleweenyException):
+    """Raised when a coin type is unrecognised."""
+    def __init__(self, msg: str = "Valid coin types are pp, gp, ep, sp, cp."):
+        super().__init__(msg)
+
+
+class OutOfRange(BambleweenyException):
+    """Raised when a value is out of range."""
+    def __init__(self, msg: str = "Value is out of range."):
         super().__init__(msg)
 
 
