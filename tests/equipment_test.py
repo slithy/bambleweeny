@@ -1,6 +1,6 @@
 import cogscc.equipment as eq
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, \
-    OutOfRange, UniqueItem
+    NotWearableItem, OutOfRange, UniqueItem
 
 eqList = eq.EquipmentList()
 
@@ -102,7 +102,13 @@ try:
 except UniqueItem:
     print("Can't create more than one instance of wearable items")
 
+print(eqList.wear("Armour"))
+try:
+    print(eqList.wear("Beetroot"))
+except NotWearableItem:
+    print("Can't wear something that is not wearable")
 print(eqList.addWearable("Indiana Jones hat", 0, 1))
+print(eqList.wear("Indiana"))
 print(eqList.inventory(True))
 print(eqList.drop("Indiana"))
 

@@ -1,4 +1,4 @@
-from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, OutOfRange, UniqueItem
+from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, NotWearableItem, OutOfRange, UniqueItem
 
 
 class Equipment:
@@ -25,6 +25,9 @@ class Equipment:
 
     def isEquipment(self):
         return self.value == 0
+
+    def isWearable(self):
+        return False
 
     def isTreasure(self):
         return self.value > 0
@@ -61,8 +64,16 @@ class Wearable(Equipment):
     def __init__(self, description: str, ac: int, ev: float, value: int):
         super().__init__(description, 1, ev, value)
         self.ac = ac
+        self.hands = 0
         self.is_worn = False
         self.location = ''
+
+    def isWearable(self):
+        return True
+
+    def wear(self, location: str):
+        self.is_worn = True
+        self.location = location
 
 
 class Weapon(Equipment):
@@ -213,6 +224,16 @@ class EquipmentList:
             return f"gets {newitem.show()}."
         else:
             raise UniqueItem(f"Wearable items are unique and you already have {self.equipment[itemno].show()}.")
+
+    def wear(self, description: str, location: str = ''):
+        itemno = self.find(description)
+        if itemno < 0:
+            return f"doesn't have any {description}."
+        elif not self.equipment[itemno].isWearable():
+            raise NotWearableItem(f"{self.equipment[itemno].show()} is not something you can wear.")
+        else:
+            self.equipment[itemno].wear(location)
+            return f"is wearing {self.equipment[itemno].show()}"
 
     def drop(self, description: str, count: int = 1):
         itemno = self.find(description)

@@ -49,6 +49,12 @@ class UniqueItem(BambleweenyException):
         super().__init__(msg)
 
 
+class NotWearableItem(BambleweenyException):
+    """Raised when there is an attempt to wear an item that is not wearable."""
+    def __init__(self, msg: str = "Only wearable items can be worn."):
+        super().__init__(msg)
+
+
 class CreditLimitExceeded(BambleweenyException):
     """Raised when there is insufficient funds."""
     def __init__(self, msg: str = "You do not have enough money."):
