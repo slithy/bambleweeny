@@ -11,6 +11,7 @@ class Equipment:
         if value < 0:
             raise OutOfRange(f"Value must be a positive integer.")
         self.description = description
+        self.article = 'an' if description[0].lower() in { 'a', 'e', 'i', 'o', 'u' } else 'a'
         self.ev = ev
         self.count = count
         self.value = value
@@ -45,6 +46,8 @@ class Equipment:
                 desc = self.description[:-1] + 'ies'
             elif desc[-1] != 's':
                 desc += 's'
+        elif self.article:
+            number = f"{self.article} "
 
         if self.value > 0:
             ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
@@ -58,6 +61,8 @@ class Wearable(Equipment):
     def __init__(self, description: str, ac: int, ev: float, value: int):
         super().__init__(description, 1, ev, value)
         self.ac = ac
+        self.is_worn = False
+        self.location = ''
 
 
 class Weapon(Equipment):
