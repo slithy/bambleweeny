@@ -1,28 +1,26 @@
 import cogscc.equipment as eq
-from cogscc.models.errors import AmbiguousMatch
-from cogscc.models.errors import CreditLimitExceeded
-from cogscc.models.errors import InvalidCoinType
-from cogscc.models.errors import OutOfRange
+from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, \
+    OutOfRange, UniqueItem
 
 eqList = eq.EquipmentList()
 
 eqList.add("Necronomicon", 1, 1)
-eqList.add("arrow", 0.1, 20)
+eqList.add("arrow", 20, 0.1)
 eqList.add("arrowroot", 1, 1)
 try:
-    eqList.add("helium balloon", -1, 1)
+    eqList.add("helium balloon", 1, -1)
 except OutOfRange:
     print("helium balloon is invalid")
 try:
-    eqList.add("dust", 0, 1)
+    eqList.add("dust", 1, 0)
 except OutOfRange:
     print("dust is invalid")
 try:
-    eqList.add("negative energy", 1, -1)
+    eqList.add("negative energy", -1, 1)
 except OutOfRange:
     print("negative energy is invalid")
 try:
-    eqList.add("no tea", 1, 0)
+    eqList.add("no tea", 0, 1)
 except OutOfRange:
     print("no tea is invalid")
 print(eqList.inventory())
@@ -38,7 +36,7 @@ except AmbiguousMatch:
     print("ar is too ambiguous")
 eqList.drop("arrow")
 eqList.drop("arrow", 5)
-eqList.add("Beetroot", 1, 2)
+eqList.add("Beetroot", 2, 1)
 print(eqList.inventory())
 
 print("Valuables")
@@ -73,8 +71,8 @@ except CreditLimitExceeded:
     print("Can't drop money you don't have")
 
 print("Inventory with no coins")
-print(eqList.add("golden snakeshead amulet with ruby eyes", 0.1, 1, 500))
-print(eqList.add("gleaming diamond", 0.01, 12, 1000))
+print(eqList.add("golden snakeshead amulet with ruby eyes", 1, 0.1, 500))
+print(eqList.add("gleaming diamond", 12, 0.01, 1000))
 print(eqList.inventory())
 
 print("Inventory with coins")
@@ -95,4 +93,16 @@ except CreditLimitExceeded:
 
 print("Inventory with coins and EV")
 print(eqList.inventory(True))
+
+print("Wearables")
+print(eqList.addWearable("Padded Armour", 1, 2))
+print(eqList.addWearable("Gold ring with snake sigil", 0, 0.01, 1000))
+try:
+    eqList.addWearable("Golden snakeshead amulet with ruby eyes", 0, 0.01, 1000)
+except UniqueItem:
+    print("Can't create more than one instance of wearable items")
+
+print(eqList.addWearable("Indiana Jones hat", 0, 1))
+print(eqList.inventory(True))
+print(eqList.drop("Indiana"))
 

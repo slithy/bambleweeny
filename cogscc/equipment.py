@@ -1,11 +1,8 @@
-from cogscc.models.errors import AmbiguousMatch
-from cogscc.models.errors import CreditLimitExceeded
-from cogscc.models.errors import InvalidCoinType
-from cogscc.models.errors import OutOfRange
+from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, OutOfRange, UniqueItem
 
 
 class Equipment:
-    def __init__(self, description: str, ev: float, count: int, value: int):
+    def __init__(self, description: str, count: int, ev: float, value: int):
         # 1 cp is 1/500 of an EV, that's the lightest thing that can be carried
         if ev < 0.002:
             raise OutOfRange(f"Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
@@ -35,11 +32,11 @@ class Equipment:
         return self.ev * self.count
 
     def show(self, showEV: bool = False):
-        article = 'a'
-        detail = ''
+        number = ''
         desc = self.description
+        detail = ''
         if self.count > 1:
-            article = f"{self.count}"
+            number = f"{self.count} "
             if desc.lower()[-5:] == "tooth":
                 desc = desc[:-5] + "teeth"
             if desc.lower()[-2:] == "ch":
@@ -48,36 +45,24 @@ class Equipment:
                 desc = self.description[:-1] + 'ies'
             elif desc[-1] != 's':
                 desc += 's'
-        elif self.description[0].lower() in ('a', 'e', 'i', 'o', 'u'):
-            article = 'an'
 
         if self.value > 0:
             ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
             detail = f" ({self.value} gp{ev})"
         elif showEV:
             detail = f" (EV {int(self.getEV() + 0.5)})"
-        return f"{article} {desc}{detail}"
-
-
-class Container:
-    def __init__(self, description: str, ev: float, capacity: int):
-        self = Equipment(description, ev, 1)
-        self.capacity = capacity
-        self.contents = []
+        return f"{number}{desc}{detail}"
 
 
 class Wearable(Equipment):
-    def __init__(self, description: str, ac: int, ev: float):
-        self = Equipment(description, ev, 1)
+    def __init__(self, description: str, ac: int, ev: float, value: int):
+        super().__init__(description, 1, ev, value)
         self.ac = ac
-        self.save = 0
-        if 'ring of protection' in description.lower():
-            self.save = ac
 
 
 class Weapon(Equipment):
-    def __init__(self, description: str, dmg: str, range: int, ev: float):
-        self = Equipment(description, ev, 1)
+    def __init__(self, description: str, dmg: str, range: int, ev: float, value: int):
+        self = Equipment(description, 1, ev, value)
         self.dmg = dmg
         self.range = range
         self.ammo = ''
@@ -87,6 +72,13 @@ class Weapon(Equipment):
             self.ammo = 'arrow'
         elif 'sling' in description.lower():
             self.ammo = 'stone'
+
+
+class Container:
+    def __init__(self, description: str, ev: float, capacity: int):
+        self = Equipment(description, 1, ev, 0)
+        self.capacity = capacity
+        self.contents = []
 
 
 class Coin:
@@ -198,18 +190,24 @@ class EquipmentList:
         else:
             raise AmbiguousMatch(f"{description} matches more than one item, please be more specific.")
 
-    def add(self, description: str, ev: float, count: int = 1, value: int = 0):
+    def add(self, description: str, count: int = 1, ev: float = 0, value: int = 0):
         itemno = self.find(description, True)
         if itemno < 0:
-            newitem = Equipment(description, ev, count, value)
+            newitem = Equipment(description, count, ev, value)
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
         else:
             self.equipment[itemno].count += count 
             return f"now has {self.equipment[itemno].show()}."
 
-    #def addWearable(self, description: str, ev: float, ac: int):
-        #itemno = self.find(description, True)
+    def addWearable(self, description: str, ac: int = 0, ev: float = 0, value: int = 0):
+        itemno = self.find(description, True)
+        if itemno < 0:
+            newitem = Wearable(description, ac, ev, value)
+            self.equipment.append(newitem)
+            return f"gets {newitem.show()}."
+        else:
+            raise UniqueItem(f"Wearable items are unique and you already have {self.equipment[itemno].show()}.")
 
     def drop(self, description: str, count: int = 1):
         itemno = self.find(description)

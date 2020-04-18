@@ -43,6 +43,12 @@ class AmbiguousMatch(BambleweenyException):
         super().__init__(msg)
 
 
+class UniqueItem(BambleweenyException):
+    """Raised when there is an attempt to access more than one of the same item."""
+    def __init__(self, msg: str = "Unique items can have only one instance."):
+        super().__init__(msg)
+
+
 class CreditLimitExceeded(BambleweenyException):
     """Raised when there is insufficient funds."""
     def __init__(self, msg: str = "You do not have enough money."):
