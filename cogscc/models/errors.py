@@ -31,6 +31,12 @@ class SelectionCancelled(SelectionException):
         super().__init__("Selection timed out or was cancelled.")
 
 
+class ItemNotFound(BambleweenyException):
+    """Raised when an item can't be found in the inventory."""
+    def __init__(self, msg: str = "Item not found."):
+        super().__init__(msg)
+
+
 class CharacterNotFound(BambleweenyException):
     """Raised when a character can't be found in the list of active characters."""
     def __init__(self, msg: str = "Character not found in the active list."):

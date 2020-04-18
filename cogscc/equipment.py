@@ -1,15 +1,16 @@
-from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, NotWearableItem, OutOfRange, UniqueItem
+from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, ItemNotFound, \
+    NotWearableItem, OutOfRange, UniqueItem
 
 
 class Equipment:
     def __init__(self, description: str, count: int, ev: float, value: int):
         # 1 cp is 1/500 of an EV, that's the lightest thing that can be carried
         if ev < 0.002:
-            raise OutOfRange(f"Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
+            raise OutOfRange("Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
         if count < 1:
-            raise OutOfRange(f"Number of items must be a positive integer.")
+            raise OutOfRange("Number of items must be a positive integer.")
         if value < 0:
-            raise OutOfRange(f"Value must be a positive integer.")
+            raise OutOfRange("Value must be a positive integer.")
         self.description = description
         self.article = 'an' if description[0].lower() in { 'a', 'e', 'i', 'o', 'u' } else 'a'
         self.ev = ev
@@ -27,6 +28,9 @@ class Equipment:
         return self.value == 0
 
     def isWearable(self):
+        return False
+
+    def isWearing(self):
         return False
 
     def isTreasure(self):
@@ -68,12 +72,30 @@ class Wearable(Equipment):
         self.is_worn = False
         self.location = ''
 
+    def isEquipment(self):
+        return not self.is_worn and self.value == 0
+
     def isWearable(self):
         return True
+
+    def isWearing(self):
+        return self.is_worn
+
+    def isTreasure(self):
+        return not self.is_worn and self.value > 0
 
     def wear(self, location: str):
         self.is_worn = True
         self.location = location
+
+    def show(self, showEV: bool = False):
+        if not self.is_worn:
+            return super().show(showEV)
+        else:
+            loc = f", {self.location}" if self.location else ''
+            ev = f", EV {int(self.ev + 0.5)}" if showEV else ''
+            ac = f", {self.ac:+} AC" if self.ac != 0 else ''
+            return f"{self.description}{loc}{ac}{ev}"
 
 
 class Weapon(Equipment):
@@ -158,7 +180,7 @@ class Coin:
 
     def show(self, showEV: bool = False):
         total_ev = f" (EV {int(self.getEV()+0.5)})" if showEV else ''
-        coin = f"**Coin{total_ev}:**"
+        coin = f"  **Coin{total_ev}:**\n"
         has_coin = False
         for den, amt in self.coin.items():
             if amt > 0:
@@ -228,7 +250,7 @@ class EquipmentList:
     def wear(self, description: str, location: str = ''):
         itemno = self.find(description)
         if itemno < 0:
-            return f"doesn't have any {description}."
+            raise ItemNotFound(f"You don't have any {description}.")
         elif not self.equipment[itemno].isWearable():
             raise NotWearableItem(f"{self.equipment[itemno].show()} is not something you can wear.")
         else:
@@ -238,7 +260,7 @@ class EquipmentList:
     def drop(self, description: str, count: int = 1):
         itemno = self.find(description)
         if itemno < 0:
-            return f"doesn't have any {description}."
+            raise ItemNotFound(f"You don't have any {description}.")
         elif count >= self.equipment[itemno].count:
             reply = f"drops {self.equipment[itemno].show()}"
             del self.equipment[itemno]
@@ -256,22 +278,28 @@ class EquipmentList:
         return f"has {self.coin.current(denomination)}."
 
     def inventory(self, showEV: bool = False):
+        wear_list = "**Wearing**\n"
+        has_wear = False
         equip_list = "**Equipment**\n"
         has_equipment = False
         treasure_list = "**Treasure**\n"
         has_treasure = False
 
         for item in self.equipment:
+            if item.isWearing():
+                has_wear = True
+                wear_list += f"  {item.show(showEV)}\n"
             if item.isEquipment():
                 has_equipment = True
-                equip_list += f"{item.show(showEV)}\n"
+                equip_list += f"  {item.show(showEV)}\n"
             elif item.isTreasure():
                 has_treasure = True
-                treasure_list += f"{item.show(showEV)}\n"
+                treasure_list += f"  {item.show(showEV)}\n"
         if not self.coin.empty():
             has_treasure = True
             treasure_list += f"{self.coin.show(showEV)}\n"
-        inventory = (equip_list if has_equipment else '') + \
+        inventory = (wear_list if has_wear else '') + \
+                    (equip_list if has_equipment else '') + \
                     (treasure_list if has_treasure else '')
         return inventory
 
