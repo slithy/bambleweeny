@@ -143,6 +143,11 @@ class Coin:
         else:
             return self.coin[denomination] * Coin.coin_ev[denomination]
 
+    def current(self, denomination: str):
+        if denomination not in Coin.coin_ev:
+            raise InvalidCoinType()
+        return f"{self.coin[denomination]} {denomination}"
+
     def show(self, showEV: bool = False):
         total_ev = f" (EV {int(self.getEV()+0.5)})" if showEV else ''
         coin = f"**Coin{total_ev}:**"
@@ -203,11 +208,8 @@ class EquipmentList:
             self.equipment[itemno].count += count 
             return f"now has {self.equipment[itemno].show()}."
 
-    def addCoin(self, amount: int, denomination: str):
-        self.coin.add(amount, denomination)
-
-    def dropCoin(self, amount: int, denomination: str):
-        self.coin.drop(amount, denomination)
+    #def addWearable(self, description: str, ev: float, ac: int):
+        #itemno = self.find(description, True)
 
     def drop(self, description: str, count: int = 1):
         itemno = self.find(description)
@@ -220,6 +222,14 @@ class EquipmentList:
         else:
             self.equipment[itemno].count -= count
             return f"now has {self.equipment[itemno].show()}."
+
+    def addCoin(self, amount: int, denomination: str):
+        self.coin.add(amount, denomination)
+        return f"has {self.coin.current(denomination)}."
+
+    def dropCoin(self, amount: int, denomination: str):
+        self.coin.drop(amount, denomination)
+        return f"has {self.coin.current(denomination)}."
 
     def inventory(self, showEV: bool = False):
         equip_list = "**Equipment**\n"
