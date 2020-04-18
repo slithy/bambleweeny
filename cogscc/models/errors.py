@@ -19,6 +19,13 @@ class AmbiguousMatch(BambleweenyException):
         super().__init__(msg)
 
 
+class InvalidItem(BambleweenyException):
+    """Raised when an item is created with invalid parameters."""
+
+    def __init__(self, msg: str = "Item is invalid."):
+        super().__init__(msg)
+
+
 class NoCharacter(BambleweenyException):
     """Raised when a user has no active character."""
 

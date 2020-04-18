@@ -1,8 +1,13 @@
+from cogscc.models.errors import InvalidItem
 from cogscc.models.errors import AmbiguousMatch
 
 
 class Equipment:
     def __init__(self, description: str, ev: float, count: int = 1):
+        if count < 1:
+            raise InvalidItem(f"Number of items must be a positive integer.")
+        if ev <= 0.01:
+            raise InvalidItem(f"EV cannot be zero. Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
         self.description = description
         self.ev = ev
         self.count = count
@@ -14,8 +19,12 @@ class Equipment:
     def __from_dict__(cls, d):
         return cls(**d)
 
-    def show(self):
+    def getEV(self):
+        return self.ev * self.count
+
+    def show(self, showDetail: bool = False):
         article = 'a'
+        detail = ''
         desc = self.description
         if self.count > 1:
             article = f"{self.count}"
@@ -29,7 +38,9 @@ class Equipment:
                 desc += 's'
         elif self.description[0].lower() in ('a', 'e', 'i', 'o', 'u'):
             article = 'an'
-        return f"{article} {desc}"
+        if showDetail:
+            detail = f" (EV {int(self.getEV() + 0.5)})"
+        return f"{article} {desc}{detail}"
 
 
 class Container:
@@ -136,11 +147,11 @@ class EquipmentList:
             self.equipment[itemno].count -= count
             return f"now has {self.equipment[itemno].show()}."
 
-    def inventory(self):
+    def inventory(self, showDetail: bool = False):
         equip_list = ''
         if self.equipment:
             equip_list += "**Equipment**\n"
             for item in self.equipment:
-                equip_list += f"{item.show()}\n"
+                equip_list += f"{item.show(showDetail)}\n"
         return equip_list
 
