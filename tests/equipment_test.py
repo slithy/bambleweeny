@@ -1,6 +1,6 @@
 import cogscc.equipment as eq
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, \
-    ItemNotFound, NotWearableItem, OutOfRange, UniqueItem
+    ItemNotFound, NotWearableItem, NotWearingItem, OutOfRange, UniqueItem
 
 eqList = eq.EquipmentList()
 
@@ -114,8 +114,18 @@ print(eqList.addWearable("Indiana Jones hat", 0, 1))
 print(eqList.wear("Indiana","on head"))
 print(eqList.wear("Padded","on body"))
 print(eqList.inventory(True))
-#print(eqList.takeOff("Chiwawa"))
-#print(eqList.takeOff("Beetroot"))
-#print(eqList.takeOff("Indiana"))
-#print(eqList.inventory())
+try:
+    eqList.takeOff("Chiwawa")
+except ItemNotFound:
+    print("Can't take off an item you don't have.")
+try:
+    eqList.takeOff("Beetroot")
+except NotWearingItem:
+    print("Can't take off an item you aren't wearing.")
+print(eqList.takeOff("Indiana"))
+print(eqList.inventory())
+
+print(f"AC bonus is {eqList.ac:+}")
+print(eqList.takeOff("Padded"))
+print(f"AC bonus is {eqList.ac:+}")
 

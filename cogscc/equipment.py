@@ -1,5 +1,5 @@
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, ItemNotFound, \
-    NotWearableItem, OutOfRange, UniqueItem
+    NotWearableItem, NotWearingItem, OutOfRange, UniqueItem
 
 
 class Equipment:
@@ -87,6 +87,9 @@ class Wearable(Equipment):
     def wear(self, location: str):
         self.is_worn = True
         self.location = location
+
+    def takeOff(self):
+        self.is_worn = False
 
     def show(self, showEV: bool = False):
         if not self.is_worn:
@@ -195,6 +198,7 @@ class EquipmentList:
     def __init__(self):
         self.equipment = []
         self.coin = Coin()
+        self.ac = 0
 
     def __to_json__(self):
         return { 'equipment': self.equipment }
@@ -228,6 +232,12 @@ class EquipmentList:
         else:
             raise AmbiguousMatch(f"{description} matches more than one item, please be more specific.")
 
+    def recalculateAC(self):
+        self.ac = 0
+        for item_no in range(len(self.equipment)):
+            if self.equipment[item_no].isWearing():
+                self.ac += self.equipment[item_no].ac
+
     def add(self, description: str, count: int = 1, ev: float = 0, value: int = 0):
         itemno = self.find(description, True)
         if itemno < 0:
@@ -255,14 +265,31 @@ class EquipmentList:
             raise NotWearableItem(f"{self.equipment[itemno].show()} is not something you can wear.")
         else:
             self.equipment[itemno].wear(location)
-            return f"is wearing {self.equipment[itemno].show()}"
+            self.recalculateAC()
+            return f"is wearing {self.equipment[itemno].show()}."
+
+    def takeOff(self, description: str, count: int = 1):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"You don't have any {description}.")
+        elif not self.equipment[itemno].isWearing():
+            raise NotWearingItem(f"You are not wearing {self.equipment[itemno].show()}.")
+        else:
+            self.equipment[itemno].takeOff()
+            self.recalculateAC()
+            reply = f"takes off {self.equipment[itemno].show()}."
+            return reply
 
     def drop(self, description: str, count: int = 1):
         itemno = self.find(description)
         if itemno < 0:
             raise ItemNotFound(f"You don't have any {description}.")
         elif count >= self.equipment[itemno].count:
-            reply = f"drops {self.equipment[itemno].show()}"
+            reply = ''
+            if self.equipment[itemno].isWearing():
+                self.equipment[itemno].takeOff()
+                self.recalculateAC()
+            reply = f"drops {self.equipment[itemno].show()}."
             del self.equipment[itemno]
             return reply
         else:
