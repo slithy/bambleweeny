@@ -296,7 +296,7 @@ class EquipmentList:
             if self.equipment[item_no].isWearing():
                 self.ac += self.equipment[item_no].ac
 
-    def add(self, description: str, count: int = 1, ev: float = 0, value: int = 0):
+    def add(self, description: str, count: int, ev: float, value: int):
         itemno = self.find(description, True)
         if itemno < 0:
             newitem = Equipment(description, count, ev, value)
@@ -306,7 +306,7 @@ class EquipmentList:
             self.equipment[itemno].count += count 
             return f"now has {self.equipment[itemno].show()}."
 
-    def addWearable(self, description: str, ac: int = 0, ev: float = 0, value: int = 0):
+    def addWearable(self, description: str, ac: int, ev: float, value: int):
         itemno = self.find(description, True)
         if itemno < 0:
             newitem = Wearable(description, ac, ev, value)
