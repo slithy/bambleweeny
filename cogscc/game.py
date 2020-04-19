@@ -5,9 +5,7 @@ from os.path import basename
 from discord.ext import commands
 from cogscc.character import Character
 from cogscc.monster import Monster
-from cogscc.models.errors import AmbiguousMatch
-from cogscc.models.errors import CharacterNotFound
-from cogscc.models.errors import NotAllowed
+from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, NotAllowed
 
 
 class ToJson(json.JSONEncoder):
@@ -203,28 +201,44 @@ class Game(commands.Cog):
         await self.characters.get(player).showInventory(ctx)
 
     @commands.command(name='equip', aliases=['pick','get'])
-    async def addEquipment(self, ctx, description: str, count: int = 1, ev: float = 1, value: int = 0):
+    async def addEquipment(self, ctx, description: str, *args):
         """Add an item to your equipment list.
-        Usage: !equip "Item Description" [<count>] [<ev>] [<value>]
-               where count is the number of this item you are carrying (default: 1)
-                     ev is the Encumbrance Value from the Player's Handbook (default: 1)
-                     value is the value in gold pieces for gems, jewellery and other treasure (default: 0)"""
+        Usage: !equip "Item Description" [wearable|<count>] [<attributes>]
+               where wearable means that you will be able to !wear this item
+                     count is the number of this item you are carrying (default: 1)
+                     attributes allow you to specify additional attributes of the item as a key-value pair:
+                         ev:<number> is the Encumbrance Value from the Player's Handbook (default: 1)
+                         value:<number> is the value in gold pieces for gems, jewellery and other treasure (default: 0)
+                         ac:<number> is the Armour Class bonus that this item will give if you wear it (default: 0)
+        Example: !equip "Mail Shirt" wearable ev:3 ac:4"""
         player = str(ctx.author)
         if player in self.characters:
-            await self.characters.get(player).addEquipment(ctx, description, count, ev, value)
-        else:
-            await ctx.send(f"{player} does not have a character.")
+            argDict = {}
+            isWearable = False
+            for arg in args:
+                s = arg.split(':', 1)
+                if len(s) == 2:
+                    argDict[s[0].lower()] = int(s[1])
+                elif s[0].isdigit() and not 'count' in argDict:
+                    argDict['count'] = int(s[0])
+                elif s[0].lower() == 'wearable':
+                    isWearable = True
+                else:
+                    raise InvalidArgument(f"I don't know what you mean by {s[0]}.")
+            for k,v in argDict.items():
+                if k not in [ 'ac','ev','value','count' ]:
+                    raise InvalidArgument(f"I don't know what you mean by {k}:{v}.")
 
-    @commands.command(name='equip.wearable', aliases=['wearable','equipw','pickw','getw'])
-    async def addWearable(self, ctx, description: str, ac: int = 0, ev: float = 1, value: int = 0):
-        """Add a wearable item to your equipment list.
-        Usage: !equip.wearable "Item Description" [<ac>] [<ev>] [<value>]
-               where ac is the armour class bonus of this item (default: 0)
-                     ev is the Encumbrance Value from the Player's Handbook (default: 1)
-                     value is the value in gold pieces for wearable treasure (jewellery, etc.) (default: 0)"""
-        player = str(ctx.author)
-        if player in self.characters:
-            await self.characters.get(player).addWearable(ctx, description, ac, ev, value)
+            if isWearable:
+                if 'count' in argDict and argDict['count'] != 1:
+                    raise InvalidArgument(f"Wearable items can't take a count.")
+                await self.characters.get(player).addWearable(ctx, description,
+                    argDict.get('ac',0), argDict.get('ev', 1), argDict.get('value', 0))
+            else:
+                if 'ac' in argDict:
+                    raise InvalidArgument(f"Only wearable items can have an AC.")
+                await self.characters.get(player).addEquipment(ctx, description,
+                    argDict.get('count',1), argDict.get('ev', 1), argDict.get('value', 0))
         else:
             await ctx.send(f"{player} does not have a character.")
 
