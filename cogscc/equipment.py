@@ -84,7 +84,31 @@ class Wearable(Equipment):
         self.location = ''
 
     def __to_json__(self):
-        return { 'description': self.description, 'ac': self.ac, 'ev': self.ev, 'value': self.value }
+        d = { 'type': 'wearable', 'description': self.description }
+        if self.ac != 0:
+            d['ac'] = self.ac
+        if self.ev != 1:
+            d['ev'] = self.ev
+        if self.value != 0:
+            d['value'] = self.value
+        if self.hands != 0:
+            d['hands'] = self.hands
+        if self.is_worn:
+            d['wearing'] = True
+        if self.is_worn and self.location != '':
+            d['location'] = self.location
+        return d
+
+    @classmethod
+    def __from_dict__(cls, d):
+        ac = d.get('ac', 0)
+        ev = d.get('ev', 1)
+        value = d.get('value', 0)
+        c = cls(d['description'], ac, ev if ev >= 0.002 else 1, value)
+        c.hands = d.get('hands', 0)
+        c.is_worn = d.get('wearing', False)
+        c.location = d.get('location', '')
+        return c
 
     def isEquipment(self):
         return not self.is_worn and self.value == 0
@@ -235,7 +259,11 @@ class EquipmentList:
     def __from_dict__(cls, d):
         e = EquipmentList()
         for equipitem in d['items']:
-            e.equipment.append(Equipment.__from_dict__(equipitem))
+            type = equipitem.get('type', 'normal')
+            if type == 'wearable':
+                e.equipment.append(Wearable.__from_dict__(equipitem))
+            else:
+                e.equipment.append(Equipment.__from_dict__(equipitem))
         e.coin = Coin.__from_dict__(d.get('coin'))
         e.recalculateAC()
         return e
