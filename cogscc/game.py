@@ -261,8 +261,21 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    #async def addCoin(self, ctx, amount: int, denomination: str): 
-    #async def dropCoin(self, ctx, amount: int, denomination: str): 
+    @commands.command(name='gp', aliases=['pp','ep','sp','cp'])
+    async def managePurse(self, ctx, amount: int):
+        """Add or remove coins from your purse.
+        Usage: !gp +<amount> or !gp -<amount>
+               There is a command for each coin type:
+               !pp (platinum pieces)
+               !gp (gold pieces)
+               !ep (electrum pieces)
+               !sp (silver pieces)
+               !cp (copper pieces)"""
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).managePurse(ctx, amount)
+        else:
+            await ctx.send(f"{player} does not have a character.")
 
     ### GM-only commands ###
 

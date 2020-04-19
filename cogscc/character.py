@@ -635,9 +635,6 @@ class Character:
     async def addWearable(self, ctx, description: str, ac: int, ev: float, value: int):
         await ctx.send(f"{self.name} {self.equipment.addWearable(description, ac, ev, value)}")
 
-    async def addCoin(self, ctx, amount: int, denomination: str): 
-        await ctx.send(f"{self.name} {self.equipment.addCoin(description, amount, denomination)}")
-
     async def wear(self, ctx, description: str, location: str = ''):
         await ctx.send(f"{self.name} {self.equipment.wear(description, location)}")
 
@@ -647,6 +644,12 @@ class Character:
     async def dropEquipment(self, ctx, description: str, count: int):
         await ctx.send(f"{self.name} {self.equipment.drop(description, count)}")
 
-    async def dropCoin(self, ctx, amount: int, denomination: str): 
-        await ctx.send(f"{self.name} {self.equipment.dropCoin(description, amount, denomination)}")
+    async def managePurse(self, ctx, amount: int):
+        denomination = ctx.invoked_with
+        if amount == 0:
+            await ctx.send(f"{self.name} gets out their purse, then changes their mind and puts it away again.")
+        elif amount > 0:
+            await ctx.send(f"{self.name} {self.equipment.addCoin(amount, denomination)}")
+        else:
+            await ctx.send(f"{self.name} {self.equipment.dropCoin(-amount, denomination)}")
 
