@@ -373,7 +373,7 @@ class Character:
 
     def __to_json__(self):
         return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
-                 'Alignment': self.alignment, 'HP': self.hp, 'Stats': self.stats, 'EquipmentList': self.equipment }
+                 'Alignment': self.alignment, 'HP': self.hp, 'Stats': self.stats, 'Equipment': self.equipment }
 
     @classmethod
     def __from_dict__(cls, d):
@@ -381,7 +381,7 @@ class Character:
         c.alignment = d['Alignment']
         c.hp = HP.__from_dict__(d['HP'])
         c.stats = BaseStats.__from_dict__(d['Stats'])
-        c.equipment = EquipmentList.__from_dict__({ 'equipment': d['Equipment'] })
+        c.equipment = EquipmentList.__from_dict__(d['Equipment'])
         return c
 
     @classmethod
@@ -626,9 +626,8 @@ class Character:
     # Manage inventory
 
     async def showInventory(self, ctx):
-        inventory = self.equipment.inventory()
-        if inventory:
-            await ctx.send(inventory)
+        inventory = self.equipment.getInventory()
+        await ctx.send(inventory if inventory else f"{self.name} is not carrying anything.")
 
     async def addEquipment(self, ctx, description: str, count: int, ev: float, value: int):
         await ctx.send(f"{self.name} {self.equipment.add(description, count, ev, value)}")

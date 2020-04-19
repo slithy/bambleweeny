@@ -18,11 +18,22 @@ class Equipment:
         self.value = value
 
     def __to_json__(self):
-        return { 'description': self.description, 'ev': self.ev, 'count': self.count }
+        # Save only non-default values
+        d = { 'description': self.description }
+        if self.count > 1:
+            d['count'] = self.count
+        if self.ev != 1.0:
+            d['ev'] = self.ev
+        if self.value != 0:
+            d['value'] = self.value
+        return d
 
     @classmethod
     def __from_dict__(cls, d):
-        return cls(**d)
+        count = d.get('count', 1)
+        ev = d.get('ev', 1)
+        value = d.get('value', 0)
+        return cls(d['description'], count, ev if ev >= 0.002 else 1, value)
 
     def isEquipment(self):
         return self.value == 0
@@ -71,6 +82,9 @@ class Wearable(Equipment):
         self.hands = 0
         self.is_worn = False
         self.location = ''
+
+    def __to_json__(self):
+        return { 'description': self.description, 'ac': self.ac, 'ev': self.ev, 'value': self.value }
 
     def isEquipment(self):
         return not self.is_worn and self.value == 0
@@ -141,6 +155,20 @@ class Coin:
             'cp': 0
         }
 
+    def __to_json__(self):
+        d = {}
+        for den,amt in self.coin.items():
+            if amt > 0:
+                d[den] = amt
+        return { 'coin': d }
+
+    @classmethod
+    def __from_dict__(cls, d):
+        c = Coin()
+        for den,amt in d.items():
+            c.coin[den] = amt
+        return c
+
     def empty(self):
         return self.coin['pp'] + self.coin['gp'] + self.coin['ep'] + self.coin['sp'] + self.coin['cp'] == 0
 
@@ -201,13 +229,15 @@ class EquipmentList:
         self.ac = 0
 
     def __to_json__(self):
-        return { 'equipment': self.equipment }
+        return { 'items': self.equipment, 'coin': self.coin.coin }
 
     @classmethod
     def __from_dict__(cls, d):
         e = EquipmentList()
-        for equipitem in d['equipment']:
+        for equipitem in d['items']:
             e.equipment.append(Equipment.__from_dict__(equipitem))
+        e.coin = Coin.__from_dict__(d.get('coin'))
+        e.recalculateAC()
         return e
 
     def find(self, description: str, exactMatch: bool = False):
@@ -304,7 +334,7 @@ class EquipmentList:
         self.coin.drop(amount, denomination)
         return f"has {self.coin.current(denomination)}."
 
-    def inventory(self, showEV: bool = False):
+    def getInventory(self, showEV: bool = False):
         wear_list = "**Wearing**\n"
         has_wear = False
         equip_list = "**Equipment**\n"
