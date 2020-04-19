@@ -370,6 +370,7 @@ class Character:
         self.stats.setPrime(self.getClassPrime())
         self.hp = HP(1)
         self.equipment = EquipmentList()
+        self.disabled = False
 
     def __to_json__(self):
         return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
@@ -382,6 +383,7 @@ class Character:
         c.hp = HP.__from_dict__(d['HP'])
         c.stats = BaseStats.__from_dict__(d['Stats'])
         c.equipment = EquipmentList.__from_dict__(d['Equipment'])
+        c.disabled = False
         return c
 
     @classmethod

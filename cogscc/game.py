@@ -122,10 +122,11 @@ class Game(commands.Cog):
         """Show stats for all characters.
         Usage: !party [stats]"""
         for player, character in self.characters.items():
-            if param == 'stats':
+            if not character.disabled and param == 'stats':
                 await character.showCharacter(ctx, f"({player})")
             else:
-                await character.showSummary(ctx, f"{player} is playing ")
+                disabled = "**DISABLED** " if character.disabled else ''
+                await character.showSummary(ctx, f"{disabled}{player} is playing ")
 
     @commands.command(name='character', aliases=['char'])
     async def character(self, ctx, character: str = ''):
@@ -157,7 +158,9 @@ class Game(commands.Cog):
         """Roll for initiative!"""
         initList = []
         for player, character in self.characters.items():
-            if character.isActive():
+            if character.disabled:
+                continue
+            elif character.isActive():
                 init = await character.rollForInitiative(ctx)
                 initList.append((init, character.name))
             else:
@@ -318,6 +321,22 @@ class Game(commands.Cog):
             return player_found
         else:
             raise AmbiguousMatch(f"{character_name} is ambiguous, be more specific or use the player ID.")
+
+    @commands.command(name='disable')
+    async def disable(self, ctx, character: str):
+        """Disables the specified character."""
+        self.gm_only(ctx)
+        player = self.getPlayer(character)
+        self.characters[player].disabled = True
+        await ctx.send(f"{player}'s character has been disabled for this session.")
+
+    @commands.command(name='enable')
+    async def enable(self, ctx, character: str):
+        """Enables the specified character."""
+        self.gm_only(ctx)
+        player = self.getPlayer(character)
+        self.characters[player].disabled = False
+        await ctx.send(f"{player}'s character has been re-enabled.")
 
     @commands.command(name='damage', aliases=['dmg'])
     async def damage(self, ctx, character: str, dmg: str):
