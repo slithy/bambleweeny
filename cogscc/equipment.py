@@ -268,7 +268,7 @@ class EquipmentList:
             self.recalculateAC()
             return f"is wearing {self.equipment[itemno].show()}."
 
-    def takeOff(self, description: str, count: int = 1):
+    def takeOff(self, description: str):
         itemno = self.find(description)
         if itemno < 0:
             raise ItemNotFound(f"You don't have any {description}.")

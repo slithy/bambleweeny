@@ -608,16 +608,14 @@ class Character:
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
 
-    async def addEquipment(self, ctx, description: str, ev: float, count: int):
-        await ctx.send(f"{self.name} {self.equipment.add(description, ev, count)}")
+    async def rollForInitiative(self, ctx):
+        dex_mod = self.stats.getMod('dex')
+        result = [roll(f"2d6{dex_mod:+}", inline=True) for _ in range(1)]
+        init = result[0].total
+        await ctx.send(f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}")
+        return init
 
-    async def dropEquipment(self, ctx, description: str, count: int):
-        await ctx.send(f"{self.name} {self.equipment.drop(description, count)}")
-
-    async def showInventory(self, ctx):
-        inventory = self.equipment.inventory()
-        if inventory:
-            await ctx.send(inventory)
+    # Show character
 
     async def showSummary(self, ctx, message: str = ""):
         await ctx.send(f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}")
@@ -625,9 +623,31 @@ class Character:
     async def showCharacter(self, ctx, message: str = ""):
         await ctx.send(f"{self.name}, {self.race} {self.xclass}, {self.getAlignment()}, Level {self.level} {message}\n**AC:** {self.getAC()}  **BtH:** {self.getBtH():+}  {self.hp}\n{self.stats}")
 
-    async def rollForInitiative(self, ctx):
-        dex_mod = self.stats.getMod('dex')
-        result = [roll(f"2d6{dex_mod:+}", inline=True) for _ in range(1)]
-        init = result[0].total
-        await ctx.send(f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}")
-        return init
+    # Manage inventory
+
+    async def showInventory(self, ctx):
+        inventory = self.equipment.inventory()
+        if inventory:
+            await ctx.send(inventory)
+
+    async def addEquipment(self, ctx, description: str, count: int, ev: float, value: int):
+        await ctx.send(f"{self.name} {self.equipment.add(description, count, ev, value)}")
+
+    async def addWearable(self, ctx, description: str, ac: int, ev: float, value: int):
+        await ctx.send(f"{self.name} {self.equipment.addWearable(description, ac, ev, value)}")
+
+    async def addCoin(self, ctx, amount: int, denomination: str): 
+        await ctx.send(f"{self.name} {self.equipment.addCoin(description, amount, denomination)}")
+
+    async def wear(self, ctx, description: str, location: str = ''):
+        await ctx.send(f"{self.name} {self.equipment.wear(description, location)}")
+
+    async def takeOff(self, ctx, description: str):
+        await ctx.send(f"{self.name} {self.equipment.takeOff(description)}")
+
+    async def dropEquipment(self, ctx, description: str, count: int):
+        await ctx.send(f"{self.name} {self.equipment.drop(description, count)}")
+
+    async def dropCoin(self, ctx, amount: int, denomination: str): 
+        await ctx.send(f"{self.name} {self.equipment.dropCoin(description, amount, denomination)}")
+

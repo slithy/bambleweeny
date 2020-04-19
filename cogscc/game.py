@@ -30,6 +30,8 @@ class Game(commands.Cog):
                 return
         raise NotAllowed(f"Only the Game Master can do that!")
 
+    # Save, create and destroy characters
+
     @commands.command(name='save')
     async def saveJson(self, ctx, filename: str = 'characters.json'):
         """Save characters to a file in JSON format."""
@@ -65,7 +67,6 @@ class Game(commands.Cog):
         player = str(ctx.author)
         if player in self.characters:
             name = self.characters[player].name
-            del self.characters[player]
             random_death = random.choice(["drinks poison and fails their saving throw",
                 "is crushed by falling rocks", "opens a chest filled with poison gas",
                 "is shot in the back by a comrade", "goes to explore the Tomb of Horrors and is never seen again", 
@@ -73,6 +74,8 @@ class Game(commands.Cog):
                 "decides to split the party", "finds the cursed katana of seppuku",
                 "decides to read the Necronomicon"])
             await ctx.send(f"{name} {random_death}. :skull:")
+            await self.characters.get(player).showInventory(ctx)
+            del self.characters[player]
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -114,6 +117,18 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
+    # Display character sheet
+
+    @commands.command(name='party')
+    async def allCharacters(self, ctx, param: str = 'None'):
+        """Show stats for all characters.
+        Usage: !party [stats]"""
+        for player, character in self.characters.items():
+            if param == 'stats':
+                await character.showCharacter(ctx, f"({player})")
+            else:
+                await character.showSummary(ctx, f"{player} is playing ")
+
     @commands.command(name='character', aliases=['char'])
     async def character(self, ctx, character: str = ''):
         """Show your character sheet."""
@@ -126,15 +141,8 @@ class Game(commands.Cog):
             self.gm_only(ctx)
             player = self.getPlayer(character)
         await self.characters.get(player).showCharacter(ctx)
-        await self.characters.get(player).showInventory(ctx)
 
-    @commands.command(name='inventory', aliases=['inv'])
-    async def inventory(self, ctx):
-        player = str(ctx.author)
-        if player in self.characters:
-            await self.characters.get(player).showInventory(ctx)
-        else:
-            await ctx.send(f"{player} does not have a character.")
+    # Game mechanics
 
     @commands.command(name='check', aliases=['ck'])
     async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
@@ -145,16 +153,6 @@ class Game(commands.Cog):
             await self.characters.get(player).siegeCheck(ctx, stat, bonus, cl)
         else:
             await ctx.send(f"{player} does not have a character.")
-
-    @commands.command(name='party')
-    async def allCharacters(self, ctx, param: str = 'None'):
-        """Show stats for all characters.
-        Usage: !party [stats]"""
-        for player, character in self.characters.items():
-            if param == 'stats':
-                await character.showCharacter(ctx, f"({player})")
-            else:
-                await character.showSummary(ctx, f"{player} is playing ")
 
     @commands.command(name='initiative', aliases=['init'])
     async def rollForInitiative(self, ctx):
@@ -181,7 +179,7 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await self.characters[player].heal(ctx, hp)
 
-    @commands.command(name='first_aid', aliases=['aid'])
+    @commands.command(name='first_aid', aliases=['firstaid','aid'])
     async def firstAid(self, ctx, character: str):
         """Perform first aid on the specified character.
         First aid does not restore any hit points, but can stop bleeding and restore unconscious characters to consciousness.
@@ -189,28 +187,82 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await self.characters[player].first_aid(ctx)
 
+    # Manage inventory
+
+    @commands.command(name='inventory', aliases=['inv'])
+    async def inventory(self, ctx, character: str = ''):
+        """List your inventory."""
+        if character == '':
+            player = str(ctx.author)
+            if player not in self.characters:
+                await ctx.send(f"{player} does not have a character.")
+                return
+        else:
+            self.gm_only(ctx)
+            player = self.getPlayer(character)
+        await self.characters.get(player).showInventory(ctx)
+
     @commands.command(name='equip', aliases=['pick','get'])
-    async def addEquipment(self, ctx, description: str, count: int = 1, ev: float = 0):
+    async def addEquipment(self, ctx, description: str, count: int = 1, ev: float = 1, value: int = 0):
         """Add an item to your equipment list.
-        Usage: !equip "Item Description" [<count>] [<ev>]
+        Usage: !equip "Item Description" [<count>] [<ev>] [<value>]
                where count is the number of this item you are carrying (default: 1)
-                 and ev is the Encumbrance Value from the Player's Handbook"""
+                     ev is the Encumbrance Value from the Player's Handbook (default: 1)
+                     value is the value in gold pieces for gems, jewellery and other treasure (default: 0)"""
         player = str(ctx.author)
         if player in self.characters:
-            await self.characters.get(player).addEquipment(ctx, description, ev, count)
+            await self.characters.get(player).addEquipment(ctx, description, count, ev, value)
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='equip.wearable', aliases=['wearable','equipw','pickw','getw'])
+    async def addWearable(self, ctx, description: str, ac: int = 0, ev: float = 1, value: int = 0):
+        """Add a wearable item to your equipment list.
+        Usage: !equip.wearable "Item Description" [<ac>] [<ev>] [<value>]
+               where ac is the armour class bonus of this item (default: 0)
+                     ev is the Encumbrance Value from the Player's Handbook (default: 1)
+                     value is the value in gold pieces for wearable treasure (jewellery, etc.) (default: 0)"""
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).addWearable(ctx, description, ac, ev, value)
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='wear')
+    async def wear(self, ctx, description: str, location: str = ''):
+        """Wear an item you are carrying.
+        Usage: !wear "Item Description" ["location"]
+               where location is the optional location on your body
+        Example: `wear ring "on left hand"` """
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).wear(ctx, description, location)
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='take_off', aliases=['takeoff','take','remove'])
+    async def takeOff(self, ctx, description: str):
+        """Take off an item you are wearing
+        Usage: !take_off "Item Description" """
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).takeOff(ctx, description)
         else:
             await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='drop')
     async def dropEquipment(self, ctx, description: str, count: int = 9999999):
-        """Remove an item to your equipment list.
-        Usage: !drop 'Description' [<count>]
+        """Remove an item from your equipment list.
+        Usage: !drop "Item Description" [<count>]
                where count is the number of this item you want to drop (default: all)"""
         player = str(ctx.author)
         if player in self.characters:
             await self.characters.get(player).dropEquipment(ctx, description, count)
         else:
             await ctx.send(f"{player} does not have a character.")
+
+    #async def addCoin(self, ctx, amount: int, denomination: str): 
+    #async def dropCoin(self, ctx, amount: int, denomination: str): 
 
     ### GM-only commands ###
 
@@ -262,7 +314,7 @@ class Game(commands.Cog):
                 await ctx.send(result)
         await ctx.send(duration_text)
 
-    @commands.command(name='level_up')
+    @commands.command(name='level_up',aliases=['levelup'])
     async def levelUp(self, ctx, character: str):
         """Levels up the specified character."""
         self.gm_only(ctx)
