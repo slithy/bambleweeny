@@ -503,6 +503,22 @@ class Character:
         self.stats.setPrime(prime_2)
         self.stats.setPrime(prime_3)
 
+    def getAC(self):
+        if self.xclass == 'Monk':
+            try:
+                ac = [ 10,11,12,12,13,13,13,14,14,14,14,15,15,15,15,16,16,16,16,16,17,17,17,17,17 ][self.level]
+            except IndexError:
+                # Level 24 is the max in CKG
+                ac = 17
+        else:
+            ac = 10
+        ac += self.equipment.ac + self.stats.getMod('dex')
+        # Half-Orcs get +1 to AC if they are not wearing armour. This is a simplification which assumes
+        # that only characters who cannot wear armour will not be wearing armour:
+        if self.race == 'Half-Orc' and (self.xclass in { 'Monk', 'Wizard', 'Illusionist' }):
+            ac += 1
+        return ac
+
     def getBtH(self):
         if self.xclass == 'Fighter':
             return self.level
@@ -607,7 +623,7 @@ class Character:
         await ctx.send(f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}")
 
     async def showCharacter(self, ctx, message: str = ""):
-        await ctx.send(f"{self.name}, {self.race} {self.xclass}, {self.getAlignment()}, Level {self.level} {message}\n**BtH:** {self.getBtH():+}  {self.hp}\n{self.stats}")
+        await ctx.send(f"{self.name}, {self.race} {self.xclass}, {self.getAlignment()}, Level {self.level} {message}\n**AC:** {self.getAC()}  **BtH:** {self.getBtH():+}  {self.hp}\n{self.stats}")
 
     async def rollForInitiative(self, ctx):
         dex_mod = self.stats.getMod('dex')

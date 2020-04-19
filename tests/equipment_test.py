@@ -97,6 +97,7 @@ print(eqList.inventory(True))
 print("Wearables")
 print(eqList.addWearable("Padded Armour", 1, 2))
 print(eqList.addWearable("Gold ring with snake sigil", 0, 0.01, 1000))
+print(eqList.addWearable("Crown of Lordly Might", 5, 0.01, 1000))
 print(eqList.inventory())
 try:
     eqList.addWearable("Golden snakeshead amulet with ruby eyes", 0, 0.01, 1000)
@@ -123,9 +124,10 @@ try:
 except NotWearingItem:
     print("Can't take off an item you aren't wearing.")
 print(eqList.takeOff("Indiana"))
+print(eqList.wear("Crown", "on head"))
 print(eqList.inventory())
 
 print(f"AC bonus is {eqList.ac:+}")
-print(eqList.takeOff("Padded"))
+print(eqList.takeOff("Crown"))
 print(f"AC bonus is {eqList.ac:+}")
 
