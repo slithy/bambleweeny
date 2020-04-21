@@ -660,7 +660,7 @@ class Character:
             raise InvalidArgument(f"{self.name} doesn't know how to {check}")
         result = self.stats.siegeCheck(self.name, level, stat, bonus, 0)
         for gm in gmList:
-            await gm.send(result)
+            await gm.send(f"{check}: {result}")
 
     # Show character
 
