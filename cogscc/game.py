@@ -16,17 +16,26 @@ class ToJson(json.JSONEncoder):
 
 
 class Game(commands.Cog):
+    gm_roles = [ 'Castle Keeper', 'Game Master', 'Dungeon Master' ]
+
     def __init__(self, bot):
         self.bot = bot
-        self.gm_roles = [ 'Castle Keeper', 'Game Master', 'Dungeon Master' ]
         self.characters = {}
         self.monsters = []
 
     def gm_only(self, ctx):
         for role in ctx.author.roles:
-            if role.name in self.gm_roles:
+            if role.name in Game.gm_roles:
                 return
         raise NotAllowed(f"Only the Game Master can do that!")
+
+    def getGmList(self, ctx):
+        gm_list = []
+        for member in ctx.guild.members:
+            for role in member.roles: 
+                if role.name in Game.gm_roles:
+                    gm_list.append(member)
+        return gm_list
 
     # Save, create and destroy characters
 
@@ -187,6 +196,24 @@ class Game(commands.Cog):
         Usage: !first_aid <character>"""
         player = self.getPlayer(character)
         await self.characters[player].first_aid(ctx)
+
+    @commands.command(name='search', aliases=['listen','smell','track','traps'])
+    async def search(self, ctx, bonus = 0):
+        """Use a sense or skill to detect something or someone.
+        Usage: !listen [+bonus]
+               !search [+bonus]
+               !smell [+bonus]
+               !track [+bonus]
+               !traps [+bonus]
+        where bonus is the (positive or negative) modifier for the check. Racial bonuses are included
+        automatically, so the bonus is for situational modifiers only. Examples:
+            Listening through a stone wall carries a -10 penalty
+            Dwarves get +4 to search checks and +2 to finding traps in stonework/structures"""
+        player = str(ctx.author)
+        if player in self.characters:
+            await self.characters.get(player).search(ctx, bonus, self.getGmList(ctx))
+        else:
+            await ctx.send(f"{player} does not have a character.")
 
     # Manage inventory
 

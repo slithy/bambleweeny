@@ -617,6 +617,51 @@ class Character:
         await ctx.send(f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}")
         return init
 
+    async def search(self, ctx, bonus, gmList):
+        check = ctx.invoked_with
+        level = 0
+        bonus = 0
+        stat = 'wis'
+        if check == 'search':
+            await ctx.send(f"{self.name} searches the area.")
+            level = self.level
+            if self.race == 'Elf':
+                bonus = 2
+        elif check == 'listen':
+            await ctx.send(f"{self.name} listens attentively.")
+            if self.xclass in [ 'Rogue', 'Assassin' ]:
+                level = self.level
+            if self.race in [ 'Elf', 'Half-Elf' ]:
+                bonus = 2
+            elif self.race == 'Gnome':
+                bonus = 3
+        elif check == 'smell':
+            stat = 'con'
+            if self.race == 'Half-Orc':
+                level = self.level
+                bonus = 2
+            await ctx.send(f"{self.name} sniffs the air.")
+        elif check == 'traps':
+            await ctx.send(f"{self.name} searches for traps.")
+            if self.xclass in [ 'Rogue', 'Assassin' ]:
+                level = self.level
+                stat = 'int'
+            elif self.xclass == 'Ranger':
+                level = self.level
+            if self.race in [ 'Elf', 'Half-Elf' ]:
+                bonus = 2
+        elif check == 'track':
+            await ctx.send(f"{self.name} searches for tracks.")
+            if self.xclass == 'Ranger':
+                level = self.level
+            if self.race == 'Half-Orc':
+                bonus = 2
+        else:
+            raise InvalidArgument(f"{self.name} doesn't know how to {check}")
+        result = self.stats.siegeCheck(self.name, level, stat, bonus, 0)
+        for gm in gmList:
+            await gm.send(result)
+
     # Show character
 
     async def showSummary(self, ctx, message: str = ""):
