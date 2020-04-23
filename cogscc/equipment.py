@@ -40,7 +40,9 @@ class Equipment:
         return self.value == 0
 
     def isPushable(self, e):
-        return True if self.ev == e.ev and self.value == e.value else False
+        return True if type(self) == type(e) and \
+                          self.ev == e.ev and \
+                       self.value == e.value else False
 
     def isWearable(self):
         return False
@@ -283,10 +285,16 @@ class EquipmentList:
             if self.equipment[item_no].description.lower() == description.lower():
                 num_results = 1
                 found_item = item_no
-        # If we didn't find one, try partial matches
+        # If we didn't find one, try partial matches at the start of the string
         if num_results == 0 and not exactMatch:
           for item_no in range(len(self.equipment)):
             if self.equipment[item_no].description.lower().startswith(description.lower()):
+                num_results += 1
+                found_item = item_no
+        # If we still didn't find one, try partial matches anywhere in the string
+        if num_results == 0 and not exactMatch:
+          for item_no in range(len(self.equipment)):
+            if description.lower() in self.equipment[item_no].description.lower():
                 num_results += 1
                 found_item = item_no
 
