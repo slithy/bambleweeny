@@ -1,3 +1,4 @@
+from copy import copy
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, ItemNotFound, \
     NotWearableItem, NotWearingItem, OutOfRange, UniqueItem
 
@@ -37,6 +38,9 @@ class Equipment:
 
     def isEquipment(self):
         return self.value == 0
+
+    def isPushable(self, e):
+        return True if self.ev == e.ev and self.value == e.value else False
 
     def isWearable(self):
         return False
@@ -112,6 +116,9 @@ class Wearable(Equipment):
 
     def isEquipment(self):
         return not self.is_worn and self.value == 0
+
+    def isPushable(self, e):
+        return False
 
     def isWearable(self):
         return True
@@ -306,6 +313,15 @@ class EquipmentList:
             self.equipment[itemno].count += count 
             return f"now has {self.equipment[itemno].show()}."
 
+    def push(self, e):
+        itemno = self.find(e.description, True)
+        if itemno < 0:
+            self.equipment.append(e)
+        elif not self.equipment[itemno].isPushable(e):
+            raise UniqueItem()
+        else:
+            self.equipment[itemno].count += e.count 
+
     def addWearable(self, description: str, ac: int, ev: float, value: int):
         itemno = self.find(description, True)
         if itemno < 0:
@@ -337,6 +353,23 @@ class EquipmentList:
             self.recalculateAC()
             reply = f"takes off {self.equipment[itemno].show()}."
             return reply
+
+    def pop(self, description: str, count: int = 1):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"You don't have any {description}.")
+        elif count >= self.equipment[itemno].count:
+            reply = ''
+            if self.equipment[itemno].isWearing():
+                self.equipment[itemno].takeOff()
+                self.recalculateAC()
+            e = copy(self.equipment[itemno])
+            del self.equipment[itemno]
+        else:
+            e = copy(self.equipment[itemno])
+            self.equipment[itemno].count -= count
+            e.count = count
+        return e
 
     def drop(self, description: str, count: int = 1):
         itemno = self.find(description)

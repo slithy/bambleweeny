@@ -4,7 +4,7 @@ from cogscc.funcs.dice import roll
 from utils.constants import STAT_ABBREVIATIONS
 from utils.constants import RACE_NAMES
 from utils.constants import CLASS_NAMES
-from cogscc.models.errors import InvalidArgument
+from cogscc.models.errors import InvalidArgument, UniqueItem
 from cogscc.equipment import Equipment
 from cogscc.equipment import EquipmentList
 
@@ -687,6 +687,19 @@ class Character:
 
     async def takeOff(self, ctx, description: str):
         await ctx.send(f"{self.name} {self.equipment.takeOff(description)}")
+
+    async def give(self, ctx, count: int, description: str, recipient):
+        if recipient is self:
+            await ctx.send("Only crazy people give things to themselves.")
+        else:
+            e = self.equipment.pop(description, count)
+            try:
+                recipient.equipment.push(e)
+            except UniqueItem:
+                self.equipment.push(e)
+                await ctx.send(f"{recipient.name} already has an item like {e.show()} with different properties")
+                return
+            await ctx.send(f"{self.name} gives {e.show()} to {recipient.name}")
 
     async def dropEquipment(self, ctx, description: str, count: int):
         await ctx.send(f"{self.name} {self.equipment.drop(description, count)}")

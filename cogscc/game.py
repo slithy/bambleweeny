@@ -272,6 +272,33 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
+    @commands.command(name='give')
+    async def give(self, ctx, *args):
+        """Give an item to another character.
+        Usage: !give [<number>] "Item Description" [to] <character>
+               where <number> is the number of this item you want to give (default: 1)
+                     <character> can be the character name or the Discord user ID."""
+        player = str(ctx.author)
+        if player in self.characters:
+            try:
+                argl = list(args)
+                description = argl.pop(0)
+                try:
+                    count = int(description)
+                    description = argl.pop(0)
+                except ValueError:
+                    count = 1
+                recipient = argl.pop(0)
+                if recipient == 'to':
+                    recipient = argl.pop(0)
+                if argl:
+                    raise IndexError()
+            except IndexError:
+                raise InvalidArgument("Wrong number of arguments. Try: `!give <item> to <character>`")
+            await self.characters.get(player).give(ctx, count, description, self.characters.get(self.getPlayer(recipient)))
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
     @commands.command(name='wear')
     async def wear(self, ctx, description: str, location: str = ''):
         """Wear an item you are carrying.
