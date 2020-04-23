@@ -75,7 +75,7 @@ class Equipment:
 
         if self.value > 0:
             ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
-            detail = f" ({self.value} gp{ev})"
+            detail = f" ({self.value * self.count} gp{ev})"
         elif showEV:
             detail = f" (EV {int(self.getEV() + 0.5)})"
         return f"{number}{desc}{detail}"

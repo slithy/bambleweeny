@@ -247,7 +247,9 @@ class Game(commands.Cog):
             isWearable = False
             for arg in args:
                 s = arg.split(':', 1)
-                if len(s) == 2:
+                if len(s) == 2 and s[0].lower() == 'ev':
+                    argDict['ev'] = float(s[1])
+                elif len(s) == 2:
                     argDict[s[0].lower()] = int(s[1])
                 elif s[0].isdigit() and not 'count' in argDict:
                     argDict['count'] = int(s[0])
