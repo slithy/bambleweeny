@@ -13,4 +13,7 @@ clean:
 clobber:
 	@./clean_saves ./save
 
+stop:
+	sudo systemctl stop docker
+
 .PHONY: test

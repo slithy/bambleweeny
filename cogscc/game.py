@@ -394,6 +394,14 @@ class Game(commands.Cog):
         self.characters[player].disabled = False
         await ctx.send(f"{player}'s character has been re-enabled.")
 
+    @commands.command(name='gm_note', aliases=['ck_note','dm_note'])
+    async def gmNote(self, ctx, character: str, item: str, description: str = ''):
+        """Adds a secret note to an item or views the note.
+        Usage: !gm_note <character> <item> [<description>]"""
+        self.gm_only(ctx)
+        player = self.getPlayer(character)
+        await self.characters[player].gmNote(ctx, item, description)
+
     @commands.command(name='damage', aliases=['dmg'])
     async def damage(self, ctx, character: str, dmg: str):
         """Does damage to the specified character.

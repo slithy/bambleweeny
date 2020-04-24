@@ -713,3 +713,9 @@ class Character:
         else:
             await ctx.send(f"{self.name} {self.equipment.dropCoin(-amount, denomination)}")
 
+    async def gmNote(self, ctx, item, description):
+        if description:
+            await ctx.send(f"The Castle Keeper adds a secret note to {self.equipment.gmNote(item, description)}")
+        else:
+            await ctx.send(f"{self.equipment.gmNote(item)}")
+

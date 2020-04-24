@@ -13,28 +13,37 @@ class Equipment:
         if value < 0:
             raise OutOfRange("Value must be a positive integer.")
         self.description = description
-        self.article = 'an' if description[0].lower() in { 'a', 'e', 'i', 'o', 'u' } else 'a'
+        self.article = self.defaultArticle()
         self.ev = ev
         self.count = count
         self.value = value
+        self.gm_note = ''
 
     def __to_json__(self):
         # Save only non-default values
         d = { 'description': self.description }
+        if self.article != self.defaultArticle():
+            d['article'] = self.defaultArticle()
         if self.count > 1:
             d['count'] = self.count
         if self.ev != 1.0:
             d['ev'] = self.ev
         if self.value != 0:
             d['value'] = self.value
+        if self.gm_note:
+            d['gm_note'] = self.gm_note
         return d
 
     @classmethod
     def __from_dict__(cls, d):
-        count = d.get('count', 1)
         ev = d.get('ev', 1)
-        value = d.get('value', 0)
-        return cls(d['description'], count, ev if ev >= 0.002 else 1, value)
+        e = cls(d['description'], d.get('count', 1), ev if ev >= 0.002 else 1, d.get('value', 0))
+        e.article = d.get('article', e.article)
+        e.gm_note = d.get('gm_note', '')
+        return e
+
+    def defaultArticle(self):
+        return 'an' if self.description[0].lower() in { 'a', 'e', 'i', 'o', 'u' } else 'a'
 
     def isEquipment(self):
         return self.value == 0
@@ -91,6 +100,10 @@ class Wearable(Equipment):
 
     def __to_json__(self):
         d = { 'type': 'wearable', 'description': self.description }
+        if self.article != super().defaultArticle():
+            d['article'] = super().defaultArticle()
+        if self.gm_note:
+            d['gm_note'] = self.gm_note
         if self.ac != 0:
             d['ac'] = self.ac
         if self.ev != 1:
@@ -107,10 +120,10 @@ class Wearable(Equipment):
 
     @classmethod
     def __from_dict__(cls, d):
-        ac = d.get('ac', 0)
         ev = d.get('ev', 1)
-        value = d.get('value', 0)
-        c = cls(d['description'], ac, ev if ev >= 0.002 else 1, value)
+        c = cls(d['description'], d.get('ac', 0), ev if ev >= 0.002 else 1, d.get('value', 0))
+        c.article = d.get('article', c.article)
+        c.gm_note = d.get('gm_note', '')
         c.hands = d.get('hands', 0)
         c.is_worn = d.get('wearing', False)
         c.location = d.get('location', '')
@@ -320,6 +333,18 @@ class EquipmentList:
         else:
             self.equipment[itemno].count += count 
             return f"now has {self.equipment[itemno].show()}."
+
+    def gmNote(self, item, description = ''):
+        itemno = self.find(item)
+        if itemno < 0:
+            raise ItemNotFound(f"{item} not found.")
+        if description:
+            self.equipment[itemno].gm_note = description
+            return f"{self.equipment[itemno].show()}"
+        elif self.equipment[itemno].gm_note:
+            return self.equipment[itemno].gm_note
+        else:
+            return f"{self.equipment[itemno].show()} has no secret note."
 
     def push(self, e):
         itemno = self.find(e.description, True)
