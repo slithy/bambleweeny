@@ -65,7 +65,7 @@ class Equipment:
     def getEV(self):
         return self.ev * self.count
 
-    def show(self, showEV: bool = False):
+    def show(self, showEV: bool = False, showNotes: bool = False):
         number = ''
         desc = self.description
         detail = ''
@@ -73,7 +73,7 @@ class Equipment:
             number = f"{self.count} "
             if desc.lower()[-5:] == "tooth":
                 desc = desc[:-5] + "teeth"
-            if desc.lower()[-2:] == "ch":
+            elif desc.lower()[-2:] == "ch":
                 desc = desc + "es"
             elif desc[-1] == 'y':
                 desc = self.description[:-1] + 'ies'
@@ -87,6 +87,7 @@ class Equipment:
             detail = f" ({self.value * self.count} gp{ev})"
         elif showEV:
             detail = f" (EV {int(self.getEV() + 0.5)})"
+        detail += ' :small_blue_diamond:' if showNotes and self.gm_note else ''
         return f"{number}{desc}{detail}"
 
 
@@ -151,14 +152,15 @@ class Wearable(Equipment):
     def takeOff(self):
         self.is_worn = False
 
-    def show(self, showEV: bool = False):
+    def show(self, showEV: bool = False, showNotes: bool = False):
         if not self.is_worn:
-            return super().show(showEV)
+            return super().show(showEV, showNotes)
         else:
             loc = f", {self.location}" if self.location else ''
             ev = f", EV {int(self.ev + 0.5)}" if showEV else ''
             ac = f", {self.ac:+} AC" if self.ac != 0 else ''
-            return f"{self.description}{loc}{ac}{ev}"
+            notes = ' :small_blue_diamond:' if showNotes and self.gm_note else ''
+            return f"{self.description}{loc}{ac}{ev}{notes}"
 
 
 class Weapon(Equipment):
@@ -428,7 +430,7 @@ class EquipmentList:
         self.coin.drop(amount, denomination)
         return f"has {self.coin.current(denomination)}."
 
-    def getInventory(self, showEV: bool = False):
+    def getInventory(self, showEV: bool = False, showNotes: bool = False):
         wear_list = "**Wearing**\n"
         has_wear = False
         equip_list = "**Equipment**\n"
@@ -439,13 +441,13 @@ class EquipmentList:
         for item in self.equipment:
             if item.isWearing():
                 has_wear = True
-                wear_list += f"  {item.show(showEV)}\n"
+                wear_list += f"  {item.show(showEV, showNotes)}\n"
             if item.isEquipment():
                 has_equipment = True
-                equip_list += f"  {item.show(showEV)}\n"
+                equip_list += f"  {item.show(showEV, showNotes)}\n"
             elif item.isTreasure():
                 has_treasure = True
-                treasure_list += f"  {item.show(showEV)}\n"
+                treasure_list += f"  {item.show(showEV, showNotes)}\n"
         if not self.coin.empty():
             has_treasure = True
             treasure_list += f"{self.coin.show(showEV)}\n"

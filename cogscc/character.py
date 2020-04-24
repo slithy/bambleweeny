@@ -672,8 +672,8 @@ class Character:
 
     # Manage inventory
 
-    async def showInventory(self, ctx):
-        inventory = self.equipment.getInventory()
+    async def showInventory(self, ctx, showNotes: bool = False):
+        inventory = self.equipment.getInventory(False, showNotes)
         await ctx.send(inventory if inventory else f"{self.name} is not carrying anything.")
 
     async def addEquipment(self, ctx, description: str, count: int, ev: float, value: int):
