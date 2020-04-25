@@ -12,8 +12,20 @@ class Equipment:
             raise OutOfRange("Number of items must be a positive integer.")
         if value < 0:
             raise OutOfRange("Value must be a positive integer.")
-        self.description = description
-        self.article = self.defaultArticle()
+
+        # Remove extra spaces
+        self.description = " ".join(description.split())
+
+        # Set article and plural
+        self.article = ''
+        for default_article in ['a','an','the','-']:
+            if self.description.lower().startswith(default_article + ' '):
+                self.article = default_article
+                self.description = self.description[len(default_article)+1:]
+        if not self.article:
+            self.article = self.defaultArticle()
+        self.plural = ''
+
         self.ev = ev
         self.count = count
         self.value = value
@@ -23,7 +35,9 @@ class Equipment:
         # Save only non-default values
         d = { 'description': self.description }
         if self.article != self.defaultArticle():
-            d['article'] = self.defaultArticle()
+            d['article'] = self.article
+        if self.plural:
+            d['plural'] = self.plural
         if self.count > 1:
             d['count'] = self.count
         if self.ev != 1.0:
@@ -38,9 +52,13 @@ class Equipment:
     def __from_dict__(cls, d):
         ev = d.get('ev', 1)
         e = cls(d['description'], d.get('count', 1), ev if ev >= 0.002 else 1, d.get('value', 0))
-        e.article = d.get('article', e.article)
-        e.gm_note = d.get('gm_note', '')
+        e.__from_dict_super__(d)
         return e
+
+    def __from_dict_super__(e, d):
+        e.article = d.get('article', e.defaultArticle())
+        e.plural = d.get('plural', '')
+        e.gm_note = d.get('gm_note', '')
 
     def defaultArticle(self):
         return 'an' if self.description[0].lower() in { 'a', 'e', 'i', 'o', 'u' } else 'a'
@@ -65,30 +83,34 @@ class Equipment:
     def getEV(self):
         return self.ev * self.count
 
-    def show(self, showEV: bool = False, showNotes: bool = False):
+    def getDescription(self):
         number = ''
         desc = self.description
-        detail = ''
         if self.count > 1:
             number = f"{self.count} "
-            if desc.lower()[-5:] == "tooth":
-                desc = desc[:-5] + "teeth"
-            elif desc.lower()[-2:] == "ch":
-                desc = desc + "es"
-            elif desc[-1] == 'y':
+            if self.plural:
+                desc = self.plural
+            elif self.description.lower().endswith(('o','s','sh','ch','x','z')):
+                desc = self.description + 'es'
+            elif self.description.lower().endswith(('ay','ey','iy','oy','uy')):
+                desc = self.description + 's'
+            elif self.description.lower().endswith('y'):
                 desc = self.description[:-1] + 'ies'
-            elif desc[-1] != 's':
-                desc += 's'
-        elif self.article:
+            else:
+                desc = self.description + 's'
+        elif self.article != '-':
             number = f"{self.article} "
+        return f"{number}{desc}"
 
+    def show(self, showEV: bool = False, showNotes: bool = False):
+        detail = ''
         if self.value > 0:
             ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
             detail = f" ({self.value * self.count} gp{ev})"
         elif showEV:
             detail = f" (EV {int(self.getEV() + 0.5)})"
         detail += ' :small_blue_diamond:' if showNotes and self.gm_note else ''
-        return f"{number}{desc}{detail}"
+        return f"{self.getDescription()}{detail}"
 
 
 class Wearable(Equipment):
@@ -100,17 +122,10 @@ class Wearable(Equipment):
         self.location = ''
 
     def __to_json__(self):
-        d = { 'type': 'wearable', 'description': self.description }
-        if self.article != super().defaultArticle():
-            d['article'] = super().defaultArticle()
-        if self.gm_note:
-            d['gm_note'] = self.gm_note
+        d = super().__to_json__()
+        d['type'] = 'wearable'
         if self.ac != 0:
             d['ac'] = self.ac
-        if self.ev != 1:
-            d['ev'] = self.ev
-        if self.value != 0:
-            d['value'] = self.value
         if self.hands != 0:
             d['hands'] = self.hands
         if self.is_worn:
@@ -122,13 +137,12 @@ class Wearable(Equipment):
     @classmethod
     def __from_dict__(cls, d):
         ev = d.get('ev', 1)
-        c = cls(d['description'], d.get('ac', 0), ev if ev >= 0.002 else 1, d.get('value', 0))
-        c.article = d.get('article', c.article)
-        c.gm_note = d.get('gm_note', '')
-        c.hands = d.get('hands', 0)
-        c.is_worn = d.get('wearing', False)
-        c.location = d.get('location', '')
-        return c
+        e = cls(d['description'], d.get('ac', 0), ev if ev >= 0.002 else 1, d.get('value', 0))
+        e.__from_dict_super__(d)
+        e.hands = d.get('hands', 0)
+        e.is_worn = d.get('wearing', False)
+        e.location = d.get('location', '')
+        return e
 
     def isEquipment(self):
         return not self.is_worn and self.value == 0
@@ -160,7 +174,7 @@ class Wearable(Equipment):
             ev = f", EV {int(self.ev + 0.5)}" if showEV else ''
             ac = f", {self.ac:+} AC" if self.ac != 0 else ''
             notes = ' :small_blue_diamond:' if showNotes and self.gm_note else ''
-            return f"{self.description}{loc}{ac}{ev}{notes}"
+            return f"{self.getDescription()}{loc}{ac}{ev}{notes}"
 
 
 class Weapon(Equipment):
