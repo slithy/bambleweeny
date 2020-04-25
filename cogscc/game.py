@@ -260,10 +260,7 @@ class Game(commands.Cog):
                     raise InvalidArgument(f"I don't know what you mean by {s[0]}.")
 
             if isWearable:
-                if 'count' in argDict and argDict['count'] != 1:
-                    raise InvalidArgument(f"Wearable items can't take a count.")
-                await self.characters.get(player).addWearable(ctx, description,
-                    argDict.get('ac',0), argDict.get('ev', 1), argDict.get('value', 0))
+                await self.characters.get(player).addWearable(ctx, description, argDict)
             else:
                 await self.characters.get(player).addEquipment(ctx, description, argDict)
         else:

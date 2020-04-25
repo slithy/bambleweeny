@@ -681,8 +681,8 @@ class Character:
     async def addEquipment(self, ctx, description: str, d: dict):
         await ctx.send(f"{self.name} {self.equipment.add(description, d)}")
 
-    async def addWearable(self, ctx, description: str, ac: int, ev: float, value: int):
-        await ctx.send(f"{self.name} {self.equipment.addWearable(description, ac, ev, value)}")
+    async def addWearable(self, ctx, description: str, d: dict):
+        await ctx.send(f"{self.name} {self.equipment.addWearable(description, d)}")
 
     async def wear(self, ctx, description: str, location: str = ''):
         await ctx.send(f"{self.name} {self.equipment.wear(description, location)}")

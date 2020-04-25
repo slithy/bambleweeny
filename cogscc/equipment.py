@@ -353,6 +353,8 @@ class EquipmentList:
             newitem = Equipment(description, count, d.get('ev',1), d.get('value',0))
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
+        elif type(self.equipment[itemno]) is not Equipment:
+            raise UniqueItem(f"You already have a {self.equipment[itemno].show()} and this type of item is unique.")
         elif 'ev' in d.keys() and d.get('ev') != self.equipment[itemno].ev:
             raise ItemNotMutable(f"EV:{d.get('ev')} is different from the EV of {self.equipment[itemno].show(True)}")
         elif 'value' in d.keys() and d.get('value') != self.equipment[itemno].value:
@@ -382,10 +384,17 @@ class EquipmentList:
         else:
             self.equipment[itemno].count += e.count 
 
-    def addWearable(self, description: str, ac: int, ev: float, value: int):
+    def addWearable(self, description: str, d: dict):
+        for key in d.keys():
+            if key not in ['count','ev','value','ac']:
+                raise InvalidEquipmentAttribute(key)
+        count = d.get('count', 1)
+        if count != 1:
+            raise UniqueItem("Wearable items are unique (count must be 1)")
+
         itemno = self.find(description, True)
         if itemno < 0:
-            newitem = Wearable(description, ac, ev, value)
+            newitem = Wearable(description, d.get('ac',0), d.get('ev',1), d.get('value',0))
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
         else:
