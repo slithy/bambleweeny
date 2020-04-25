@@ -258,9 +258,6 @@ class Game(commands.Cog):
                     isWearable = True
                 else:
                     raise InvalidArgument(f"I don't know what you mean by {s[0]}.")
-            for k,v in argDict.items():
-                if k not in [ 'ac','ev','value','count' ]:
-                    raise InvalidArgument(f"I don't know what you mean by {k}:{v}.")
 
             if isWearable:
                 if 'count' in argDict and argDict['count'] != 1:
@@ -268,10 +265,7 @@ class Game(commands.Cog):
                 await self.characters.get(player).addWearable(ctx, description,
                     argDict.get('ac',0), argDict.get('ev', 1), argDict.get('value', 0))
             else:
-                if 'ac' in argDict:
-                    raise InvalidArgument(f"Only wearable items can have an AC.")
-                await self.characters.get(player).addEquipment(ctx, description,
-                    argDict.get('count',1), argDict.get('ev', 1), argDict.get('value', 0))
+                await self.characters.get(player).addEquipment(ctx, description, argDict)
         else:
             await ctx.send(f"{player} does not have a character.")
 

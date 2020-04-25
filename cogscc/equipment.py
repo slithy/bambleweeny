@@ -1,6 +1,6 @@
 from copy import copy
-from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, ItemNotFound, \
-    NotWearableItem, NotWearingItem, OutOfRange, UniqueItem
+from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidEquipmentAttribute, \
+    ItemNotFound, ItemNotMutable, ItemNotWearable, NotWearingItem, OutOfRange, UniqueItem
 
 
 class Equipment:
@@ -340,12 +340,23 @@ class EquipmentList:
             if self.equipment[item_no].isWearing():
                 self.ac += self.equipment[item_no].ac
 
-    def add(self, description: str, count: int, ev: float, value: int):
+    def add(self, description: str, d: dict):
+        for key in d.keys():
+            if key not in ['count','ev','value']:
+                raise InvalidEquipmentAttribute(key)
+        count = d.get('count', 1)
+        if count < 1:
+            raise OutOfRange("count must be a positive integer")
+
         itemno = self.find(description, True)
         if itemno < 0:
-            newitem = Equipment(description, count, ev, value)
+            newitem = Equipment(description, count, d.get('ev',1), d.get('value',0))
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
+        elif 'ev' in d.keys() and d.get('ev') != self.equipment[itemno].ev:
+            raise ItemNotMutable(f"EV:{d.get('ev')} is different from the EV of {self.equipment[itemno].show(True)}")
+        elif 'value' in d.keys() and d.get('value') != self.equipment[itemno].value:
+            raise ItemNotMutable(f"Value:{d.get('value')} is different from the value of {self.equipment[itemno].show()}")
         else:
             self.equipment[itemno].count += count 
             return f"now has {self.equipment[itemno].show()}."
@@ -385,7 +396,7 @@ class EquipmentList:
         if itemno < 0:
             raise ItemNotFound(f"You don't have any {description}.")
         elif not self.equipment[itemno].isWearable():
-            raise NotWearableItem(f"{self.equipment[itemno].show()} is not something you can wear.")
+            raise ItemNotWearable(f"{self.equipment[itemno].show()} is not something you can wear.")
         else:
             self.equipment[itemno].wear(location)
             self.recalculateAC()

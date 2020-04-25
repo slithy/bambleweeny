@@ -678,8 +678,8 @@ class Character:
         inventory = self.equipment.getInventory(False, showNotes)
         await ctx.send(inventory if inventory else f"{self.name} is not carrying anything.")
 
-    async def addEquipment(self, ctx, description: str, count: int, ev: float, value: int):
-        await ctx.send(f"{self.name} {self.equipment.add(description, count, ev, value)}")
+    async def addEquipment(self, ctx, description: str, d: dict):
+        await ctx.send(f"{self.name} {self.equipment.add(description, d)}")
 
     async def addWearable(self, ctx, description: str, ac: int, ev: float, value: int):
         await ctx.send(f"{self.name} {self.equipment.addWearable(description, ac, ev, value)}")

@@ -3,6 +3,13 @@ class BambleweenyException(Exception):
     def __init__(self, msg):
         super().__init__(msg)
 
+class InvalidEquipmentAttribute(BambleweenyException):
+    """Raised when an invalid attribute is applied to an item of equipment."""
+    def __init__(self, attr: str):
+        msg = f"{attr} is not a valid attribute in this context."
+        if attr == 'ac':
+            msg = f"Only wearable items can take an AC."
+        super().__init__(msg)
 
 class EvaluationError(BambleweenyException):
     """Raised when a cvar evaluation causes an error."""
@@ -37,6 +44,12 @@ class ItemNotFound(BambleweenyException):
         super().__init__(msg)
 
 
+class ItemNotMutable(BambleweenyException):
+    """Raised on an attempt to change the attributes of an item when the context does not allow it."""
+    def __init__(self, msg: str = "Item is not mutable."):
+        super().__init__(msg)
+
+
 class CharacterNotFound(BambleweenyException):
     """Raised when a character can't be found in the list of active characters."""
     def __init__(self, msg: str = "Character not found in the active list."):
@@ -55,7 +68,7 @@ class UniqueItem(BambleweenyException):
         super().__init__(msg)
 
 
-class NotWearableItem(BambleweenyException):
+class ItemNotWearable(BambleweenyException):
     """Raised when there is an attempt to wear an item that is not wearable."""
     def __init__(self, msg: str = "Only wearable items can be worn."):
         super().__init__(msg)
