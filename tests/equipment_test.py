@@ -1,12 +1,12 @@
 import cogscc.equipment as eq
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, \
-    ItemNotFound, NotWearableItem, NotWearingItem, OutOfRange, UniqueItem
+    ItemNotFound, ItemNotWearable, NotWearingItem, OutOfRange, UniqueItem
 
 eqList = eq.EquipmentList()
 
-eqList.add("Necronomicon", 1, 1)
-eqList.add("arrow", 20, 0.1)
-eqList.add("arrowroot", 1, 1)
+eqList.add("Necronomicon", {})
+eqList.add("arrow", { 'count':20, 'ev':0.1})
+eqList.add("arrowroot", {})
 try:
     eqList.add("helium balloon", 1, -1)
 except OutOfRange:

@@ -4,7 +4,7 @@ import json
 from os.path import basename
 from discord.ext import commands
 from cogscc.character import Character
-from cogscc.monster import Monster
+#from cogscc.monster import Monster
 from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, NotAllowed
 
 

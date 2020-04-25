@@ -189,6 +189,20 @@ class HP:
             status = f"{name} is unconscious."
         return status
 
+    def brief(self):
+        if self.wound == Wound.NORMAL and not self.conscious:
+            wounded = ' :dizzy_face:'
+        elif self.wound == Wound.GRIEVOUS or self.wound == Wound.MORTAL:
+            if self.conscious:
+                wounded = ' :grimacing:'
+            else:
+                wounded = ' :dizzy_face:'
+        elif self.wound == Wound.DEAD:
+            wounded = f": skull:"
+        else:
+            wounded = ''
+        return f"{self.current}/{self.max}{wounded}"
+
     def __str__(self):
         if self.conscious:
             unconscious = ':grimacing:'
@@ -205,6 +219,4 @@ class HP:
         else:
             wounded = ''
         return f"**HP**: {self.current}/{self.max} {wounded}"
-
-
 

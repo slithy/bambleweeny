@@ -4,9 +4,10 @@ from utils.constants import RACE_NAMES
 from utils.constants import CLASS_NAMES
 from cogscc.models.errors import InvalidArgument
 from cogscc.funcs.dice import roll
-from cogscc.equipment import EquipmentList
 from cogscc.stats import BaseStats
 from cogscc.hitpoints import HP
+from cogscc.equipment import EquipmentList
+#from cogscc.monster import Monster
 
 
 class Character:
