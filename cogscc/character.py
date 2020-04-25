@@ -122,16 +122,18 @@ class BaseStats:
         result = [roll(f"1d20{all_mods:+}", inline=True) for _ in range(1)]
         total = result[0].total
         if total > cb and cl == 0:
-            margin = total - cb
-            success = f"Success against CL{margin}!"
+            success = f"Success against CL{total-cb}!"
         elif total > cb + cl:
             success = f"Success (CL{cl})! :grinning:"
         else:
-            success = f"Failure! :scream:"
+            success = f"Failure ({total-cb})" if name == 'secret_check' else "Failure! :scream:"
 
-        known_cl = ''
-        if cl != 0:
-            known_cl = f"against challenge level {cl}"
+        # Abbreviated result, used for secret GM checks
+        if name == 'secret_check':
+            return f"{success}"
+
+        # Long-form result for normal checks
+        known_cl = f"against challenge level {cl}" if cl > 0 else ''
         bonuses = f"{level:+} for level"
         if mod != 0:
             bonuses = bonuses + f", {mod:+} modifier"
@@ -658,9 +660,9 @@ class Character:
                 bonus = 2
         else:
             raise InvalidArgument(f"{self.name} doesn't know how to {check}")
-        result = self.stats.siegeCheck(self.name, level, stat, bonus, 0)
+        result = self.stats.siegeCheck('secret_check', level, stat, bonus, 0)
         for gm in gmList:
-            await gm.send(f"{check}: {result}")
+            await gm.send(f"{self.name} makes a {check} check: {result}")
 
     # Show character
 
