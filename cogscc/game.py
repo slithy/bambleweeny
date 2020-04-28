@@ -243,11 +243,11 @@ class Game(commands.Cog):
             if player not in self.characters:
                 await ctx.send(f"{player} does not have a character.")
                 return
-            await self.characters.get(player).showInventory(ctx)
+            await ctx.send(self.characters.get(player).showInventory())
         else:
             self.gm_only(ctx)
             player = self.getPlayer(character)
-            await self.characters.get(player).showInventory(ctx, True)
+            await ctx.send(self.characters.get(player).showInventory(True))
 
     @commands.command(name='equip', aliases=['pick','get'])
     async def addEquipment(self, ctx, description: str, *args):
@@ -278,9 +278,9 @@ class Game(commands.Cog):
                     raise InvalidArgument(f"I don't know what you mean by {s[0]}.")
 
             if isWearable:
-                await self.characters.get(player).addWearable(ctx, description, argDict)
+                await ctx.send(self.characters.get(player).addWearable(description, argDict))
             else:
-                await self.characters.get(player).addEquipment(ctx, description, argDict)
+                await ctx.send(self.characters.get(player).addEquipment(description, argDict))
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -307,7 +307,7 @@ class Game(commands.Cog):
                     raise IndexError()
             except IndexError:
                 raise InvalidArgument("Wrong number of arguments. Try: `!give <item> to <character>`")
-            await self.characters.get(player).give(ctx, count, description, self.characters.get(self.getPlayer(recipient)))
+            await ctx.send(self.characters.get(player).give(count, description, self.characters.get(self.getPlayer(recipient))))
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -319,7 +319,7 @@ class Game(commands.Cog):
         Example: `wear ring "on left hand"` """
         player = str(ctx.author)
         if player in self.characters:
-            await self.characters.get(player).wear(ctx, description, location)
+            await ctx.send(self.characters.get(player).wear(description, location))
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -329,7 +329,7 @@ class Game(commands.Cog):
         Usage: !take_off "Item Description" """
         player = str(ctx.author)
         if player in self.characters:
-            await self.characters.get(player).takeOff(ctx, description)
+            await ctx.send(self.characters.get(player).takeOff(description))
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -340,7 +340,7 @@ class Game(commands.Cog):
                where count is the number of this item you want to drop (default: all)"""
         player = str(ctx.author)
         if player in self.characters:
-            await self.characters.get(player).dropEquipment(ctx, description, count)
+            await ctx.send(self.characters.get(player).dropEquipment(description, count))
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -356,7 +356,7 @@ class Game(commands.Cog):
                !cp (copper pieces)"""
         player = str(ctx.author)
         if player in self.characters:
-            await self.characters.get(player).managePurse(ctx, amount)
+            await ctx.send(self.characters.get(player).managePurse(ctx.invoked_with, amount))
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -410,7 +410,7 @@ class Game(commands.Cog):
         Usage: !gm_note <character> <item> [<description>]"""
         self.gm_only(ctx)
         player = self.getPlayer(character)
-        await self.characters[player].gmNote(ctx, item, description)
+        await ctx.send(self.characters[player].gmNote(item, description))
 
     @commands.command(name='damage', aliases=['dmg'])
     async def damage(self, ctx, character: str, dmg: str):

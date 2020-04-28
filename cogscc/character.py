@@ -316,50 +316,48 @@ class Character:
 
     # Manage inventory
 
-    async def showInventory(self, ctx, showNotes: bool = False):
+    def showInventory(self, showNotes: bool = False):
         inventory = self.equipment.getInventory(False, showNotes)
-        await ctx.send(inventory if inventory else f"{self.name} is not carrying anything.")
+        return inventory if inventory else f"{self.name} is not carrying anything."
 
-    async def addEquipment(self, ctx, description: str, d: dict):
-        await ctx.send(f"{self.name} {self.equipment.add(description, d)}")
+    def addEquipment(self, description: str, d: dict):
+        return f"{self.name} {self.equipment.add(description, d)}"
 
-    async def addWearable(self, ctx, description: str, d: dict):
-        await ctx.send(f"{self.name} {self.equipment.addWearable(description, d)}")
+    def addWearable(self, description: str, d: dict):
+        return f"{self.name} {self.equipment.addWearable(description, d)}"
 
-    async def wear(self, ctx, description: str, location: str = ''):
-        await ctx.send(f"{self.name} {self.equipment.wear(description, location)}")
+    def wear(self, description: str, location: str = ''):
+        return f"{self.name} {self.equipment.wear(description, location)}"
 
-    async def takeOff(self, ctx, description: str):
-        await ctx.send(f"{self.name} {self.equipment.takeOff(description)}")
+    def takeOff(self, description: str):
+        return f"{self.name} {self.equipment.takeOff(description)}"
 
-    async def give(self, ctx, count: int, description: str, recipient):
+    def give(self, count: int, description: str, recipient):
         if recipient is self:
-            await ctx.send("Only crazy people give things to themselves.")
+            return "Only crazy people give things to themselves."
         else:
             e = self.equipment.pop(description, count)
             try:
                 recipient.equipment.push(e)
             except UniqueItem:
                 self.equipment.push(e)
-                await ctx.send(f"{recipient.name} already has an item like {e.show()} with different properties")
-                return
-            await ctx.send(f"{self.name} gives {e.show()} to {recipient.name}")
+                return f"{recipient.name} already has an item like {e.show()} with different properties"
+            return f"{self.name} gives {e.show()} to {recipient.name}"
 
-    async def dropEquipment(self, ctx, description: str, count: int):
-        await ctx.send(f"{self.name} {self.equipment.drop(description, count)}")
+    def dropEquipment(self, description: str, count: int):
+        return f"{self.name} {self.equipment.drop(description, count)}"
 
-    async def managePurse(self, ctx, amount: int):
-        denomination = ctx.invoked_with
+    def managePurse(self, denomination: str, amount: int):
         if amount == 0:
-            await ctx.send(f"{self.name} gets out their purse, then changes their mind and puts it away again.")
+            return f"{self.name} gets out their purse, then changes their mind and puts it away again."
         elif amount > 0:
-            await ctx.send(f"{self.name} {self.equipment.addCoin(amount, denomination)}")
+            return f"{self.name} {self.equipment.addCoin(amount, denomination)}"
         else:
-            await ctx.send(f"{self.name} {self.equipment.dropCoin(-amount, denomination)}")
+            return f"{self.name} {self.equipment.dropCoin(-amount, denomination)}"
 
-    async def gmNote(self, ctx, item, description):
+    def gmNote(self, item, description):
         if description:
-            await ctx.send(f"The Castle Keeper adds a secret note to {self.equipment.gmNote(item, description)}")
+            return f"The Castle Keeper adds a secret note to {self.equipment.gmNote(item, description)}"
         else:
-            await ctx.send(f"{self.equipment.gmNote(item)}")
+            return f"{self.equipment.gmNote(item)}"
 
