@@ -3,6 +3,7 @@ import time
 import json
 from os.path import basename
 from discord.ext import commands
+from cogscc.funcs.dice import roll
 from cogscc.character import Character
 #from cogscc.monster import Monster
 from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, NotAllowed
@@ -37,6 +38,17 @@ class Game(commands.Cog):
                     gm_list.append(member)
         return gm_list
 
+    # Roll up a new character
+
+    @commands.command(name='generate')
+    async def genStats(self, ctx):
+        """Randomly generate the six base stats for a new character."""
+        rolls = [roll("4d6kh3", inline=True) for _ in range(6)]
+        #self.stats.set(rolls[0].total, rolls[1].total, rolls[2].total, rolls[3].total, rolls[4].total, rolls[5].total)
+        stat_summary = '\n:game_die: '.join(r.skeleton for r in rolls)
+        total = sum([r.total for r in rolls])
+        await ctx.send(f"{ctx.message.author.mention}\nGenerated random stats:\n:game_die: {stat_summary}\nTotal = `{total}`")
+
     # Save, create and destroy characters
 
     @commands.command(name='save')
@@ -50,11 +62,6 @@ class Game(commands.Cog):
         with open(f"/save/{filename_backup}", 'w') as f:
             json.dump(self.characters, f, cls=ToJson)
         await ctx.send(f"Characters saved as {filename_backup}")
-
-    @commands.command(name='generate')
-    async def genStats(self, ctx):
-        """Randomly generate the six base stats for a new character."""
-        await Character.genStats(ctx)
 
     @commands.command(name='create')
     async def create(self, ctx, name: str, race: str, xclass: str, level: int = 1):

@@ -37,15 +37,6 @@ class Character:
         c.disabled = False
         return c
 
-    @classmethod
-    async def genStats(cls, ctx):
-        """Randomly generate the six base stats for a new character."""
-        rolls = [roll("4d6kh3", inline=True) for _ in range(6)]
-        #self.stats.set(rolls[0].total, rolls[1].total, rolls[2].total, rolls[3].total, rolls[4].total, rolls[5].total)
-        stat_summary = '\n:game_die: '.join(r.skeleton for r in rolls)
-        total = sum([r.total for r in rolls])
-        await ctx.send(f"{ctx.message.author.mention}\nGenerated random stats:\n:game_die: {stat_summary}\nTotal = `{total}`")
-
     def setRace(self, race: str):
         if race.title() not in RACE_NAMES:
             raise InvalidArgument(f"{race} is not a valid race.")
