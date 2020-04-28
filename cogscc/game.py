@@ -5,7 +5,7 @@ from os.path import basename
 from discord.ext import commands
 from cogscc.funcs.dice import roll
 from cogscc.character import Character
-#from cogscc.monster import Monster
+from cogscc.monster import Monster
 from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, NotAllowed
 
 
@@ -173,17 +173,21 @@ class Game(commands.Cog):
     async def rollForInitiative(self, ctx):
         """Roll for initiative!"""
         initList = []
+        initRolls = ''
         for player, character in self.characters.items():
             if character.disabled:
                 continue
             elif character.isActive():
-                init = await character.rollForInitiative(ctx)
+                (init, dieRoll) = character.rollForInitiative()
                 initList.append((init, character.name))
+                initRolls += dieRoll
             else:
-                await character.inactiveStatus(ctx)
+                initRolls += character.inactiveStatus()
         for monster in self.monsters:
-            init = await monster.rollForInitiative(ctx)
+            (init, dieRoll) = monster.rollForInitiative()
             initList.append((init, monster.name))
+            initRolls += dieRoll
+        await ctx.send(initRolls)
         initOrder = "**Initiative Order**\n"
         for i in sorted(initList, reverse=True):
             initOrder += f"{i[0]}\t{i[1]}\n"
@@ -445,10 +449,10 @@ class Game(commands.Cog):
         await ctx.send(f"Monsters reset.")
 
     @commands.command(name='monster_add', aliases=['ma'])
-    async def monsterAdd(self, ctx, name: str, init_mod: int = 0):
+    async def monsterAdd(self, ctx, name: str, hd: int = 1, ac: int = 10, dex: int = 10):
         """Adds a new monster to the combat."""
         self.gm_only(ctx)
-        self.monsters.append(Monster(name, init_mod))
+        self.monsters.append(Monster(name, { 'hd': hd, 'ac': ac, 'dex': dex }))
         await ctx.send(f"Added {name} to combat.")
 
 def setup(bot):

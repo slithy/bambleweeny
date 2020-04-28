@@ -212,8 +212,8 @@ class Character:
     def isActive(self):
         return self.hp.current > 0
 
-    async def inactiveStatus(self, ctx):
-        await ctx.send(f"{self.hp.bleed(self.name)}")
+    def inactiveStatus(self):
+        return f"{self.hp.bleed(self.name)}\n"
 
     async def damage(self, ctx, dmg: str):
         dmg_roll = ''
@@ -254,12 +254,11 @@ class Character:
     async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
         await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
 
-    async def rollForInitiative(self, ctx):
+    def rollForInitiative(self):
         dex_mod = self.stats.getMod('dex')
         result = [roll(f"2d6{dex_mod:+}", inline=True) for _ in range(1)]
         init = result[0].total
-        await ctx.send(f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}")
-        return init
+        return (init, f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}\n")
 
     async def search(self, ctx, bonus, gmList):
         check = ctx.invoked_with

@@ -117,3 +117,9 @@ class Monster:
         statblock = statblock[:-1]
         return statblock
 
+    def rollForInitiative(self):
+        dex_mod = self.stats.getMod('dex')
+        result = [roll(f"2d6{dex_mod:+}", inline=True) for _ in range(1)]
+        init = result[0].total
+        return (init, f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}\n")
+
