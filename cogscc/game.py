@@ -198,7 +198,7 @@ class Game(commands.Cog):
         """Heals the specified character.
         Usage: !heal <character> <healing_dice>"""
         player = self.getPlayer(character)
-        await self.characters[player].heal(ctx, hp)
+        await ctx.send(self.characters[player].heal(hp))
 
     @commands.command(name='first_aid', aliases=['firstaid','aid'])
     async def firstAid(self, ctx, character: str):
@@ -206,7 +206,7 @@ class Game(commands.Cog):
         First aid does not restore any hit points, but can stop bleeding and restore unconscious characters to consciousness.
         Usage: !first_aid <character>"""
         player = self.getPlayer(character)
-        await self.characters[player].first_aid(ctx)
+        await ctx.send(self.characters[player].first_aid())
 
     @commands.command(name='search', aliases=['listen','smell','track','traps'])
     async def search(self, ctx, bonus = 0):
@@ -411,21 +411,20 @@ class Game(commands.Cog):
         Usage: !damage <character> <damage_dice>"""
         self.gm_only(ctx)
         player = self.getPlayer(character)
-        await self.characters[player].damage(ctx, dmg)
+        await ctx.send(self.characters[player].damage(dmg))
 
     @commands.command(name='rest')
     async def rest(self, ctx, duration: int = 1):
         """Rest for 1 or more days."""
         self.gm_only(ctx)
-        duration_text = f"{duration} days have passed."
+        result = ''
         if duration < 2:
             duration = 1
             duration_text = "1 day has passed."
         for player, character in self.characters.items():
-            result = character.rest(duration)
-            if result != '':
-                await ctx.send(result)
-        await ctx.send(duration_text)
+            result += character.rest(duration)
+        result += f"\n{duration} days have passed."
+        await ctx.send(result)
 
     @commands.command(name='level_up',aliases=['levelup'])
     async def levelUp(self, ctx, character: str):

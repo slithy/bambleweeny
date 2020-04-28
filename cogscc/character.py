@@ -215,7 +215,7 @@ class Character:
     def inactiveStatus(self):
         return f"{self.hp.bleed(self.name)}\n"
 
-    async def damage(self, ctx, dmg: str):
+    def damage(self, dmg: str):
         dmg_roll = ''
         dmg_amt: int
         try:
@@ -225,9 +225,9 @@ class Character:
             result = [roll(f"{dmg}", inline=True) for _ in range(1)]
             dmg_amt = result[0].total
             dmg_roll = f":game_die: {result[0].skeleton}\n"
-        await ctx.send(f"{dmg_roll}{self.hp.lose(self.name, dmg_amt)}")
+        return f"{dmg_roll}{self.hp.lose(self.name, dmg_amt)}"
 
-    async def heal(self, ctx, heal: str):
+    def heal(self, heal: str):
         heal_roll = ''
         heal_amt: int
         try:
@@ -237,16 +237,15 @@ class Character:
             result = [roll(f"{heal}", inline=True) for _ in range(1)]
             heal_amt = result[0].total
             heal_roll = f":game_die: {result[0].skeleton}\n"
-        await ctx.send(f"{heal_roll}{self.hp.heal(self.name, heal_amt)}")
+        return f"{heal_roll}{self.hp.heal(self.name, heal_amt)}"
 
-    async def first_aid(self, ctx):
+    def first_aid(self):
         all_mods = self.level + self.stats.getMod('con') + self.stats.getPrime('con')
         result = [roll(f"1d20{all_mods:+}", inline=True) for _ in range(1)]
         total = result[0].total
         success = total > 18
         check = f"{self.name} makes a Constitution check.\n:game_die: {result[0].skeleton}"
-        result = self.hp.first_aid(self.name, check, success)
-        await ctx.send(f"{result}")
+        return self.hp.first_aid(self.name, check, success)
 
     def rest(self, duration: int):
         return self.hp.rest(self.name, self.stats.getMod('con'), duration)
