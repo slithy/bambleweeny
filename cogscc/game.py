@@ -428,7 +428,7 @@ class Game(commands.Cog):
         """Levels up the specified character."""
         self.gm_only(ctx)
         player = self.getPlayer(character)
-        await self.characters[player].levelUp(ctx)
+        await ctx.send(self.characters[player].levelUp())
 
     @commands.command(name='euthanise')
     async def deleteCharacter(self, ctx, player: str):

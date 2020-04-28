@@ -178,7 +178,7 @@ class Character:
         else:
             raise InvalidArgument(f"{self.xclass} is not a valid class.")
 
-    async def levelUp(self, ctx):
+    def levelUp(self):
         """Level up and roll new hit points."""
         hd: int
         if self.xclass == 'Barbarian' or self.xclass == 'Monk':
@@ -205,7 +205,9 @@ class Character:
         hptxt = 'hit points'
         if total == 1:
             hptxt = 'hit point'
-        await ctx.send(f"{self.name} levels up! :partying_face:\n:game_die: {result[0].skeleton}\n{self.name} advances to level {self.level} and gains {total} {hptxt} (total hp: {self.hp.max}).")
+        return f"{self.name} levels up! :partying_face:\n" + \
+               f":game_die: {result[0].skeleton}\n" + \
+               f"{self.name} advances to level {self.level} and gains {total} {hptxt} (total hp: {self.hp.max})."
 
     def isActive(self):
         return self.hp.current > 0
