@@ -120,10 +120,6 @@ class BaseStats:
         else:
             success = f"Failure ({total-cb})" if name == 'secret_check' else "Failure! :scream:"
 
-        # Abbreviated result, used for secret GM checks
-        if name == 'secret_check':
-            return f"{success}"
-
         # Long-form result for normal checks
         known_cl = f"against challenge level {cl}" if cl > 0 else ''
         bonuses = f"{level:+} for level"
@@ -133,7 +129,11 @@ class BaseStats:
             bonuses = bonuses + f", {prime:+} for prime attribute"
         if bonus != 0:
             bonuses = bonuses + f", {bonus:+} bonus"
-        return f"{name} makes a {stat.upper()} check {known_cl}\nBonuses are {bonuses} = {all_mods:+}\n:game_die: {result[0].skeleton}\n{success}"
+
+        if name == 'secret_check':
+            return f"{success}                                                                                \nBonuses are {bonuses} = {all_mods:+}\n:game_die: {result[0].skeleton}"
+        else:
+            return f"{name} makes a {stat.upper()} check {known_cl}\nBonuses are {bonuses} = {all_mods:+}\n:game_die: {result[0].skeleton}\n{success}"
 
     def __str__(self):
         return f"**STR**: {self.strength}{self.printPrime(self.str_p)}({self.getMod('str'):+})  " \

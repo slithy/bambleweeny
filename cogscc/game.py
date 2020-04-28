@@ -229,7 +229,10 @@ class Game(commands.Cog):
             Dwarves get +4 to search checks and +2 to finding traps in stonework/structures"""
         player = str(ctx.author)
         if player in self.characters:
-            await self.characters.get(player).search(ctx, bonus, self.getGmList(ctx))
+            (message, result) = self.characters.get(player).search(ctx.invoked_with, bonus)
+            await ctx.send(message)
+            for gm in self.getGmList(ctx):
+                await gm.send(result)
         else:
             await ctx.send(f"{player} does not have a character.")
 

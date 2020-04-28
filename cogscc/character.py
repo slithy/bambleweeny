@@ -259,18 +259,18 @@ class Character:
         init = result[0].total
         return (init, f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}\n")
 
-    async def search(self, ctx, bonus, gmList):
-        check = ctx.invoked_with
+    def search(self, check, bonus):
         level = 0
         bonus = 0
         stat = 'wis'
+        message = ''
         if check == 'search':
-            await ctx.send(f"{self.name} searches the area.")
+            message = f"{self.name} searches the area."
             level = self.level
             if self.race == 'Elf':
                 bonus = 2
         elif check == 'listen':
-            await ctx.send(f"{self.name} listens attentively.")
+            message = f"{self.name} listens attentively."
             if self.xclass in [ 'Rogue', 'Assassin' ]:
                 level = self.level
             if self.race in [ 'Elf', 'Half-Elf' ]:
@@ -278,13 +278,13 @@ class Character:
             elif self.race == 'Gnome':
                 bonus = 3
         elif check == 'smell':
+            message = f"{self.name} sniffs the air."
             stat = 'con'
             if self.race == 'Half-Orc':
                 level = self.level
                 bonus = 2
-            await ctx.send(f"{self.name} sniffs the air.")
         elif check == 'traps':
-            await ctx.send(f"{self.name} searches for traps.")
+            message = f"{self.name} searches for traps."
             if self.xclass in [ 'Rogue', 'Assassin' ]:
                 level = self.level
                 stat = 'int'
@@ -293,7 +293,7 @@ class Character:
             if self.race in [ 'Elf', 'Half-Elf' ]:
                 bonus = 2
         elif check == 'track':
-            await ctx.send(f"{self.name} searches for tracks.")
+            message = f"{self.name} searches for tracks."
             if self.xclass == 'Ranger':
                 level = self.level
             if self.race == 'Half-Orc':
@@ -301,8 +301,7 @@ class Character:
         else:
             raise InvalidArgument(f"{self.name} doesn't know how to {check}")
         result = self.stats.siegeCheck('secret_check', level, stat, bonus, 0)
-        for gm in gmList:
-            await gm.send(f"{self.name} makes a {check} check: {result}")
+        return (message,f"{self.name} makes a {check} check: {result}")
 
     # Show character
 
