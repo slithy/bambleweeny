@@ -115,7 +115,7 @@ class BaseStats:
         total = result[0].total
         if total > cb and cl == 0:
             success = f"Success against CL{total-cb}!"
-        elif total > cb + cl:
+        elif total >= cb + cl:
             success = f"Success (CL{cl})! :grinning:"
         else:
             success = f"Failure ({total-cb})" if name == 'secret_check' else "Failure! :scream:"

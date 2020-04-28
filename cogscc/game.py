@@ -69,10 +69,10 @@ class Game(commands.Cog):
         Usage: !create "Character Name" <race> <class> [<level>]"""
         player = str(ctx.author)
         if player in self.characters:
-            await self.characters.get(player).showSummary(ctx, "You already have a character: ")
+            await ctx.send(self.characters.get(player).showSummary("You already have a character: "))
             return
         self.characters[player] = Character(name, race, xclass, level)
-        await self.characters.get(player).showSummary(ctx, f"{player} is playing ")
+        await ctx.send(self.characters.get(player).showSummary(f"{player} is playing "))
         return
 
     @commands.command(name='suicide')
@@ -100,7 +100,7 @@ class Game(commands.Cog):
         player = str(ctx.author)
         if player in self.characters:
             self.characters.get(player).assignStats(strength, dexterity, constitution, intelligence, wisdom, charisma, hp)
-            await self.characters.get(player).showCharacter(ctx)
+            await ctx.send(self.characters.get(player).showCharacter())
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -114,7 +114,7 @@ class Game(commands.Cog):
         player = str(ctx.author)
         if player in self.characters:
             self.characters.get(player).setPrimes(first_prime, second_prime, third_prime)
-            await self.characters.get(player).showCharacter(ctx)
+            await ctx.send(self.characters.get(player).showCharacter())
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -137,12 +137,19 @@ class Game(commands.Cog):
     async def allCharacters(self, ctx, param: str = 'None'):
         """Show stats for all characters.
         Usage: !party [stats]"""
+        party = ''
         for player, character in self.characters.items():
-            if not character.disabled and param == 'stats':
-                await character.showCharacter(ctx, f"({player})")
-            else:
+            if param != 'stats':
                 disabled = "**DISABLED** " if character.disabled else ''
-                await character.showSummary(ctx, f"{disabled}{player} is playing ")
+                party += '\n' + character.showSummary(f"{disabled}{player} is playing ")
+            elif not character.disabled:
+                party += '\n' + character.showCharacter(f"({player})")
+            # Discord has a hard limit of 2000 chars/message
+            if len(party) > 1500:
+                await ctx.send(party)
+                party = ''
+        if party:
+            await ctx.send(party)
 
     @commands.command(name='character', aliases=['char'])
     async def character(self, ctx, character: str = ''):
@@ -155,7 +162,7 @@ class Game(commands.Cog):
         else:
             self.gm_only(ctx)
             player = self.getPlayer(character)
-        await self.characters.get(player).showCharacter(ctx)
+        await ctx.send(self.characters.get(player).showCharacter())
 
     # Game mechanics
 
@@ -165,7 +172,7 @@ class Game(commands.Cog):
         Usage: !check <stat> [<bonus>] [<challenge level>]"""
         player = str(ctx.author)
         if player in self.characters:
-            await self.characters.get(player).siegeCheck(ctx, stat, bonus, cl)
+            await ctx.send(self.characters.get(player).siegeCheck(stat, bonus, cl))
         else:
             await ctx.send(f"{player} does not have a character.")
 

@@ -250,8 +250,8 @@ class Character:
     def rest(self, duration: int):
         return self.hp.rest(self.name, self.stats.getMod('con'), duration)
 
-    async def siegeCheck(self, ctx, stat: str, bonus: int, cl: int):
-        await ctx.send(self.stats.siegeCheck(self.name, self.level, stat, bonus, cl))
+    def siegeCheck(self, stat: str, bonus: int, cl: int):
+        return self.stats.siegeCheck(self.name, self.level, stat, bonus, cl)
 
     def rollForInitiative(self):
         dex_mod = self.stats.getMod('dex')
@@ -306,11 +306,13 @@ class Character:
 
     # Show character
 
-    async def showSummary(self, ctx, message: str = ""):
-        await ctx.send(f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}")
+    def showSummary(self, message: str = ""):
+        return f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}"
 
-    async def showCharacter(self, ctx, message: str = ""):
-        await ctx.send(f"{self.name}, {self.race} {self.xclass}, {self.getAlignment()}, Level {self.level} {message}\n**AC:** {self.getAC()}  **BtH:** {self.getBtH():+}  {self.hp}\n{self.stats}")
+    def showCharacter(self, message: str = ""):
+        return f"{self.name}, {self.race} {self.xclass}, {self.getAlignment()}, Level {self.level} {message}\n" + \
+               f"**AC:** {self.getAC()}  **BtH:** {self.getBtH():+}  {self.hp}\n" + \
+               f"{self.stats}"
 
     # Manage inventory
 
