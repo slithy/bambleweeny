@@ -87,8 +87,7 @@ class Game(commands.Cog):
                 "goes for a swim in a pool of acid", "didn't realise that the treasure chest was a mimic",
                 "decides to split the party", "finds the cursed katana of seppuku",
                 "decides to read the Necronomicon"])
-            await ctx.send(f"{name} {random_death}. :skull:")
-            await self.characters.get(player).showInventory(ctx)
+            await ctx.send(f"{name} {random_death}. :skull:\n" + self.characters.get(player).showInventory())
             del self.characters[player]
         else:
             await ctx.send(f"{player} does not have a character.")
@@ -337,10 +336,10 @@ class Game(commands.Cog):
             await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='drop')
-    async def dropEquipment(self, ctx, description: str, count: int = 9999999):
+    async def dropEquipment(self, ctx, description: str, count: int = 1):
         """Remove an item from your equipment list.
         Usage: !drop "Item Description" [<count>]
-               where count is the number of this item you want to drop (default: all)"""
+               where count is the number of this item you want to drop (default: 1)"""
         player = str(ctx.author)
         if player in self.characters:
             await ctx.send(self.characters.get(player).dropEquipment(description, count))
