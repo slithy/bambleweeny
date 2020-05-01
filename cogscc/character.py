@@ -5,7 +5,7 @@ from utils.constants import CLASS_NAMES
 from cogscc.models.errors import InvalidArgument
 from cogscc.funcs.dice import roll
 from cogscc.stats import BaseStats
-from cogscc.hitpoints import HP
+from cogscc.hitpoints import HP, Wound
 from cogscc.equipment import EquipmentList
 #from cogscc.monster import Monster
 
@@ -214,6 +214,19 @@ class Character:
 
     def inactiveStatus(self):
         return f"{self.hp.bleed(self.name)}\n"
+
+    def energyDrain(self, num_levels: int = 1):
+        new_hp = int((self.hp.max*(self.level-num_levels)/self.level)+0.5)
+        self.hp.max = new_hp
+        if self.hp.current > new_hp:
+            self.hp.current = new_hp
+        self.level -= num_levels
+        if self.level < 1:
+            self.hp.wound = Wound.DEAD
+            return f"All of {self.name}'s life energy has been drained! :scream:\n{self.name} is a dead withered husk. :skull:"
+        else:
+            return f"{self.name}'s life energy has been drained! :scream:\n{self.name} is reduced to level {self.level}. {self.hp}"
+        
 
     def damage(self, dmg: str):
         dmg_roll = ''

@@ -422,6 +422,14 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].damage(dmg))
 
+    @commands.command(name='energy_drain')
+    async def energyDrain(self, ctx, character: str, levels: int = 1):
+        """Drains life energy level(s) from the specified character.
+        Usage: !energy_drain <character> <no_levels>"""
+        self.gm_only(ctx)
+        player = self.getPlayer(character)
+        await ctx.send(self.characters[player].energyDrain(levels))
+
     @commands.command(name='rest')
     async def rest(self, ctx, duration: int = 1):
         """Rest for 1 or more days."""
