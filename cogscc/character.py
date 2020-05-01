@@ -37,6 +37,9 @@ class Character:
         c.disabled = False
         return c
 
+    def isMatchName(self, name: str):
+        return self.name.lower().startswith(name.lower())
+
     def setRace(self, race: str):
         if race.title() not in RACE_NAMES:
             raise InvalidArgument(f"{race} is not a valid race.")

@@ -46,6 +46,11 @@ class Monster:
             self.stats.setPrime('cha')
         # Everything else
         self.optional_stats = d
+        self.disabled = False
+
+    def isMatchName(self, name: str):
+        personal_name = self.optional_stats.get('personal_name', '')
+        return personal_name.lower().startswith(name.lower()) or self.name.lower().startswith(name.lower())
 
     def rollHp(self, already_rolled: int = 0):
         result = [roll(f"{self.hd}", inline=True) for _ in range(self.count-already_rolled)]
@@ -87,7 +92,7 @@ class Monster:
             evil_axis = 'Evil'
         return law_axis + ' ' + evil_axis
 
-    def showSummary(self):
+    def showSummary(self, msg: str = ''):
         personal_name = self.optional_stats.get('personal_name', '')
         number = f"{self.count} "
         if self.count == 1:
@@ -103,7 +108,7 @@ class Monster:
             desc = self.name[:-1] + 'ies'
         else:
             desc = self.name + 's'
-        return f"{personal_name} the {self.name}" if personal_name else f"{number}{desc}"
+        return f"{msg}{personal_name} the {self.name}" if personal_name else f"{number}{desc}"
 
     # Show in character list
     def showCharacter(self, message: str = ""):

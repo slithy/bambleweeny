@@ -6,6 +6,7 @@ from discord.ext import commands
 from cogscc.funcs.dice import roll
 from cogscc.character import Character
 from cogscc.monster import Monster
+import cogscc.animals
 from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, NotAllowed
 
 
@@ -372,7 +373,16 @@ class Game(commands.Cog):
             chars = json.load(f)
             for player, character in chars.items():
                 self.characters[player] = Character.__from_dict__(character)
-        await ctx.send(f"Characters loaded from {filename}")
+        await ctx.send(f"Characters loaded from {filename}.")
+
+    @commands.command(name='load_animals')
+    async def loadAnimals(self, ctx):
+        """Load new animal companions, familiars and mounts."""
+        self.gm_only(ctx)
+        animals = cogscc.animals.load()
+        for player, animal in animals.items():
+            self.characters[player] = animal
+        await ctx.send(f"Animals loaded.")
 
     def getPlayer(self, character_name: str):
         if character_name in self.characters:
@@ -380,7 +390,7 @@ class Game(commands.Cog):
         num_results = 0
         player_found: str
         for player, character in self.characters.items():
-            if character.name.lower().startswith(character_name.lower()):
+            if character.isMatchName(character_name):
                 num_results += 1
                 player_found = player
         if num_results == 0:
