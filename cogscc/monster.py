@@ -1,12 +1,19 @@
 from cogscc.funcs.dice import roll
 from cogscc.stats import BaseStats
 from cogscc.hitpoints import HP
+from cogscc.models.errors import OutOfRange, InvalidArgument
 
 
 class Monster:
     def __init__(self, name: str, d: dict):
         # Name
         self.name = name
+        # Count
+        self.count = d.pop('count', 1)
+        if self.count < 1:
+            raise OutOfRange(f"Count cannot be {self.count}.")
+        elif self.count > 1 and 'personal_name' in d:
+            raise InvalidArgument("Monsters with a personal name can't have count > 1.")
         # AC
         self.ac = int(d.pop('ac'))
         # HD
@@ -15,7 +22,6 @@ class Monster:
             del d['hd']
         except ValueError:
             self.hd = d.pop('hd')
-        self.count = d.pop('count', 1)
         # hp
         hp_list = d.pop('hp', [])
         if type(hp_list) == int:
@@ -65,7 +71,24 @@ class Monster:
                 'Deific': 26
            }[d['intelligence']]
 
-    def show(self):
+    def getAlignment(self):
+        alignment = self.optional_stats.get('alignment', 'N')
+        if alignment == 'N' or alignment == 'NN':
+            return 'Neutral'
+        law_axis = 'Neutral'
+        evil_axis = 'Neutral'
+        if alignment[0] == 'L':
+            law_axis = 'Lawful'
+        elif alignment[0] == 'C':
+            law_axis = 'Chaotic'
+        if alignment[1] == 'G':
+            evil_axis = 'Good'
+        elif alignment[1] == 'E':
+            evil_axis = 'Evil'
+        return law_axis + ' ' + evil_axis
+
+    def showSummary(self):
+        personal_name = self.optional_stats.get('personal_name', '')
         number = f"{self.count} "
         if self.count == 1:
             desc = self.name
@@ -80,10 +103,35 @@ class Monster:
             desc = self.name[:-1] + 'ies'
         else:
             desc = self.name + 's'
-        return f"{number}{desc}"
+        return f"{personal_name} the {self.name}" if personal_name else f"{number}{desc}"
+
+    # Show in character list
+    def showCharacter(self, message: str = ""):
+        statblock = self.showSummary()
+        if 'alignment' in self.optional_stats:
+            statblock += f", {self.getAlignment()}"
+        statblock += f"\n**AC:** {self.ac}  **HD:** {self.hd}  **HP:** "
+        if self.count == 1:
+            statblock += f"{self.hp[0].brief()}"
+        else:
+            for hp in self.hp:
+                statblock += f"{hp.current},"
+            statblock = statblock[:-1]
+        if 'move' in self.optional_stats:
+            statblock += f"  **Move:** {self.optional_stats['move']}"
+        statblock += '\n'
+        if 'attacks' in self.optional_stats:
+            statblock += "**Attack:**"
+            for attack in self.optional_stats['attacks']:
+                num = f"{attack[0]}×" if attack[0] > 1 else ""
+                statblock += f" {num}{attack[1]} ({attack[2]}),"
+            statblock = statblock[:-1]
+        if 'special' in self.optional_stats:
+            statblock += f"  **Special:** {self.optional_stats['special']}"
+        return statblock
 
     def statblock(self):
-        statblock = self.show()
+        statblock = self.showSummary()
         statblock += f": **AC** {self.ac}, **HD** {self.hd}, **hp** "
         if self.count == 1:
             statblock += f"{self.hp[0].brief()},"
@@ -95,7 +143,7 @@ class Monster:
         if 'attacks' in self.optional_stats:
             statblock += " **Attack**"
             for attack in self.optional_stats['attacks']:
-                num = f"{attack[0]}× " if attack[0] > 1 else ""
+                num = f"{attack[0]}×" if attack[0] > 1 else ""
                 statblock += f" {num}{attack[1]} ({attack[2]}),"
         if 'special' in self.optional_stats:
             statblock += f" **Special** {self.optional_stats['special']},"
@@ -116,6 +164,8 @@ class Monster:
                 statblock += f"{xp_base + (hp.max * xp_hp)},"
         statblock = statblock[:-1]
         return statblock
+
+    # Game mechanics
 
     def rollForInitiative(self):
         dex_mod = self.stats.getMod('dex')

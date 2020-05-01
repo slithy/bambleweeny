@@ -34,7 +34,7 @@ print(m.statblock())
 
 # Multiple monsters
 m = Monster('Orc', { 'hd':1, 'ac':20, 'count':10 })
-print(m.show())
+print(m.showSummary())
 print(m.statblock())
 
 m = Monster('Octopus', { 'hd':4, 'ac':20, 'count':5, 'plural_name': 'Octopodes' })
@@ -57,3 +57,4 @@ d = { 'ac': 12, 'hd': '1d12', 'hp': [ HP(8,5) ], 'size': 'S', 'move': '15, 30 (j
 
 m = Monster('Giant Killer Frog', d)
 print(m.statblock())
+

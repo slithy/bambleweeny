@@ -5,7 +5,7 @@ build:
 
 test:
 	#env PYTHONPATH=. python3.7 tests/equipment_test.py
-	#env PYTHONPATH=. python3.7 tests/monster_test.py
+	env PYTHONPATH=. python3.7 tests/monster_test.py
 	env PYTHONPATH=. python3.7 tests/character_test.py
 
 clean:
