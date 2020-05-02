@@ -161,8 +161,9 @@ class Game(commands.Cog):
                 await ctx.send(f"{player} does not have a character.")
                 return
         else:
-            self.gm_only(ctx)
             player = self.getPlayer(character)
+            if not player.startswith(str(ctx.author)):
+                self.gm_only(ctx)
         await ctx.send(self.characters.get(player).showCharacter())
 
     # Game mechanics
@@ -227,6 +228,22 @@ class Game(commands.Cog):
 
     # Wounds and healing
 
+    @commands.command(name='damage', aliases=['dmg'])
+    async def damage(self, ctx, character: str, dmg: str):
+        """Does damage to the specified character.
+        Usage: !damage <character> <damage_dice>"""
+        self.gm_only(ctx)
+        player = self.getPlayer(character)
+        await ctx.send(self.characters[player].damage(dmg))
+
+    @commands.command(name='energy_drain')
+    async def energyDrain(self, ctx, character: str, levels: int = 1):
+        """Drains life energy level(s) from the specified character.
+        Usage: !energy_drain <character> <no_levels>"""
+        self.gm_only(ctx)
+        player = self.getPlayer(character)
+        await ctx.send(self.characters[player].energyDrain(levels))
+
     @commands.command(name='heal')
     async def heal(self, ctx, character: str, hp: str):
         """Heals the specified character.
@@ -241,6 +258,19 @@ class Game(commands.Cog):
         Usage: !first_aid <character>"""
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].first_aid())
+
+    @commands.command(name='rest')
+    async def rest(self, ctx, duration: int = 1):
+        """Rest for 1 or more days."""
+        self.gm_only(ctx)
+        result = ''
+        if duration < 2:
+            duration = 1
+            duration_text = "1 day has passed."
+        for player, character in self.characters.items():
+            result += character.rest(duration)
+        result += f"\n{duration} days have passed."
+        await ctx.send(result)
 
     # Manage inventory
 
@@ -429,35 +459,6 @@ class Game(commands.Cog):
         self.gm_only(ctx)
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].gmNote(item, description))
-
-    @commands.command(name='damage', aliases=['dmg'])
-    async def damage(self, ctx, character: str, dmg: str):
-        """Does damage to the specified character.
-        Usage: !damage <character> <damage_dice>"""
-        self.gm_only(ctx)
-        player = self.getPlayer(character)
-        await ctx.send(self.characters[player].damage(dmg))
-
-    @commands.command(name='energy_drain')
-    async def energyDrain(self, ctx, character: str, levels: int = 1):
-        """Drains life energy level(s) from the specified character.
-        Usage: !energy_drain <character> <no_levels>"""
-        self.gm_only(ctx)
-        player = self.getPlayer(character)
-        await ctx.send(self.characters[player].energyDrain(levels))
-
-    @commands.command(name='rest')
-    async def rest(self, ctx, duration: int = 1):
-        """Rest for 1 or more days."""
-        self.gm_only(ctx)
-        result = ''
-        if duration < 2:
-            duration = 1
-            duration_text = "1 day has passed."
-        for player, character in self.characters.items():
-            result += character.rest(duration)
-        result += f"\n{duration} days have passed."
-        await ctx.send(result)
 
     @commands.command(name='level_up',aliases=['levelup'])
     async def levelUp(self, ctx, character: str):
