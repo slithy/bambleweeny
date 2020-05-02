@@ -6,7 +6,7 @@ from discord.ext import commands
 from cogscc.funcs.dice import roll
 from cogscc.character import Character
 from cogscc.monster import Monster
-import cogscc.animals
+import cogscc.npc
 from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, NotAllowed
 
 
@@ -138,7 +138,7 @@ class Game(commands.Cog):
         """Show stats for all characters.
         Usage: !party [stats]"""
         party = ''
-        for player, character in self.characters.items():
+        for player, character in sorted(self.characters.items()):
             if param != 'stats':
                 disabled = "**DISABLED** " if character.disabled else ''
                 party += '\n' + character.showSummary(f"{disabled}{player} is playing ")
@@ -166,7 +166,7 @@ class Game(commands.Cog):
 
     # Game mechanics
 
-    @commands.command(name='check', aliases=['ck'])
+    @commands.command(name='check', aliases=['chk'])
     async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
         """Make an ability check.
         Usage: !check <stat> [<bonus>] [<challenge level>]"""
@@ -181,7 +181,7 @@ class Game(commands.Cog):
         """Roll for initiative!"""
         initList = []
         initRolls = ''
-        for player, character in self.characters.items():
+        for player, character in sorted(self.characters.items()):
             if character.disabled:
                 continue
             elif character.isActive():
@@ -375,14 +375,14 @@ class Game(commands.Cog):
                 self.characters[player] = Character.__from_dict__(character)
         await ctx.send(f"Characters loaded from {filename}.")
 
-    @commands.command(name='load_animals')
-    async def loadAnimals(self, ctx):
-        """Load new animal companions, familiars and mounts."""
+    @commands.command(name='load_npc')
+    async def loadNPC(self, ctx):
+        """Load new NPCs, animal companions, familiars, mounts, etc."""
         self.gm_only(ctx)
-        animals = cogscc.animals.load()
-        for player, animal in animals.items():
-            self.characters[player] = animal
-        await ctx.send(f"Animals loaded.")
+        npcs = cogscc.npc.load()
+        for player, npc in npcs.items():
+            self.characters[player] = npc
+        await ctx.send(f"NPCs loaded.")
 
     def getPlayer(self, character_name: str):
         if character_name in self.characters:

@@ -1,7 +1,7 @@
 from cogscc.character import Character
 from cogscc.monster import Monster
 from cogscc.hitpoints import HP
-import cogscc.animals
+import cogscc.npc
 
 c = Character("Skullthrax Deathbane", "Human", "Barbarian", 3)
 c.assignStats(18,18,18,7,7,7,31)
@@ -23,7 +23,7 @@ print(m.showSummary())
 print(m.showCharacter())
 
 
-animals = cogscc.animals.load()
+npcs = cogscc.npc.load()
 characters = {}
-for player, animal in animals.items():
-    characters[player] = animal
+for player, npc in npcs.items():
+    characters[player] = npc
