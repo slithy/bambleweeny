@@ -9,6 +9,34 @@ from cogscc.monster import Monster
 import cogscc.npc
 from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, NotAllowed
 
+def getArgDict(*args):
+    argDict = {}
+    for arg in args:
+        s = arg.split(':', 1)
+        if len(s) == 2:
+            # Arguments should be key:value pairs
+            try:
+                argDict[s[0].lower()] = int(s[1])
+            except ValueError:
+                try:
+                    argDict[s[0].lower()] = float(s[1])
+                except ValueError:
+                    argDict[s[0].lower()] = s[1]
+        else:
+            # Allow one integer and one string argument with default key
+            try:
+                count = int(s[0])
+                if 'count' in argDict:
+                    raise EvaluationError(f"I don't know what to do with {s[0]}.")
+                else:
+                    argDict['count'] = count
+            except ValueError:
+                if 'name' in argDict:
+                    raise EvaluationError(f"I don't know what to do with {s[0]}.")
+                else:
+                    argDict['name'] = s[0]
+    return argDict
+
 
 class ToJson(json.JSONEncoder):
     def default(self, obj):
@@ -38,6 +66,19 @@ class Game(commands.Cog):
                 if role.name in Game.gm_roles:
                     gm_list.append(member)
         return gm_list
+
+    def selfOrGm(self, ctx, character: str):
+        if character:
+            # Specified character name: if the caller is not a GM, it must be controlled by the player
+            player = self.getPlayer(character)
+            if not player.startswith(str(ctx.author)):
+                self.gm_only(ctx)
+        else:
+            # Player's own character (if it exists)
+            player = str(ctx.author)
+            if player not in self.characters:
+                raise CharacterNotFound(f"{player} does not have a character.")
+        return player
 
     # Roll up a new character
 
@@ -155,28 +196,21 @@ class Game(commands.Cog):
     @commands.command(name='character', aliases=['char'])
     async def character(self, ctx, character: str = ''):
         """Show your character sheet."""
-        if character == '':
-            player = str(ctx.author)
-            if player not in self.characters:
-                await ctx.send(f"{player} does not have a character.")
-                return
-        else:
-            player = self.getPlayer(character)
-            if not player.startswith(str(ctx.author)):
-                self.gm_only(ctx)
+        player = self.selfOrGm(ctx, character)
         await ctx.send(self.characters.get(player).showCharacter())
 
     # Game mechanics
 
     @commands.command(name='check', aliases=['chk'])
-    async def siegeCheck(self, ctx, stat: str, bonus: int = 0, cl: int = 0):
+    async def siegeCheck(self, ctx, stat: str, *args):
         """Make an ability check.
-        Usage: !check <stat> [<bonus>] [<challenge level>]"""
-        player = str(ctx.author)
-        if player in self.characters:
-            await ctx.send(self.characters.get(player).siegeCheck(stat, bonus, cl))
-        else:
-            await ctx.send(f"{player} does not have a character.")
+        Usage: !check <stat> [<bonus>] [CL:<challenge level>]"""
+        argDict = getArgDict(*args)
+        character = argDict.get('name', '')
+        bonus = argDict.get('count', 0)
+        cl = argDict.get('cl', 0)
+        player = self.selfOrGm(ctx, character)
+        await ctx.send(self.characters.get(player).siegeCheck(stat, bonus, cl))
 
     @commands.command(name='search', aliases=['listen','smell','track','traps'])
     async def search(self, ctx, bonus = 0):
