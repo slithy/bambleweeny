@@ -49,7 +49,8 @@ print(m.statblock())
 m = Monster('Goblin', { 'hd':'1d6', 'ac':13, 'count':5, 'hp': [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'xp': [ 5, 1 ] })
 print(m.statblock())
 
-d = { 'ac': 12, 'hd': '1d12', 'hp': [ HP(8,5) ], 'size': 'S', 'move': '15, 30 (jump)', 'save': 'P',
+hp = HP(8,5)
+d = { 'ac': 12, 'hd': '1d12', 'hp': [ hp.__to_json__() ], 'size': 'S', 'move': '15, 30 (jump)', 'save': 'P',
       'special': 'Camouflage +5 to hide, +10 to surprise', 'intelligence': 'Animal', 'alignment': 'N',
       'type': 'Animal', 'xp': [ 9, 1 ], 'attacks': [
           [ 2, 'talons', '1d2' ],
