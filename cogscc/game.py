@@ -7,7 +7,7 @@ from cogscc.funcs.dice import roll
 from cogscc.character import Character
 from cogscc.monster import Monster
 import cogscc.npc
-from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, NotAllowed
+from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, MissingArgument, NotAllowed
 
 def getArgDict(*args):
     argDict = {}
@@ -27,12 +27,12 @@ def getArgDict(*args):
             try:
                 count = int(s[0])
                 if 'count' in argDict:
-                    raise EvaluationError(f"I don't know what to do with {s[0]}.")
+                    raise InvalidArgument(f"I don't know what to do with {s[0]}.")
                 else:
                     argDict['count'] = count
             except ValueError:
                 if 'name' in argDict:
-                    raise EvaluationError(f"I don't know what to do with {s[0]}.")
+                    raise InvalidArgument(f"I don't know what to do with {s[0]}.")
                 else:
                     argDict['name'] = s[0]
     return argDict
@@ -201,10 +201,19 @@ class Game(commands.Cog):
 
     # Game mechanics
 
-    @commands.command(name='check', aliases=['chk'])
-    async def siegeCheck(self, ctx, stat: str, *args):
+    @commands.command(name='check', aliases=['ck','chk','str','dex','con','int','wis','cha'])
+    async def siegeCheck(self, ctx, *args):
         """Make an ability check.
         Usage: !check <stat> [<bonus>] [CL:<challenge level>]"""
+        if ctx.invoked_with in ['str','dex','con','int','wis','cha']:
+            stat = ctx.invoked_with
+        else:
+            try:
+                l = list(args)
+                stat = l.pop(0)
+                args = tuple(l)
+            except IndexError:
+                raise MissingArgument("Required argument <stat> is missing.")
         argDict = getArgDict(*args)
         character = argDict.get('name', '')
         bonus = argDict.get('count', 0)
@@ -335,22 +344,8 @@ class Game(commands.Cog):
         Example: !equip "Mail Shirt" wearable ev:3 ac:4"""
         player = str(ctx.author)
         if player in self.characters:
-            argDict = {}
-            isWearable = False
-            for arg in args:
-                s = arg.split(':', 1)
-                if len(s) == 2 and s[0].lower() == 'ev':
-                    argDict['ev'] = float(s[1])
-                elif len(s) == 2:
-                    argDict[s[0].lower()] = int(s[1])
-                elif s[0].isdigit() and not 'count' in argDict:
-                    argDict['count'] = int(s[0])
-                elif s[0].lower() == 'wearable':
-                    isWearable = True
-                else:
-                    raise InvalidArgument(f"I don't know what you mean by {s[0]}.")
-
-            if isWearable:
+            argDict = getArgDict(*args)
+            if argDict.get('name','') == 'wearable':
                 await ctx.send(self.characters.get(player).addWearable(description, argDict))
             else:
                 await ctx.send(self.characters.get(player).addEquipment(description, argDict))
@@ -519,13 +514,7 @@ class Game(commands.Cog):
     async def monsterAdd(self, ctx, name: str, *args):
         """Adds a new monster to the combat."""
         self.gm_only(ctx)
-        argDict = {}
-        for arg in args:
-            s = arg.split(':', 1)
-            if len(s) == 2:
-                argDict[s[0].lower()] = int(s[1])
-            elif s[0].isdigit() and not 'count' in argDict:
-                argDict['count'] = int(s[0])
+        argDict = getArgDict(*args)
         if 'ac' not in argDict:
             argDict['ac'] = 10
         if 'hd' not in argDict:

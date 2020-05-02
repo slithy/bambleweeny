@@ -16,6 +16,11 @@ class NotAllowed(BambleweenyException):
     """Raised when a user tries to do something they are not allowed to do by role or dependency."""
     pass
 
+class MissingArgument(BambleweenyException):
+    """Raised when a command is missing a required argument."""
+    def __init__(self, msg):
+        super().__init__(msg)
+
 class InvalidEquipmentAttribute(BambleweenyException):
     """Raised when an invalid attribute is applied to an item of equipment."""
     def __init__(self, attr: str):
