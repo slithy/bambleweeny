@@ -342,15 +342,17 @@ class EquipmentList:
 
     def add(self, description: str, d: dict):
         for key in d.keys():
+            if key is 'name':
+                raise InvalidEquipmentAttribute(d['name'])
             if key not in ['count','ev','value']:
                 raise InvalidEquipmentAttribute(key)
         count = d.get('count', 1)
-        if count < 1:
+        if count != int(count) or count < 1:
             raise OutOfRange("count must be a positive integer")
 
         itemno = self.find(description, True)
         if itemno < 0:
-            newitem = Equipment(description, count, d.get('ev',1), d.get('value',0))
+            newitem = Equipment(description, count, float(d.get('ev',1)), int(d.get('value',0)))
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
         elif type(self.equipment[itemno]) is not Equipment:
@@ -386,7 +388,7 @@ class EquipmentList:
 
     def addWearable(self, description: str, d: dict):
         for key in d.keys():
-            if key not in ['count','ev','value','ac']:
+            if key not in ['name','count','ev','value','ac']:
                 raise InvalidEquipmentAttribute(key)
         count = d.get('count', 1)
         if count != 1:
@@ -394,7 +396,7 @@ class EquipmentList:
 
         itemno = self.find(description, True)
         if itemno < 0:
-            newitem = Wearable(description, d.get('ac',0), d.get('ev',1), d.get('value',0))
+            newitem = Wearable(description, int(d.get('ac',0)), float(d.get('ev',1)), int(d.get('value',0)))
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
         else:
