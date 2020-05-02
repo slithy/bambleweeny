@@ -437,8 +437,11 @@ class Game(commands.Cog):
         with open(f"/save/{basename(filename)}", 'r') as f:
             chars = json.load(f)
             for player, character in chars.items():
-                self.characters[player] = Character.__from_dict__(character)
-        await ctx.send(f"Characters loaded from {filename}.")
+                if character.get('type', ''):
+                    self.characters[player] = Monster.__from_dict__(character)
+                else:
+                    self.characters[player] = Character.__from_dict__(character)
+        await ctx.send(f"Characters and NPCs loaded from {filename}.")
 
     @commands.command(name='load_npc')
     async def loadNPC(self, ctx):

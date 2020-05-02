@@ -31,7 +31,7 @@ class Monster(BaseCharacter):
             del hp_list[self.count:]
         elif len(hp_list) < self.count:
             hp_list += self.rollHp(len(hp_list))
-        self.hp = [ hp if type(hp) == HP else HP(hp) for hp in hp_list ]
+        self.hp = [ HP(hp) if type(hp) is int else HP.__from_dict__(hp) for hp in hp_list ]
         # Saves
         self.save = d.pop('save','P')
         self.getInt(d)
@@ -48,6 +48,16 @@ class Monster(BaseCharacter):
         # Everything else
         self.optional_stats = d
         self.disabled = False
+
+    def __to_json__(self):
+        d = { 'type': 'monster', 'name': self.name, 'count': self.count, 'ac': self.ac, 'hd': self.hd, 'hp': self.hp, 'save': self.save, 'stats': self.stats }
+        return { **d, **self.optional_stats }
+
+    @classmethod
+    def __from_dict__(cls, d):
+        del d['type']
+        m = Monster(d.pop('name'), d)
+        return m
 
     def getName(self):
         return self.optional_stats.get('personal_name', self.name)

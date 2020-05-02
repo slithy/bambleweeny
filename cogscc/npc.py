@@ -10,4 +10,5 @@ def load():
         'personal_name': 'Froggo' }
     killer_frog = Monster('Giant Killer Frog', killer_frog_dict)
 
-    return { 'sudo#4043#1': killer_frog }
+    # Return { 'user#id#num', Monster }
+    return {}
