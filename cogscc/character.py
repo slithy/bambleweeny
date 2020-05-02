@@ -2,15 +2,15 @@ from math import ceil
 from utils.constants import STAT_ABBREVIATIONS
 from utils.constants import RACE_NAMES
 from utils.constants import CLASS_NAMES
-from cogscc.models.errors import InvalidArgument
-from cogscc.funcs.dice import roll
+from cogscc.base_character import BaseCharacter
 from cogscc.stats import BaseStats
 from cogscc.hitpoints import HP, Wound
 from cogscc.equipment import EquipmentList
-#from cogscc.monster import Monster
+from cogscc.funcs.dice import roll
+from cogscc.models.errors import InvalidArgument
 
 
-class Character:
+class Character(BaseCharacter):
     def __init__(self, name: str, race: str, xclass: str, level: int):
         self.name = name
         self.setRace(race)
@@ -37,8 +37,7 @@ class Character:
         c.disabled = False
         return c
 
-    def isMatchName(self, name: str):
-        return self.name.lower().startswith(name.lower())
+    # Character generation
 
     def setRace(self, race: str):
         if race.title() not in RACE_NAMES:
@@ -150,6 +149,8 @@ class Character:
         self.stats.setPrime(prime_2)
         self.stats.setPrime(prime_3)
 
+    # Game mechanics
+
     def getAC(self):
         if self.xclass == 'Monk':
             try:
@@ -212,12 +213,6 @@ class Character:
                f":game_die: {result[0].skeleton}\n" + \
                f"{self.name} advances to level {self.level} and gains {total} {hptxt} (total hp: {self.hp.max})."
 
-    def isActive(self):
-        return self.hp.current > 0
-
-    def inactiveStatus(self):
-        return f"{self.hp.bleed(self.name)}\n"
-
     def energyDrain(self, num_levels: int = 1):
         new_hp = int((self.hp.max*(self.level-num_levels)/self.level)+0.5)
         self.hp.max = new_hp
@@ -229,51 +224,6 @@ class Character:
             return f"All of {self.name}'s life energy has been drained! :scream:\n{self.name} is a dead withered husk. :skull:"
         else:
             return f"{self.name}'s life energy has been drained! :scream:\n{self.name} is reduced to level {self.level}. {self.hp}"
-        
-
-    def damage(self, dmg: str):
-        dmg_roll = ''
-        dmg_amt: int
-        try:
-            int(dmg)
-            dmg_amt = int(dmg)
-        except ValueError:
-            result = [roll(f"{dmg}", inline=True) for _ in range(1)]
-            dmg_amt = result[0].total
-            dmg_roll = f":game_die: {result[0].skeleton}\n"
-        return f"{dmg_roll}{self.hp.lose(self.name, dmg_amt)}"
-
-    def heal(self, heal: str):
-        heal_roll = ''
-        heal_amt: int
-        try:
-            int(heal)
-            heal_amt = int(heal)
-        except ValueError:
-            result = [roll(f"{heal}", inline=True) for _ in range(1)]
-            heal_amt = result[0].total
-            heal_roll = f":game_die: {result[0].skeleton}\n"
-        return f"{heal_roll}{self.hp.heal(self.name, heal_amt)}"
-
-    def first_aid(self):
-        all_mods = self.level + self.stats.getMod('con') + self.stats.getPrime('con')
-        result = [roll(f"1d20{all_mods:+}", inline=True) for _ in range(1)]
-        total = result[0].total
-        success = total > 18
-        check = f"{self.name} makes a Constitution check.\n:game_die: {result[0].skeleton}"
-        return self.hp.first_aid(self.name, check, success)
-
-    def rest(self, duration: int):
-        return self.hp.rest(self.name, self.stats.getMod('con'), duration)
-
-    def siegeCheck(self, stat: str, bonus: int, cl: int):
-        return self.stats.siegeCheck(self.name, self.level, stat, bonus, cl)
-
-    def rollForInitiative(self):
-        dex_mod = self.stats.getMod('dex')
-        result = [roll(f"2d6{dex_mod:+}", inline=True) for _ in range(1)]
-        init = result[0].total
-        return (init, f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}\n")
 
     def search(self, check, bonus):
         level = 0

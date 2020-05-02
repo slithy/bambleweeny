@@ -81,7 +81,7 @@ class Game(commands.Cog):
         """Kill your character (allowing you to create a new one)."""
         player = str(ctx.author)
         if player in self.characters:
-            name = self.characters[player].name
+            name = self.characters[player].getName()
             random_death = random.choice(["drinks poison and fails their saving throw",
                 "is crushed by falling rocks", "opens a chest filled with poison gas",
                 "is shot in the back by a comrade", "goes to explore the Tomb of Horrors and is never seen again", 
@@ -127,7 +127,7 @@ class Game(commands.Cog):
         player = str(ctx.author)
         if player in self.characters:
             self.characters.get(player).setAlignment(alignment)
-            await ctx.send(f"{self.characters.get(player).name} is {self.characters.get(player).getAlignment()}")
+            await ctx.send(f"{self.characters.get(player).getName()} is {self.characters.get(player).getAlignment()}")
         else:
             await ctx.send(f"{player} does not have a character.")
 
@@ -141,7 +141,8 @@ class Game(commands.Cog):
         for player, character in sorted(self.characters.items()):
             if param != 'stats':
                 disabled = "**DISABLED** " if character.disabled else ''
-                party += '\n' + character.showSummary(f"{disabled}{player} is playing ")
+                msg = f"{player} is playing" if type(character) is Character else "(NPC) "
+                party += character.showSummary(f"\n{disabled}{msg} ")
             elif not character.disabled:
                 party += '\n' + character.showCharacter(f"({player})")
             # Discord has a hard limit of 2000 chars/message
@@ -176,45 +177,6 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='initiative', aliases=['init'])
-    async def rollForInitiative(self, ctx):
-        """Roll for initiative!"""
-        initList = []
-        initRolls = ''
-        for player, character in sorted(self.characters.items()):
-            if character.disabled:
-                continue
-            elif character.isActive():
-                (init, dieRoll) = character.rollForInitiative()
-                initList.append((init, character.name))
-                initRolls += dieRoll
-            else:
-                initRolls += character.inactiveStatus()
-        for monster in self.monsters:
-            (init, dieRoll) = monster.rollForInitiative()
-            initList.append((init, monster.name))
-            initRolls += dieRoll
-        await ctx.send(initRolls)
-        initOrder = "**Initiative Order**\n"
-        for i in sorted(initList, reverse=True):
-            initOrder += f"{i[0]}\t{i[1]}\n"
-        await ctx.send(initOrder)
-
-    @commands.command(name='heal')
-    async def heal(self, ctx, character: str, hp: str):
-        """Heals the specified character.
-        Usage: !heal <character> <healing_dice>"""
-        player = self.getPlayer(character)
-        await ctx.send(self.characters[player].heal(hp))
-
-    @commands.command(name='first_aid', aliases=['firstaid','aid'])
-    async def firstAid(self, ctx, character: str):
-        """Perform first aid on the specified character.
-        First aid does not restore any hit points, but can stop bleeding and restore unconscious characters to consciousness.
-        Usage: !first_aid <character>"""
-        player = self.getPlayer(character)
-        await ctx.send(self.characters[player].first_aid())
-
     @commands.command(name='search', aliases=['listen','smell','track','traps'])
     async def search(self, ctx, bonus = 0):
         """Use a sense or skill to detect something or someone.
@@ -235,6 +197,50 @@ class Game(commands.Cog):
                 await gm.send(result)
         else:
             await ctx.send(f"{player} does not have a character.")
+
+    # Combat
+
+    @commands.command(name='initiative', aliases=['init'])
+    async def rollForInitiative(self, ctx):
+        """Roll for initiative!"""
+        self.gm_only(ctx)
+        initList = []
+        initRolls = ''
+        for player, character in sorted(self.characters.items()):
+            if character.disabled:
+                continue
+            elif character.isActive():
+                (init, dieRoll) = character.rollForInitiative()
+                initList.append((init, character.getName()))
+                initRolls += dieRoll
+            else:
+                initRolls += character.inactiveStatus()
+        for monster in self.monsters:
+            (init, dieRoll) = monster.rollForInitiative()
+            initList.append((init, monster.getName()))
+            initRolls += dieRoll
+        await ctx.send(initRolls)
+        initOrder = "**Initiative Order**\n"
+        for i in sorted(initList, reverse=True):
+            initOrder += f"{i[0]}\t{i[1]}\n"
+        await ctx.send(initOrder)
+
+    # Wounds and healing
+
+    @commands.command(name='heal')
+    async def heal(self, ctx, character: str, hp: str):
+        """Heals the specified character.
+        Usage: !heal <character> <healing_dice>"""
+        player = self.getPlayer(character)
+        await ctx.send(self.characters[player].heal(hp))
+
+    @commands.command(name='first_aid', aliases=['firstaid','aid'])
+    async def firstAid(self, ctx, character: str):
+        """Perform first aid on the specified character.
+        First aid does not restore any hit points, but can stop bleeding and restore unconscious characters to consciousness.
+        Usage: !first_aid <character>"""
+        player = self.getPlayer(character)
+        await ctx.send(self.characters[player].first_aid())
 
     # Manage inventory
 
@@ -475,10 +481,21 @@ class Game(commands.Cog):
         await ctx.send(f"Monsters reset.")
 
     @commands.command(name='monster_add', aliases=['ma'])
-    async def monsterAdd(self, ctx, name: str, hd: int = 1, ac: int = 10, dex: int = 10):
+    async def monsterAdd(self, ctx, name: str, *args):
         """Adds a new monster to the combat."""
         self.gm_only(ctx)
-        self.monsters.append(Monster(name, { 'hd': hd, 'ac': ac, 'dex': dex }))
+        argDict = {}
+        for arg in args:
+            s = arg.split(':', 1)
+            if len(s) == 2:
+                argDict[s[0].lower()] = int(s[1])
+            elif s[0].isdigit() and not 'count' in argDict:
+                argDict['count'] = int(s[0])
+        if 'ac' not in argDict:
+            argDict['ac'] = 10
+        if 'hd' not in argDict:
+            argDict['hd'] = 1
+        self.monsters.append(Monster(name, argDict))
         await ctx.send(f"Added {name} to combat.")
 
 def setup(bot):

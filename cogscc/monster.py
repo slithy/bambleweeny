@@ -1,10 +1,11 @@
-from cogscc.funcs.dice import roll
+from cogscc.base_character import BaseCharacter
 from cogscc.stats import BaseStats
 from cogscc.hitpoints import HP
-from cogscc.models.errors import OutOfRange, InvalidArgument
+from cogscc.funcs.dice import roll
+from cogscc.models.errors import OutOfRange, InvalidArgument, MonsterNotUnique
 
 
-class Monster:
+class Monster(BaseCharacter):
     def __init__(self, name: str, d: dict):
         # Name
         self.name = name
@@ -47,6 +48,17 @@ class Monster:
         # Everything else
         self.optional_stats = d
         self.disabled = False
+
+    def getName(self):
+        return self.optional_stats.get('personal_name', self.name)
+
+    def getLevel(self):
+        return int(self.hd.split('d')[0])
+
+    def getHp(self):
+        if self.count != 1:
+            raise MonsterNotUnique()
+        return self.hp[0]
 
     def isMatchName(self, name: str):
         personal_name = self.optional_stats.get('personal_name', '')
@@ -112,7 +124,7 @@ class Monster:
 
     # Show in character list
     def showCharacter(self, message: str = ""):
-        statblock = self.showSummary()
+        statblock = self.showSummary().replace(' the ', ', ', 1)
         if 'alignment' in self.optional_stats:
             statblock += f", {self.getAlignment()}"
         statblock += f"\n**AC:** {self.ac}  **HD:** {self.hd}  **HP:** "
@@ -171,10 +183,4 @@ class Monster:
         return statblock
 
     # Game mechanics
-
-    def rollForInitiative(self):
-        dex_mod = self.stats.getMod('dex')
-        result = [roll(f"2d6{dex_mod:+}", inline=True) for _ in range(1)]
-        init = result[0].total
-        return (init, f":game_die: {self.name} rolls 2d6{dex_mod:+} = {init}\n")
 
