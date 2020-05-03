@@ -288,6 +288,15 @@ class Character(BaseCharacter):
     def addEquipment(self, description: str, d: dict):
         return f"{self.name} {self.equipment.add(description, d)}"
 
+    def addWeapon(self, description: str, d: dict):
+        return f"{self.name} {self.equipment.addWeapon(description, d)}"
+
+    def wield(self, description: str):
+        return f"{self.name} {self.equipment.wield(description)}"
+
+    def unwield(self, description: str):
+        return f"{self.name} {self.equipment.unwield(description)}"
+
     def addWearable(self, description: str, d: dict):
         return f"{self.name} {self.equipment.addWearable(description, d)}"
 

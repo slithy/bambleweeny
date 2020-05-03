@@ -338,19 +338,28 @@ class Game(commands.Cog):
     @commands.command(name='equip', aliases=['pick','get'])
     async def addEquipment(self, ctx, description: str, *args):
         """Add an item to your equipment list.
-        Usage: !equip "Item Description" [wearable|<count>] [<attributes>]
-               where wearable means that you will be able to !wear this item
+        Usage: !equip "Item Description" [weapon|wearable|<count>] [<attributes>]
+               where weapon means that you will be able to !wield this item
+                     wearable means that you will be able to !wear this item
                      count is the number of this item you are carrying (default: 1)
                      attributes allow you to specify additional attributes of the item as a key-value pair:
                          ev:<number> is the Encumbrance Value from the Player's Handbook (default: 1)
                          value:<number> is the value in gold pieces for gems, jewellery and other treasure (default: 0)
+                         dmg:<dice string> is the damage dice for a weapon
+                         bth:<number> is the bonus to bit for an exceptional or magic weapon (default: 0)
+                         range:<number> is the range in feet for a ranged weapon (default: 0)
+                         ammo:<string> is the ammunition type for a ranged weapon (default is bolt/arrow/stone)
+                         hands:<number> is how many hands it takes to wield a weapon (default: 1)
                          ac:<number> is the Armour Class bonus that this item will give if you wear it (default: 0)
-        Example: !equip "Mail Shirt" wearable ev:3 ac:4"""
+        Examples: `!equip "Longbow" weapon ev:4 dmg:1d6 range:100 hands:2`
+                  `!equip "Mail Shirt" wearable ev:3 ac:4`"""
         player = str(ctx.author)
         if player in self.characters:
             argDict = getArgDict(*args)
             if argDict.get('name','') == 'wearable':
                 await ctx.send(self.characters.get(player).addWearable(description, argDict))
+            elif argDict.get('name','') == 'weapon':
+                await ctx.send(self.characters.get(player).addWeapon(description, argDict))
             else:
                 await ctx.send(self.characters.get(player).addEquipment(description, argDict))
         else:
@@ -380,6 +389,26 @@ class Game(commands.Cog):
             except IndexError:
                 raise InvalidArgument("Wrong number of arguments. Try: `!give <item> to <character>`")
             await ctx.send(self.characters.get(player).give(count, description, self.characters.get(self.getPlayer(recipient))))
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='wield')
+    async def wield(self, ctx, description: str):
+        """Wield a weapon you are carrying.
+        Usage: !wield "Weapon Name" """
+        player = str(ctx.author)
+        if player in self.characters:
+            await ctx.send(self.characters.get(player).wield(description))
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='unwield', aliases=['sheathe','unstring'])
+    async def unwield(self, ctx, description: str):
+        """Unwield a weapon you are carrying.
+        Usage: !unwield "Weapon Name" """
+        player = str(ctx.author)
+        if player in self.characters:
+            await ctx.send(self.characters.get(player).unwield(description))
         else:
             await ctx.send(f"{player} does not have a character.")
 

@@ -145,9 +145,8 @@ class Wearable(Equipment):
     @classmethod
     def __from_dict__(cls, d):
         ev = d.get('ev', 1)
-        e = cls(d['description'], d.get('ac', 0), ev if ev >= 0.002 else 1, d.get('value', 0))
+        e = cls(d['description'], d.get('ac', 0), d.get('hands', 0), ev if ev >= 0.002 else 1, d.get('value', 0))
         e.__from_dict_super__(d)
-        e.hands = d.get('hands', 0)
         e.is_worn = d.get('wearing', False)
         e.location = d.get('location', '')
         return e
@@ -202,6 +201,30 @@ class Weapon(Equipment):
         self.range = range
         self.setAmmo(ammo)
         self.is_wielding = False
+
+    def __to_json__(self):
+        d = super().__to_json__()
+        d['type'] = 'weapon'
+        d['dmg'] = self.dmg
+        if self.bth != 0:
+            d['bth'] = self.bth
+        if self.hands != 1:
+            d['hands'] = self.hands
+        if self.range != 0:
+            d['range'] = self.range
+        if self.ammo != '':
+            d['ammo'] = self.ammo
+        if self.is_wielding:
+            d['wielding'] = True
+        return d
+
+    @classmethod
+    def __from_dict__(cls, d):
+        ev = d.get('ev', 1)
+        e = cls(d['description'], d['dmg'], d.get('bth', 0), d.get('hands', 1), d.get('range', 0), d.get('ammo', ''), ev if ev >= 0.002 else 1, d.get('value', 0))
+        e.__from_dict_super__(d)
+        e.is_wielding = d.get('wielding', False)
+        return e
 
     def setAmmo(self, ammo: str):
         if ammo:
@@ -352,6 +375,8 @@ class EquipmentList:
             type = equipitem.get('type', 'normal')
             if type == 'wearable':
                 e.equipment.append(Wearable.__from_dict__(equipitem))
+            elif type == 'weapon':
+                e.equipment.append(Weapon.__from_dict__(equipitem))
             else:
                 e.equipment.append(Equipment.__from_dict__(equipitem))
         e.coin = Coin.__from_dict__(d.get('coin'))
@@ -401,7 +426,7 @@ class EquipmentList:
 
     def add(self, description: str, d: dict):
         for key in d.keys():
-            if key is 'name':
+            if key == 'name':
                 raise InvalidEquipmentAttribute(d['name'])
             if key not in ['count','ev','value']:
                 raise InvalidEquipmentAttribute(key)
@@ -510,6 +535,8 @@ class EquipmentList:
             raise ItemNotFound(f"You don't have any {description}.")
         elif not self.equipment[itemno].isWearable():
             raise ItemNotWearable(f"{self.equipment[itemno].show()} is not something you can wear.")
+        elif self.getFreeHands() < self.equipment[itemno].hands:
+            raise ItemNotWearable(f"{self.equipment[itemno].show()} requires {self.equipment[itemno].hands} free hands.")
         else:
             self.equipment[itemno].wear(location)
             self.recalculateAC()
