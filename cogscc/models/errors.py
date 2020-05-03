@@ -80,6 +80,11 @@ class UniqueItem(BambleweenyException):
     def __init__(self, msg: str = "Unique items can have only one instance."):
         super().__init__(msg)
 
+class ItemNotWieldable(BambleweenyException):
+    """Raised when there is an attempt to wield an item that is not wieldable."""
+    def __init__(self, msg: str = "Only weapons can be wielded."):
+        super().__init__(msg)
+
 class ItemNotWearable(BambleweenyException):
     """Raised when there is an attempt to wear an item that is not wearable."""
     def __init__(self, msg: str = "Only wearable items can be worn."):

@@ -1,7 +1,7 @@
 import cogscc.equipment as eq
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, \
-    InvalidEquipmentAttribute, ItemNotFound, ItemNotWearable, NotWearingItem, MissingArgument, \
-    OutOfRange, UniqueItem
+    InvalidEquipmentAttribute, ItemNotFound, ItemNotWieldable, ItemNotWearable, NotWearingItem, \
+    MissingArgument, OutOfRange, UniqueItem
 
 eqList = eq.EquipmentList()
 
@@ -96,7 +96,7 @@ print("Inventory with coins and EV")
 print(eqList.getInventory(True))
 
 print("Wearables")
-print(eqList.addWearable("Padded Armour", { 'ac':1, 'ev':2 }))
+print(eqList.addWearable("- Padded Armour", { 'ac':1, 'ev':2 }))
 print(eqList.addWearable("Gold ring with snake sigil", { 'ev':0.01, 'value':1000 }))
 print(eqList.addWearable("Crown of Lordly Might", { 'ac':5, 'ev':0.01, 'value':1000 }))
 print(eqList.getInventory())
@@ -157,14 +157,31 @@ print(eqList.addWeapon("Magic Dagger +3", { 'bth': 3, 'damage': '1d4+3', 'range'
 print(eqList.getInventory())
 
 print("Wielding Weapons")
+print(eqList.wear("shield","on right arm"))
 print(eqList.wear("shield","on left arm"))
-print(eqList.wield("two"))
-print(eqList.wield("shield"))
-print(eqList.wear("sword"))
+try:
+    print(eqList.wield("two"))
+except ItemNotWieldable:
+    print("Not enough hands free")
+try:
+    print(eqList.wield("shield"))
+except ItemNotWieldable:
+    print("Only weapons can be wielded")
+try:
+    print(eqList.wear("sword"))
+except:
+    print("Weapons cannot be worn.")
 print(eqList.wield("sword"))
 print(eqList.getInventory())
 
-print("Using Weapons")
-print(eqList.attack())
+print(eqList.unwield("sword"))
+print(eqList.takeOff("shield"))
+#print(eqList.wield("dagger"))
+#print(eqList.wield("club"))
+print(eqList.wield("bow"))
+print(eqList.getInventory())
+
+#print("Using Weapons")
+#print(eqList.attack())
 
 # Add magic arrows! Need an ammunition property for equipment, with bonus to hit/dmg

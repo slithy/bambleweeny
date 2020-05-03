@@ -1,6 +1,6 @@
 from copy import copy
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidEquipmentAttribute, \
-    ItemNotFound, ItemNotMutable, ItemNotWearable, MissingArgument, NotWearingItem, OutOfRange, UniqueItem
+    ItemNotFound, ItemNotMutable, ItemNotWieldable, ItemNotWearable, MissingArgument, NotWearingItem, OutOfRange, UniqueItem
 
 
 class Equipment:
@@ -71,6 +71,12 @@ class Equipment:
                           self.ev == e.ev and \
                        self.value == e.value else False
 
+    def isWeapon(self):
+        return False
+
+    def isWielding(self):
+        return False
+
     def isWearable(self):
         return False
 
@@ -117,6 +123,8 @@ class Wearable(Equipment):
     def __init__(self, description: str, ac: int, hands: int, ev: float, value: int):
         super().__init__(description, 1, ev, value)
         self.ac = ac
+        if hands < 0 or hands > 2:
+            raise InvalidEquipmentAttribute(f"hands:{hands}")
         self.hands = hands
         self.is_worn = False
         self.location = ''
@@ -171,7 +179,7 @@ class Wearable(Equipment):
             return super().show(showEV, showNotes)
         else:
             loc = f", {self.location}" if self.location else ''
-            ev = f", EV {int(self.ev + 0.5)}" if showEV else ''
+            ev = f" (EV {int(self.ev + 0.5)})" if showEV else ''
             ac = f", {self.ac:+} AC" if self.ac != 0 else ''
             notes = ' :small_blue_diamond:' if showNotes and self.gm_note else ''
             return f"{self.getDescription()}{loc}{ac}{ev}{notes}"
@@ -188,6 +196,8 @@ class Weapon(Equipment):
         super().__init__(description, 1, ev, value)
         self.dmg = dmg
         self.bth = bth
+        if hands < 1 or hands > 2:
+            raise InvalidEquipmentAttribute(f"hands:{hands}")
         self.hands = hands
         self.range = range
         self.setAmmo(ammo)
@@ -203,6 +213,34 @@ class Weapon(Equipment):
                     break
         else:
             self.ammo = ''
+
+    def isEquipment(self):
+        return not self.is_wielding and self.value == 0
+
+    def isPushable(self, e):
+        return False
+
+    def isWeapon(self):
+        return True
+
+    def isWielding(self):
+        return self.is_wielding
+
+    def wield(self):
+        self.is_wielding = True
+
+    def unwield(self):
+        self.is_wielding = False
+
+    def show(self, showEV: bool = False, showNotes: bool = False):
+        if not self.is_wielding:
+            return super().show(showEV, showNotes)
+        else:
+            dmg = f"{self.dmg} dmg" if self.bth == 0 else f"BtH {self.bth:+}, {self.dmg} dmg"
+            range = f", range {self.range}'" if self.range > 0 else ""
+            ev = f" (EV {int(self.ev + 0.5)})" if showEV else ''
+            notes = ' :small_blue_diamond:' if showNotes and self.gm_note else ''
+            return f"{self.getDescription()}, {dmg}{range}{ev}{notes}"
 
 
 class Container:
@@ -354,6 +392,13 @@ class EquipmentList:
             if self.equipment[item_no].isWearing():
                 self.ac += self.equipment[item_no].ac
 
+    def getFreeHands(self):
+        free_hands = 2
+        for item_no in range(len(self.equipment)):
+            if self.equipment[item_no].isWearing() or self.equipment[item_no].isWielding():
+                free_hands -= self.equipment[item_no].hands
+        return free_hands
+
     def add(self, description: str, d: dict):
         for key in d.keys():
             if key is 'name':
@@ -418,6 +463,30 @@ class EquipmentList:
             return f"gets {newitem.show()}."
         else:
             raise UniqueItem(f"Weapons are unique and you already have {self.equipment[itemno].show()}.")
+
+    def wield(self, description: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"You don't have any {description}.")
+        elif not self.equipment[itemno].isWeapon():
+            raise ItemNotWieldable(f"{self.equipment[itemno].show()} is not something you can wield.")
+        elif self.getFreeHands() < self.equipment[itemno].hands:
+            raise ItemNotWieldable(f"{self.equipment[itemno].show()} requires {self.equipment[itemno].hands} free hands.")
+        else:
+            reply = f"is wielding {self.equipment[itemno].show()}."
+            self.equipment[itemno].wield()
+            return reply
+
+    def unwield(self, description: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"You don't have any {description}.")
+        elif not self.equipment[itemno].isWielding():
+            raise NotWearingItem(f"You are not wielding {self.equipment[itemno].show()}.")
+        else:
+            self.equipment[itemno].unwield()
+            reply = f"puts away {self.equipment[itemno].show()}."
+            return reply
 
     def addWearable(self, description: str, d: dict):
         for key in d.keys():
@@ -502,6 +571,8 @@ class EquipmentList:
     def getInventory(self, showEV: bool = False, showNotes: bool = False):
         wear_list = "**Wearing**\n"
         has_wear = False
+        wield_list = "**Wielding**\n"
+        has_wield = False
         equip_list = "**Equipment**\n"
         has_equipment = False
         treasure_list = "**Treasure**\n"
@@ -511,7 +582,10 @@ class EquipmentList:
             if item.isWearing():
                 has_wear = True
                 wear_list += f"  {item.show(showEV, showNotes)}\n"
-            if item.isEquipment():
+            if item.isWielding():
+                has_wield = True
+                wield_list += f"  {item.show(showEV, showNotes)}\n"
+            elif item.isEquipment():
                 has_equipment = True
                 equip_list += f"  {item.show(showEV, showNotes)}\n"
             elif item.isTreasure():
@@ -521,6 +595,7 @@ class EquipmentList:
             has_treasure = True
             treasure_list += f"{self.coin.show(showEV)}\n"
         inventory = (wear_list if has_wear else '') + \
+                    (wield_list if has_wield else '') + \
                     (equip_list if has_equipment else '') + \
                     (treasure_list if has_treasure else '')
         return inventory
