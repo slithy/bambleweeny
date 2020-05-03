@@ -10,11 +10,15 @@ import cogscc.npc
 from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, MissingArgument, NotAllowed
 
 def getArgDict(*args):
+    synonymDict = { 'cap': 'capacity', 'dmg': 'damage', 'rng': 'range', 'val': 'value' }
+
     argDict = {}
     for arg in args:
         s = arg.split(':', 1)
         if len(s) == 2:
             # Arguments should be key:value pairs
+            if s[0].lower() in synonymDict:
+                s[0] = synonymDict[s[0]]
             try:
                 argDict[s[0].lower()] = int(s[1])
             except ValueError:

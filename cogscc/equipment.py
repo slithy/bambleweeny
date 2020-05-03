@@ -1,6 +1,6 @@
 from copy import copy
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidEquipmentAttribute, \
-    ItemNotFound, ItemNotMutable, ItemNotWearable, NotWearingItem, OutOfRange, UniqueItem
+    ItemNotFound, ItemNotMutable, ItemNotWearable, MissingArgument, NotWearingItem, OutOfRange, UniqueItem
 
 
 class Equipment:
@@ -114,10 +114,10 @@ class Equipment:
 
 
 class Wearable(Equipment):
-    def __init__(self, description: str, ac: int, ev: float, value: int):
+    def __init__(self, description: str, ac: int, hands: int, ev: float, value: int):
         super().__init__(description, 1, ev, value)
         self.ac = ac
-        self.hands = 0
+        self.hands = hands
         self.is_worn = False
         self.location = ''
 
@@ -178,17 +178,31 @@ class Wearable(Equipment):
 
 
 class Weapon(Equipment):
-    def __init__(self, description: str, dmg: str, range: int, ev: float, value: int):
-        self = Equipment(description, 1, ev, value)
+    DefaultAmmo = {
+        'crossbow': 'bolt',
+        'bow': 'arrow',
+        'sling': 'stone'
+    }
+
+    def __init__(self, description: str, dmg: str, bth: int, hands: int, range: int, ammo: str, ev: float, value: int):
+        super().__init__(description, 1, ev, value)
         self.dmg = dmg
+        self.bth = bth
+        self.hands = hands
         self.range = range
-        self.ammo = ''
-        if 'crossbow' in description.lower():
-            self.ammo = 'bolt'
-        elif bow in description.lower():
-            self.ammo = 'arrow'
-        elif 'sling' in description.lower():
-            self.ammo = 'stone'
+        self.setAmmo(ammo)
+        self.is_wielding = False
+
+    def setAmmo(self, ammo: str):
+        if ammo:
+            self.ammo = ammo
+        elif self.range != 0:
+            for weapon, ammo in Weapon.DefaultAmmo.items():
+                if weapon in self.description.lower():
+                    self.ammo = ammo
+                    break
+        else:
+            self.ammo = ''
 
 
 class Container:
@@ -386,9 +400,28 @@ class EquipmentList:
         else:
             self.equipment[itemno].count += e.count 
 
+    def addWeapon(self, description: str, d: dict):
+        for key in d.keys():
+            if key not in ['name','count','ev','value','damage','bth','hands','range','ammo']:
+                raise InvalidEquipmentAttribute(key)
+        count = d.get('count', 1)
+        if count != 1:
+            raise UniqueItem("Weapons are unique (count must be 1)")
+        if not d.get('damage',''):
+            raise MissingArgument(f"You need to specify the damage for {description}.")
+
+        itemno = self.find(description, True)
+        if itemno < 0:
+            newitem = Weapon(description, d['damage'], int(d.get('bth',0)), int(d.get('hands',1)),
+                int(d.get('range',0)), d.get('ammo',''), float(d.get('ev',1)), int(d.get('value',0)))
+            self.equipment.append(newitem)
+            return f"gets {newitem.show()}."
+        else:
+            raise UniqueItem(f"Weapons are unique and you already have {self.equipment[itemno].show()}.")
+
     def addWearable(self, description: str, d: dict):
         for key in d.keys():
-            if key not in ['name','count','ev','value','ac']:
+            if key not in ['name','count','ev','value','ac','hands']:
                 raise InvalidEquipmentAttribute(key)
         count = d.get('count', 1)
         if count != 1:
@@ -396,7 +429,7 @@ class EquipmentList:
 
         itemno = self.find(description, True)
         if itemno < 0:
-            newitem = Wearable(description, int(d.get('ac',0)), float(d.get('ev',1)), int(d.get('value',0)))
+            newitem = Wearable(description, int(d.get('ac',0)), int(d.get('hands',0)), float(d.get('ev',1)), int(d.get('value',0)))
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
         else:

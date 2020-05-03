@@ -1,6 +1,7 @@
 import cogscc.equipment as eq
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, \
-    ItemNotFound, ItemNotWearable, NotWearingItem, OutOfRange, UniqueItem
+    InvalidEquipmentAttribute, ItemNotFound, ItemNotWearable, NotWearingItem, MissingArgument, \
+    OutOfRange, UniqueItem
 
 eqList = eq.EquipmentList()
 
@@ -131,3 +132,39 @@ print(f"AC bonus is {eqList.ac:+}")
 print(eqList.takeOff("Crown"))
 print(f"AC bonus is {eqList.ac:+}")
 
+print("Weapons")
+try:
+    print(eqList.addWeapon("Club", {}))
+except MissingArgument:
+    print("damage was not specified")
+try:
+    print(eqList.addWeapon("Club", { 'ac':3 }))
+except InvalidEquipmentAttribute:
+    print("Only wearable items can take an AC.")
+print(eqList.addWeapon("Sword", { 'damage': '1d8' }))
+print(eqList.addWeapon("Two-handed Sword", { 'damage': '2d6', 'hands':2, 'ev':5 }))
+try:
+    print(eqList.addWeapon("Two-handed Sword", { 'damage': '3d6' }))
+except UniqueItem:
+    print("Can't add two of the same item")
+print(eqList.addWearable("Shield, medium steel", { 'ac': 1, 'ev':3, 'hands':1 }))
+
+print("Ranged Weapons")
+print(eqList.addWeapon("Club, gold plated", { 'damage': '1d6+1', 'range':10, 'ev':2, 'value':100 }))
+print(eqList.addWeapon("Longbow", { 'damage': '1d6', 'range':100, 'ev':2, 'ammo':'arrow', 'hands':2 }))
+print(eqList.addWeapon("Sling", { 'damage': '1d4', 'range':50, 'ev':1 }))
+print(eqList.addWeapon("Magic Dagger +3", { 'bth': 3, 'damage': '1d4+3', 'range':10, 'ev':1 }))
+print(eqList.getInventory())
+
+print("Wielding Weapons")
+print(eqList.wear("shield","on left arm"))
+print(eqList.wield("two"))
+print(eqList.wield("shield"))
+print(eqList.wear("sword"))
+print(eqList.wield("sword"))
+print(eqList.getInventory())
+
+print("Using Weapons")
+print(eqList.attack())
+
+# Add magic arrows! Need an ammunition property for equipment, with bonus to hit/dmg
