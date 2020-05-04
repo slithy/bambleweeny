@@ -279,6 +279,27 @@ class Character(BaseCharacter):
                f"**AC:** {self.getAC()}  **BtH:** {self.getBtH():+}  {self.hp}\n" + \
                f"{self.stats}"
 
+    def showHp(self):
+        num_moons = int(self.hp.max/4 + 0.75)
+        current = 0 if self.hp.current == 0 else self.hp.current
+        moons = ''
+        for i in range(num_moons):
+            if current == 0:
+                moons += ':new_moon:'
+            elif current == 1:
+                moons += ':waning_crescent_moon:'
+                current = 0
+            elif current == 2:
+                moons += ':last_quarter_moon:'
+                current = 0
+            elif current == 3:
+                moons += ':waning_gibbous_moon:'
+                current = 0
+            else:
+                moons += ':full_moon:'
+                current -= 4
+        return f"{self.hp}\n{moons}"
+
     # Manage inventory
 
     def showInventory(self, showNotes: bool = False):

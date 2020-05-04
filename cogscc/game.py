@@ -203,6 +203,12 @@ class Game(commands.Cog):
         player = self.selfOrGm(ctx, character)
         await ctx.send(self.characters.get(player).showCharacter())
 
+    @commands.command(name='hp')
+    async def character(self, ctx, character: str = ''):
+        """Show your hit points."""
+        player = self.selfOrGm(ctx, character)
+        await ctx.send(self.characters.get(player).showHp())
+
     # Game mechanics
 
     @commands.command(name='check', aliases=['ck','chk','str','dex','con','int','wis','cha'])

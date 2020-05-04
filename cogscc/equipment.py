@@ -348,7 +348,7 @@ class Coin:
 
     def show(self, showEV: bool = False):
         total_ev = f" (EV {int(self.getEV()+0.5)})" if showEV else ''
-        coin = f"  **Coin{total_ev}:**\n"
+        coin = f"  :moneybag:{total_ev}\n"
         has_coin = False
         for den, amt in self.coin.items():
             if amt > 0:

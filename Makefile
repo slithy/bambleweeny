@@ -15,6 +15,9 @@ clean:
 clobber:
 	@./clean_saves ./save
 
+start:
+	sudo systemctl start docker
+
 stop:
 	sudo systemctl stop docker
 
