@@ -204,7 +204,7 @@ class Game(commands.Cog):
         await ctx.send(self.characters.get(player).showCharacter())
 
     @commands.command(name='hp')
-    async def character(self, ctx, character: str = ''):
+    async def hp(self, ctx, character: str = ''):
         """Show your hit points."""
         player = self.selfOrGm(ctx, character)
         await ctx.send(self.characters.get(player).showHp())
