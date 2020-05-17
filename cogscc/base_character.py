@@ -19,6 +19,9 @@ class BaseCharacter:
     def inactiveStatus(self):
         return f"{self.getHp().bleed(self.getName())}\n"
 
+    def showShortSummary(self):
+        return self.name
+
     # Game mechanics
 
     def siegeCheck(self, stat: str, bonus: int, cl: int):

@@ -132,6 +132,9 @@ class Monster(BaseCharacter):
             desc = self.name + 's'
         return f"{msg}{personal_name} the {self.name}" if personal_name else f"{number}{desc}"
 
+    def showShortSummary(self):
+        return self.showSummary()
+
     # Show in character list
     def showCharacter(self, message: str = ""):
         statblock = self.showSummary().replace(' the ', ', ', 1)

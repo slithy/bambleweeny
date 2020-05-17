@@ -265,13 +265,13 @@ class Game(commands.Cog):
                 continue
             elif character.isActive():
                 (init, dieRoll) = character.rollForInitiative()
-                initList.append((init, character.getName()))
+                initList.append((init, character.showShortSummary()))
                 initRolls += dieRoll
             else:
                 initRolls += character.inactiveStatus()
         for monster in self.monsters:
             (init, dieRoll) = monster.rollForInitiative()
-            initList.append((init, monster.getName()))
+            initList.append((init, monster.showShortSummary()))
             initRolls += dieRoll
         await ctx.send(initRolls)
         initOrder = "**Initiative Order**\n"

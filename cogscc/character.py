@@ -271,6 +271,9 @@ class Character(BaseCharacter):
 
     # Show character
 
+    def showShortSummary(self):
+        return f"{self.name}     **AC:** {self.getAC()} {self.hp}"
+
     def showSummary(self, message: str = ""):
         return f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}"
 
@@ -281,7 +284,7 @@ class Character(BaseCharacter):
 
     def showHp(self):
         num_moons = int(self.hp.max/4 + 0.75)
-        current = 0 if self.hp.current == 0 else self.hp.current
+        current = 0 if self.hp.current < 0 else self.hp.current
         moons = ''
         for i in range(num_moons):
             if current == 0:
