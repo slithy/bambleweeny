@@ -316,13 +316,13 @@ class Character(BaseCharacter):
         return f"{self.name} {self.equipment.addWeapon(description, d)}"
 
     def wield(self, description: str):
-        return f"{self.name} {self.equipment.wield(description)}"
+        return f"{self.equipment.wield(self.name, description)}"
 
     def addWearable(self, description: str, d: dict):
         return f"{self.name} {self.equipment.addWearable(description, d)}"
 
     def wear(self, description: str, location: str = ''):
-        return f"{self.name} {self.equipment.wear(description, location)}"
+        return f"{self.equipment.wear(self.name, description, location)}"
 
     def takeOff(self, description: str):
         return f"{self.name} {self.equipment.takeOff(description)}"

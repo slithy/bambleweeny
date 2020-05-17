@@ -417,12 +417,28 @@ class EquipmentList:
             if self.equipment[item_no].isWearing():
                 self.ac += self.equipment[item_no].ac
 
-    def getFreeHands(self):
+    def freeHands(self, hands: int, name: str):
         free_hands = 2
+        reply = ''
         for item_no in range(len(self.equipment)):
             if self.equipment[item_no].isWearing() or self.equipment[item_no].isWielding():
                 free_hands -= self.equipment[item_no].hands
-        return free_hands
+        if free_hands >= hands:
+            return reply
+        for item_no in range(len(self.equipment)):
+            if self.equipment[item_no].isWielding():
+                self.equipment[item_no].unwield()
+                free_hands += self.equipment[item_no].hands
+                reply += f"{name} puts away {self.equipment[item_no].show()}\n"
+                if free_hands >= hands:
+                    return reply
+        for item_no in range(len(self.equipment)):
+            if self.equipment[item_no].isWearing() and self.equipment[item_no].hands > 0:
+                self.equipment[item_no].takeOff()
+                free_hands += self.equipment[item_no].hands
+                reply += f"{name} takes off {self.equipment[item_no].show()}\n"
+                if free_hands >= hands:
+                    return reply
 
     def add(self, description: str, d: dict):
         for key in d.keys():
@@ -489,16 +505,15 @@ class EquipmentList:
         else:
             raise UniqueItem(f"Weapons are unique and you already have {self.equipment[itemno].show()}.")
 
-    def wield(self, description: str):
+    def wield(self, name: str, description: str):
         itemno = self.find(description)
         if itemno < 0:
             raise ItemNotFound(f"You don't have any {description}.")
         elif not self.equipment[itemno].isWeapon():
             raise ItemNotWieldable(f"{self.equipment[itemno].show()} is not something you can wield.")
-        elif self.getFreeHands() < self.equipment[itemno].hands:
-            raise ItemNotWieldable(f"{self.equipment[itemno].show()} requires {self.equipment[itemno].hands} free hands.")
         else:
-            reply = f"is wielding {self.equipment[itemno].show()}."
+            reply = self.freeHands(self.equipment[itemno].hands, name)
+            reply += f"{name} is wielding {self.equipment[itemno].show()}."
             self.equipment[itemno].wield()
             return reply
 
@@ -510,6 +525,10 @@ class EquipmentList:
         if count != 1:
             raise UniqueItem("Wearable items are unique (count must be 1)")
 
+        # Shields require 1 hand by default
+        if d.get('hands',99) == 99 and 'shield' in description.lower():
+            d['hands'] = 1
+
         itemno = self.find(description, True)
         if itemno < 0:
             newitem = Wearable(description, int(d.get('ac',0)), int(d.get('hands',0)), float(d.get('ev',1)), int(d.get('value',0)))
@@ -518,18 +537,18 @@ class EquipmentList:
         else:
             raise UniqueItem(f"Wearable items are unique and you already have {self.equipment[itemno].show()}.")
 
-    def wear(self, description: str, location: str = ''):
+    def wear(self, name: str, description: str, location: str = ''):
         itemno = self.find(description)
         if itemno < 0:
             raise ItemNotFound(f"You don't have any {description}.")
         elif not self.equipment[itemno].isWearable():
             raise ItemNotWearable(f"{self.equipment[itemno].show()} is not something you can wear.")
-        elif self.getFreeHands() < self.equipment[itemno].hands:
-            raise ItemNotWearable(f"{self.equipment[itemno].show()} requires {self.equipment[itemno].hands} free hands.")
         else:
+            reply = self.freeHands(self.equipment[itemno].hands, name)
+            reply += f"{name} is wearing {self.equipment[itemno].show()}."
             self.equipment[itemno].wear(location)
             self.recalculateAC()
-            return f"is wearing {self.equipment[itemno].show()}."
+            return reply
 
     def takeOff(self, description: str):
         itemno = self.find(description)
