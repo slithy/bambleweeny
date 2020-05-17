@@ -515,6 +515,7 @@ class EquipmentList:
             reply = self.freeHands(self.equipment[itemno].hands, name)
             reply += f"{name} is wielding {self.equipment[itemno].show()}."
             self.equipment[itemno].wield()
+            self.recalculateAC()
             return reply
 
     def addWearable(self, description: str, d: dict):
