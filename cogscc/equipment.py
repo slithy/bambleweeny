@@ -502,17 +502,6 @@ class EquipmentList:
             self.equipment[itemno].wield()
             return reply
 
-    def unwield(self, description: str):
-        itemno = self.find(description)
-        if itemno < 0:
-            raise ItemNotFound(f"You don't have any {description}.")
-        elif not self.equipment[itemno].isWielding():
-            raise NotWearingItem(f"You are not wielding {self.equipment[itemno].show()}.")
-        else:
-            self.equipment[itemno].unwield()
-            reply = f"puts away {self.equipment[itemno].show()}."
-            return reply
-
     def addWearable(self, description: str, d: dict):
         for key in d.keys():
             if key not in ['name','count','ev','value','ac','hands']:
@@ -546,13 +535,17 @@ class EquipmentList:
         itemno = self.find(description)
         if itemno < 0:
             raise ItemNotFound(f"You don't have any {description}.")
-        elif not self.equipment[itemno].isWearing():
-            raise NotWearingItem(f"You are not wearing {self.equipment[itemno].show()}.")
-        else:
+        elif self.equipment[itemno].isWearing():
             self.equipment[itemno].takeOff()
             self.recalculateAC()
             reply = f"takes off {self.equipment[itemno].show()}."
             return reply
+        elif self.equipment[itemno].isWielding():
+            self.equipment[itemno].unwield()
+            reply = f"puts away {self.equipment[itemno].show()}."
+            return reply
+        else:
+            raise NotWearingItem(f"You are not bearing {self.equipment[itemno].show()}.")
 
     def pop(self, description: str, count: int = 1):
         itemno = self.find(description)

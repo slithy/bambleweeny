@@ -251,6 +251,13 @@ async def on_message(message):
 
 
 @bot.event
+async def on_message_edit(before,after):
+    if after.author.id in bot.muted:
+        return
+    await bot.process_commands(after)
+
+
+@bot.event
 async def on_command(ctx):
     try:
         log.debug(

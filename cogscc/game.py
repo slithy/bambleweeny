@@ -362,6 +362,13 @@ class Game(commands.Cog):
         player = str(ctx.author)
         if player in self.characters:
             argDict = getArgDict(*args)
+            # If type not specified, try to infer it from the attributes
+            if argDict.get('name','') == '':
+                if argDict.get('ac','') != '':
+                    argDict['name'] = 'wearable'
+                elif argDict.get('damage','') != '':
+                    argDict['name'] = 'weapon'
+            # Add equipment by type
             if argDict.get('name','') == 'wearable':
                 await ctx.send(self.characters.get(player).addWearable(description, argDict))
             elif argDict.get('name','') == 'weapon':
@@ -408,16 +415,6 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='unwield', aliases=['sheathe','unstring'])
-    async def unwield(self, ctx, description: str):
-        """Unwield a weapon you are carrying.
-        Usage: !unwield "Weapon Name" """
-        player = str(ctx.author)
-        if player in self.characters:
-            await ctx.send(self.characters.get(player).unwield(description))
-        else:
-            await ctx.send(f"{player} does not have a character.")
-
     @commands.command(name='wear')
     async def wear(self, ctx, description: str, location: str = ''):
         """Wear an item you are carrying.
@@ -430,9 +427,9 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='take_off', aliases=['takeoff','take','remove'])
+    @commands.command(name='remove', aliases=['take_off','takeoff','unwear','unwield','sheathe','unstring'])
     async def takeOff(self, ctx, description: str):
-        """Take off an item you are wearing
+        """Take off an item you are wearing or wielding
         Usage: !take_off "Item Description" """
         player = str(ctx.author)
         if player in self.characters:

@@ -315,9 +315,6 @@ class Character(BaseCharacter):
     def wield(self, description: str):
         return f"{self.name} {self.equipment.wield(description)}"
 
-    def unwield(self, description: str):
-        return f"{self.name} {self.equipment.unwield(description)}"
-
     def addWearable(self, description: str, d: dict):
         return f"{self.name} {self.equipment.addWearable(description, d)}"
 
