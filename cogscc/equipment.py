@@ -286,10 +286,13 @@ class Container(Equipment):
         e.__from_dict_super__(d)
         return e
 
+    def __lt__(self, other):
+        return self.description < other.description
+
     def isContainer(self):
         return True
 
-    def show(self, showEV: bool = False, showNotes: bool = False):
+    def showAll(self, showEV: bool = False, showNotes: bool = False):
         detail = ''
         if self.value > 0:
             ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
@@ -297,7 +300,7 @@ class Container(Equipment):
         elif showEV:
             detail = f" (EV {int(self.getEV() + 0.5)})"
         detail += ' :small_blue_diamond:' if showNotes and self.gm_note else ''
-        return f"**{self.getDescription()}**{detail} Capacity {self.capacity}\n"
+        return f"**{self.description}**{detail} Capacity {self.capacity}\n"
 
 
 class Coin:
@@ -689,8 +692,9 @@ class EquipmentList:
             treasure_list += f"{self.coin.show(showEV)}\n"
         inventory = (wear_list if has_wear else '') + \
                     (wield_list if has_wield else '')
+        container_list.sort()
         for item in container_list:
-            inventory += item.show()
+            inventory += item.showAll()
         inventory += (equip_list if has_equipment else '') + \
                      (treasure_list if has_treasure else '')
         return inventory

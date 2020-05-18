@@ -179,9 +179,9 @@ print(eqList.getInventory())
 
 # Containers
 
-print(eqList.addContainer("Backpack", { 'ev': 2, 'capacity': 8 }))
-print(eqList.addContainer("Large Barrel", { 'ev': 9, 'capacity': 9 }))
 print(eqList.addContainer("Large Sack made of silk", { 'ev': 2, 'capacity': 10, 'value': 50 }))
+print(eqList.addContainer("Large Barrel", { 'ev': 9, 'capacity': 9 }))
+print(eqList.addContainer("Backpack", { 'ev': 2, 'capacity': 8 }))
 print(eqList.getInventory())
 
 
