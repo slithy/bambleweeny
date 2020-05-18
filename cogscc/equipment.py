@@ -83,6 +83,9 @@ class Equipment:
     def isWearing(self):
         return False
 
+    def isContainer(self):
+        return False
+
     def isTreasure(self):
         return self.value > 0
 
@@ -266,11 +269,35 @@ class Weapon(Equipment):
             return f"{self.getDescription()}, {dmg}{range}{ev}{notes}"
 
 
-class Container:
-    def __init__(self, description: str, ev: float, capacity: int):
-        self = Equipment(description, 1, ev, 0)
+class Container(Equipment):
+    def __init__(self, description: str, capacity: int, ev: float, value: int):
+        super().__init__(description, 1, ev, value)
         self.capacity = capacity
-        self.contents = []
+
+    def __to_json__(self):
+        d = super().__to_json__()
+        d['type'] = 'container'
+        d['capacity'] = self.capacity
+        return d
+
+    @classmethod
+    def __from_dict__(cls, d):
+        e = cls(d['description'], d['capacity'], d.get('ev', 1.0), d.get('value', 0))
+        e.__from_dict_super__(d)
+        return e
+
+    def isContainer(self):
+        return True
+
+    def show(self, showEV: bool = False, showNotes: bool = False):
+        detail = ''
+        if self.value > 0:
+            ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
+            detail = f" ({self.value * self.count} gp{ev})"
+        elif showEV:
+            detail = f" (EV {int(self.getEV() + 0.5)})"
+        detail += ' :small_blue_diamond:' if showNotes and self.gm_note else ''
+        return f"**{self.getDescription()}**{detail} Capacity {self.capacity}\n"
 
 
 class Coin:
@@ -377,6 +404,8 @@ class EquipmentList:
                 e.equipment.append(Wearable.__from_dict__(equipitem))
             elif type == 'weapon':
                 e.equipment.append(Weapon.__from_dict__(equipitem))
+            elif type == 'container':
+                e.equipment.append(Container.__from_dict__(equipitem))
             else:
                 e.equipment.append(Equipment.__from_dict__(equipitem))
         e.coin = Coin.__from_dict__(d.get('coin'))
@@ -567,6 +596,27 @@ class EquipmentList:
         else:
             raise NotWearingItem(f"You are not bearing {self.equipment[itemno].show()}.")
 
+    def addContainer(self, description: str, d: dict):
+        for key in d.keys():
+            if key not in ['name','count','capacity','ev','value']:
+                raise InvalidEquipmentAttribute(key)
+        count = d.get('count', 1)
+        if count != 1:
+            raise UniqueItem("Containers are unique (count must be 1)")
+        if not d.get('ev',''):
+            raise MissingArgument(f"You need to specify the Encumbrance Value (EV) for {description}.")
+        if not d.get('capacity',''):
+            raise MissingArgument(f"You need to specify the capacity for {description}.")
+
+        itemno = self.find(description, True)
+        if itemno < 0:
+            newitem = Container(description, int(d['capacity']), float(d['ev']), int(d.get('value',0)))
+            self.equipment.append(newitem)
+            return f"gets {newitem.show()}."
+        else:
+            raise UniqueItem(f"Containers are unique and you already have {self.equipment[itemno].show()}.")
+
+
     def pop(self, description: str, count: int = 1):
         itemno = self.find(description)
         if itemno < 0:
@@ -613,10 +663,11 @@ class EquipmentList:
         has_wear = False
         wield_list = "**Wielding**\n"
         has_wield = False
-        equip_list = "**Equipment**\n"
+        equip_list = "**Carrying**\n"
         has_equipment = False
         treasure_list = "**Treasure**\n"
         has_treasure = False
+        container_list = []
 
         for item in self.equipment:
             if item.isWearing():
@@ -625,6 +676,8 @@ class EquipmentList:
             if item.isWielding():
                 has_wield = True
                 wield_list += f"  {item.show(showEV, showNotes)}\n"
+            elif item.isContainer():
+                container_list.append(item)
             elif item.isEquipment():
                 has_equipment = True
                 equip_list += f"  {item.show(showEV, showNotes)}\n"
@@ -635,8 +688,10 @@ class EquipmentList:
             has_treasure = True
             treasure_list += f"{self.coin.show(showEV)}\n"
         inventory = (wear_list if has_wear else '') + \
-                    (wield_list if has_wield else '') + \
-                    (equip_list if has_equipment else '') + \
-                    (treasure_list if has_treasure else '')
+                    (wield_list if has_wield else '')
+        for item in container_list:
+            inventory += item.show()
+        inventory += (equip_list if has_equipment else '') + \
+                     (treasure_list if has_treasure else '')
         return inventory
 

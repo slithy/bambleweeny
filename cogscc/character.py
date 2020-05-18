@@ -327,6 +327,9 @@ class Character(BaseCharacter):
     def takeOff(self, description: str):
         return f"{self.name} {self.equipment.takeOff(description)}"
 
+    def addContainer(self, description: str, d: dict):
+        return f"{self.name} {self.equipment.addContainer(description, d)}"
+
     def give(self, count: int, description: str, recipient):
         if recipient is self:
             return "Only crazy people give things to themselves."

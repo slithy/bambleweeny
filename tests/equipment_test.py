@@ -105,16 +105,16 @@ try:
 except UniqueItem:
     print("Can't create more than one instance of wearable items")
 try:
-    print(eqList.wear("Armour"))
+    print(eqList.wear("Bill","Armour"))
 except ItemNotFound:
     print("Can't wear items that you aren't carrying")
 try:
-    print(eqList.wear("Beetroot"))
+    print(eqList.wear("Bill","Beetroot"))
 except ItemNotWearable:
     print("Can't wear something that is not wearable")
 print(eqList.addWearable("Indiana Jones hat", {}))
-print(eqList.wear("Indiana","on head"))
-print(eqList.wear("Padded","on body"))
+print(eqList.wear("Bill","Indiana","on head"))
+print(eqList.wear("Bill","Padded","on body"))
 print(eqList.getInventory(True))
 try:
     eqList.takeOff("Chiwawa")
@@ -125,7 +125,7 @@ try:
 except NotWearingItem:
     print("Can't take off an item you aren't wearing.")
 print(eqList.takeOff("Indiana"))
-print(eqList.wear("Crown", "on head"))
+print(eqList.wear("Bill","Crown", "on head"))
 print(eqList.getInventory())
 
 print(f"AC bonus is {eqList.ac:+}")
@@ -157,31 +157,32 @@ print(eqList.addWeapon("Magic Dagger +3", { 'bth': 3, 'damage': '1d4+3', 'range'
 print(eqList.getInventory())
 
 print("Wielding Weapons")
-print(eqList.wear("shield","on right arm"))
-print(eqList.wear("shield","on left arm"))
+print(eqList.wear("Bill","shield","on right arm"))
+print(eqList.wear("Bill","shield","on left arm"))
+print(eqList.wield("Bill","two"))
 try:
-    print(eqList.wield("two"))
-except ItemNotWieldable:
-    print("Not enough hands free")
-try:
-    print(eqList.wield("shield"))
+    print(eqList.wield("Bill","shield"))
 except ItemNotWieldable:
     print("Only weapons can be wielded")
 try:
-    print(eqList.wear("sword"))
+    print(eqList.wear("Bill","sword"))
 except:
     print("Weapons cannot be worn.")
-print(eqList.wield("sword"))
+print(eqList.wield("Bill","sword"))
 print(eqList.getInventory())
 
-print(eqList.unwield("sword"))
-print(eqList.takeOff("shield"))
-#print(eqList.wield("dagger"))
-#print(eqList.wield("club"))
-print(eqList.wield("bow"))
+print(eqList.takeOff("sword"))
+print(eqList.wield("Bill","dagger"))
+print(eqList.wield("Bill","club"))
+print(eqList.wield("Bill","bow"))
 print(eqList.getInventory())
 
-#print("Using Weapons")
-#print(eqList.attack())
+# Containers
+
+print(eqList.addContainer("Backpack", { 'ev': 2, 'capacity': 8 }))
+print(eqList.addContainer("Large Barrel", { 'ev': 9, 'capacity': 9 }))
+print(eqList.addContainer("Large Sack made of silk", { 'ev': 2, 'capacity': 10, 'value': 50 }))
+print(eqList.getInventory())
+
 
 # Add magic arrows! Need an ammunition property for equipment, with bonus to hit/dmg

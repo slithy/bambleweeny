@@ -368,11 +368,15 @@ class Game(commands.Cog):
                     argDict['name'] = 'wearable'
                 elif argDict.get('damage','') != '':
                     argDict['name'] = 'weapon'
+                elif argDict.get('capacity','') != '':
+                    argDict['name'] = 'container'
             # Add equipment by type
             if argDict.get('name','') == 'wearable':
                 await ctx.send(self.characters.get(player).addWearable(description, argDict))
             elif argDict.get('name','') == 'weapon':
                 await ctx.send(self.characters.get(player).addWeapon(description, argDict))
+            elif argDict.get('name','') == 'container':
+                await ctx.send(self.characters.get(player).addContainer(description, argDict))
             else:
                 await ctx.send(self.characters.get(player).addEquipment(description, argDict))
         else:
