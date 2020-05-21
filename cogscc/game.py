@@ -441,9 +441,11 @@ class Game(commands.Cog):
             await ctx.send(f"{player} does not have a character.")
 
     @commands.command(name='put')
-    async def put(self, ctx, description: str, container: str):
+    async def put(self, ctx, description: str, instr: str, container: str = ''):
         """Put an item into a container
-        Usage: !put "Item Description" "Container" """
+        Usage: !put "Item Description" [in] "Container" """
+        if instr != 'in' or not container:
+            container = instr
         player = str(ctx.author)
         if player in self.characters:
             await ctx.send(self.characters.get(player).put(description, container))
