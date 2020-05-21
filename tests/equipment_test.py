@@ -151,7 +151,7 @@ print(eqList.addWearable("Shield, medium steel", { 'ac': 1, 'ev':3, 'hands':1 })
 
 print("Ranged Weapons")
 print(eqList.addWeapon("Club, gold plated", { 'damage': '1d6+1', 'range':10, 'ev':2, 'value':100 }))
-print(eqList.addWeapon("Longbow", { 'damage': '1d6', 'range':100, 'ev':2, 'ammo':'arrow', 'hands':2 }))
+print(eqList.addWeapon("Longbow", { 'damage': '1d6', 'range':100, 'ev':2, 'hands':2 }))
 print(eqList.addWeapon("Sling", { 'damage': '1d4', 'range':50, 'ev':1 }))
 print(eqList.addWeapon("Magic Dagger +3", { 'bth': 3, 'damage': '1d4+3', 'range':10, 'ev':1 }))
 print(eqList.getInventory())
@@ -199,6 +199,10 @@ except NestedContainer:
     print("Containers cannot be nested.")
 print(eqList.put("arrow","backpack"))
 print(eqList.put("diamond","backpack"))
+print(eqList.wear("Bill","padded"))
+print(eqList.wield("Bill","longbow"))
+print(eqList.takeOut("beet"))
+
 print(eqList.getInventory())
 
 # Add magic arrows! Need an ammunition property for equipment, with bonus to hit/dmg

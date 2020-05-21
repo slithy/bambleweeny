@@ -94,6 +94,22 @@ class Equipment:
     def getEV(self):
         return self.ev * self.count
 
+    def findContainer(self):
+        for ref in gc.get_referrers(self):
+            for cl in gc.get_referrers(ref):
+                if type(cl) is dict and 'capacity' in cl:
+                    return (ref,cl)
+        return None
+
+    def isInContainer(self):
+        return self.findContainer() != None
+
+    def removeFromContainer(self):
+        fc = self.findContainer()
+        if fc != None:
+            fc[0].remove(self)
+            return fc[1]['description']
+
     def getDescription(self):
         number = ''
         desc = self.description
@@ -172,6 +188,7 @@ class Wearable(Equipment):
         return not self.is_worn and self.value > 0
 
     def wear(self, location: str):
+        self.removeFromContainer()
         self.is_worn = True
         self.location = location
 
@@ -235,6 +252,7 @@ class Weapon(Equipment):
         return self.is_wielding
 
     def wield(self):
+        self.removeFromContainer()
         self.is_wielding = True
 
     def unwield(self):
@@ -285,9 +303,10 @@ class Container(Equipment):
             item.takeOff()
         elif item.isWielding():
             item.unwield()
-        for ref in gc.get_referrers(item):
-            if ref is self.contents:
-                raise InvalidContainerItem(f"{item.show()} is already in {self.show()}.")
+        elif item in self.contents:
+            raise InvalidContainerItem(f"{item.show()} is already in {self.show()}.")
+        else:
+            item.removeFromContainer()
         self.contents.append(item)
 
     def showContents(self, showEV: bool = False, showNotes: bool = False):
@@ -629,6 +648,14 @@ class EquipmentList:
             raise ItemNotFound(f"You don't have any {container}.")
         self.equipment[contno].put(self.equipment[itemno])
         return f"puts {self.equipment[itemno].show()} into {self.equipment[contno].show()}"
+
+    def takeOut(self, description: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"You don't have any {description}.")
+        contdesc = self.equipment[itemno].removeFromContainer()
+        contno = self.find(contdesc)
+        return f"removes {self.equipment[itemno].show()} from {self.equipment[contno].show()}"
 
     def pop(self, description: str, count: int = 1):
         itemno = self.find(description)
