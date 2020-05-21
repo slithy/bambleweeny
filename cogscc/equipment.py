@@ -1,6 +1,8 @@
+import gc
 from copy import copy
-from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidEquipmentAttribute, \
-    ItemNotFound, ItemNotMutable, ItemNotWieldable, ItemNotWearable, MissingArgument, NotWearingItem, OutOfRange, UniqueItem
+from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidContainerItem, \
+    InvalidEquipmentAttribute, ItemNotFound, ItemNotMutable, ItemNotWieldable, ItemNotWearable, \
+    MissingArgument, NestedContainer, NotWearingItem, OutOfRange, UniqueItem
 
 
 class Equipment:
@@ -273,17 +275,21 @@ class Container(Equipment):
     def __init__(self, description: str, capacity: int, ev: float, value: int):
         super().__init__(description, 1, ev, value)
         self.capacity = capacity
+        self.contents = []
 
     def __to_json__(self):
         d = super().__to_json__()
         d['type'] = 'container'
         d['capacity'] = self.capacity
+        if contents:
+            d['contents'] = contents
         return d
 
     @classmethod
     def __from_dict__(cls, d):
         e = cls(d['description'], d['capacity'], d.get('ev', 1.0), d.get('value', 0))
         e.__from_dict_super__(d)
+        e.contents = d.get('contents', [])
         return e
 
     def __lt__(self, other):
@@ -292,7 +298,19 @@ class Container(Equipment):
     def isContainer(self):
         return True
 
-    def showAll(self, showEV: bool = False, showNotes: bool = False):
+    def put(self, item):
+        if item.isContainer():
+            raise NestedContainer(f"You try to put {item.show()} inside {self.show()}. This tears a hole in the fabric of space-time. You are sucked in and die. :skull:")
+        elif item.isWearing():
+            item.takeOff()
+        elif item.isWielding():
+            item.unwield()
+        for ref in gc.get_referrers(item):
+            if ref is self.contents:
+                raise InvalidContainerItem(f"{item.show()} is already in {self.show()}.")
+        self.contents.append(item)
+
+    def showContents(self, showEV: bool = False, showNotes: bool = False):
         detail = ''
         if self.value > 0:
             ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
@@ -300,7 +318,10 @@ class Container(Equipment):
         elif showEV:
             detail = f" (EV {int(self.getEV() + 0.5)})"
         detail += ' :small_blue_diamond:' if showNotes and self.gm_note else ''
-        return f"**{self.description}**{detail} Capacity {self.capacity}\n"
+        equip_list = f"**{self.description}**{detail} Capacity {self.capacity}\n"
+        for item in self.contents:
+            equip_list += f"  {item.show(showEV, showNotes)}\n"
+        return equip_list
 
 
 class Coin:
@@ -619,6 +640,15 @@ class EquipmentList:
         else:
             raise UniqueItem(f"Containers are unique and you already have {self.equipment[itemno].show()}.")
 
+    def put(self, description: str, container: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"You don't have any {description}.")
+        contno = self.find(container)
+        if contno < 0:
+            raise ItemNotFound(f"You don't have any {container}.")
+        self.equipment[contno].put(self.equipment[itemno])
+        return f"puts {self.equipment[itemno].show()} into {self.equipment[contno].show()}"
 
     def pop(self, description: str, count: int = 1):
         itemno = self.find(description)
@@ -694,7 +724,7 @@ class EquipmentList:
                     (wield_list if has_wield else '')
         container_list.sort()
         for item in container_list:
-            inventory += item.showAll()
+            inventory += item.showContents()
         inventory += (equip_list if has_equipment else '') + \
                      (treasure_list if has_treasure else '')
         return inventory

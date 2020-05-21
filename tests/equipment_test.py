@@ -1,7 +1,7 @@
 import cogscc.equipment as eq
-from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, \
+from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidContainerItem, \
     InvalidEquipmentAttribute, ItemNotFound, ItemNotWieldable, ItemNotWearable, NotWearingItem, \
-    MissingArgument, OutOfRange, UniqueItem
+    MissingArgument, NestedContainer, OutOfRange, UniqueItem
 
 eqList = eq.EquipmentList()
 
@@ -184,5 +184,21 @@ print(eqList.addContainer("Large Barrel", { 'ev': 9, 'capacity': 9 }))
 print(eqList.addContainer("Backpack", { 'ev': 2, 'capacity': 8 }))
 print(eqList.getInventory())
 
+print(eqList.put("beet","backpack"))
+print(eqList.put("beet","sack"))
+print(eqList.put("beet","barrel"))
+try:
+    print(eqList.put("beet","barrel"))
+except InvalidContainerItem:
+    print("Can't put things in a container they are already in.")
+print(eqList.put("armour","backpack"))
+print(eqList.put("longbow","backpack"))
+try:
+    print(eqList.put("barrel","backpack"))
+except NestedContainer:
+    print("Containers cannot be nested.")
+print(eqList.put("arrow","backpack"))
+print(eqList.put("diamond","backpack"))
+print(eqList.getInventory())
 
 # Add magic arrows! Need an ammunition property for equipment, with bonus to hit/dmg

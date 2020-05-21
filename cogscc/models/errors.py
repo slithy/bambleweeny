@@ -80,6 +80,16 @@ class UniqueItem(BambleweenyException):
     def __init__(self, msg: str = "Unique items can have only one instance."):
         super().__init__(msg)
 
+class InvalidContainerItem(BambleweenyException):
+    """Raised when there is an attempt to put an item in a container that cannot hold it."""
+    def __init__(self, msg: str = "Item cannot be put in that container."):
+        super().__init__(msg)
+
+class NestedContainer(BambleweenyException):
+    """Raised when there is an attempt to put a container inside another container."""
+    def __init__(self, msg: str = "Containers cannot be nested."):
+        super().__init__(msg)
+
 class ItemNotWieldable(BambleweenyException):
     """Raised when there is an attempt to wield an item that is not wieldable."""
     def __init__(self, msg: str = "Only weapons can be wielded."):
