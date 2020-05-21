@@ -430,13 +430,23 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='remove', aliases=['take_off','takeoff','unwear','unwield','sheathe','unstring'])
+    @commands.command(name='remove', aliases=['take','take_off','takeoff','take_out','takeout','unwear','unwield','sheathe','unstring'])
     async def takeOff(self, ctx, description: str):
-        """Take off an item you are wearing or wielding
-        Usage: !take_off "Item Description" """
+        """Take off an item you are wearing or wielding, or remove it from a container
+        Usage: !remove "Item Description" """
         player = str(ctx.author)
         if player in self.characters:
             await ctx.send(self.characters.get(player).takeOff(description))
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='put')
+    async def put(self, ctx, description: str, container: str):
+        """Put an item into a container
+        Usage: !put "Item Description" "Container" """
+        player = str(ctx.author)
+        if player in self.characters:
+            await ctx.send(self.characters.get(player).put(description, container))
         else:
             await ctx.send(f"{player} does not have a character.")
 

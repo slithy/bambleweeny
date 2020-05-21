@@ -95,10 +95,11 @@ class Equipment:
         return self.ev * self.count
 
     def findContainer(self):
-        for ref in gc.get_referrers(self):
-            for cl in gc.get_referrers(ref):
-                if type(cl) is dict and 'capacity' in cl:
-                    return (ref,cl)
+        if not self.isContainer():
+            for ref in gc.get_referrers(self):
+                for cl in gc.get_referrers(ref):
+                    if type(cl) is dict and 'capacity' in cl:
+                        return (ref,cl)
         return None
 
     def isInContainer(self):
@@ -611,13 +612,16 @@ class EquipmentList:
             self.equipment[itemno].takeOff()
             self.recalculateAC()
             reply = f"takes off {self.equipment[itemno].show()}."
-            return reply
         elif self.equipment[itemno].isWielding():
             self.equipment[itemno].unwield()
             reply = f"puts away {self.equipment[itemno].show()}."
-            return reply
+        elif self.equipment[itemno].isInContainer():
+            contdesc = self.equipment[itemno].removeFromContainer()
+            contno = self.find(contdesc)
+            reply = f"removes {self.equipment[itemno].show()} from {self.equipment[contno].show()}."
         else:
             raise NotWearingItem(f"You are not bearing {self.equipment[itemno].show()}.")
+        return reply
 
     def addContainer(self, description: str, d: dict):
         for key in d.keys():
@@ -649,14 +653,6 @@ class EquipmentList:
         self.equipment[contno].put(self.equipment[itemno])
         return f"puts {self.equipment[itemno].show()} into {self.equipment[contno].show()}"
 
-    def takeOut(self, description: str):
-        itemno = self.find(description)
-        if itemno < 0:
-            raise ItemNotFound(f"You don't have any {description}.")
-        contdesc = self.equipment[itemno].removeFromContainer()
-        contno = self.find(contdesc)
-        return f"removes {self.equipment[itemno].show()} from {self.equipment[contno].show()}"
-
     def pop(self, description: str, count: int = 1):
         itemno = self.find(description)
         if itemno < 0:
@@ -666,6 +662,10 @@ class EquipmentList:
             if self.equipment[itemno].isWearing():
                 self.equipment[itemno].takeOff()
                 self.recalculateAC()
+            elif self.equipment[itemno].isWielding():
+                self.equipment[itemno].unwield()
+            else:
+                self.equipment[itemno].removeFromContainer()
             e = copy(self.equipment[itemno])
             del self.equipment[itemno]
         else:
@@ -683,6 +683,8 @@ class EquipmentList:
             if self.equipment[itemno].isWearing():
                 self.equipment[itemno].takeOff()
                 self.recalculateAC()
+            else:
+                self.equipment[itemno].removeFromContainer()
             reply = f"drops {self.equipment[itemno].show()}."
             del self.equipment[itemno]
             return reply
@@ -718,7 +720,7 @@ class EquipmentList:
                 wield_list += f"  {item.show(showEV, showNotes)}\n"
             elif item.isContainer():
                 container_list.append(item)
-            elif item.isEquipment():
+            elif item.isEquipment() and not item.isInContainer():
                 has_equipment = True
                 equip_list += f"  {item.show(showEV, showNotes)}\n"
             elif item.isTreasure():

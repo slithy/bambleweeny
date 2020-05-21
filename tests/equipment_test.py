@@ -201,7 +201,7 @@ print(eqList.put("arrow","backpack"))
 print(eqList.put("diamond","backpack"))
 print(eqList.wear("Bill","padded"))
 print(eqList.wield("Bill","longbow"))
-print(eqList.takeOut("beet"))
+print(eqList.takeOff("beet"))
 
 print(eqList.getInventory())
 

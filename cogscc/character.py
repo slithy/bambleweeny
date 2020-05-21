@@ -324,6 +324,9 @@ class Character(BaseCharacter):
     def wear(self, description: str, location: str = ''):
         return f"{self.equipment.wear(self.name, description, location)}"
 
+    def put(self, description: str, container: str):
+        return f"{self.name} {self.equipment.put(description, container)}"
+
     def takeOff(self, description: str):
         return f"{self.name} {self.equipment.takeOff(description)}"
 
