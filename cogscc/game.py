@@ -354,7 +354,6 @@ class Game(commands.Cog):
                          dmg:<dice string> is the damage dice for a weapon
                          bth:<number> is the bonus to bit for an exceptional or magic weapon (default: 0)
                          range:<number> is the range in feet for a ranged weapon (default: 0)
-                         ammo:<string> is the ammunition type for a ranged weapon (default is bolt/arrow/stone)
                          hands:<number> is how many hands it takes to wield a weapon (default: 1)
                          ac:<number> is the Armour Class bonus that this item will give if you wear it (default: 0)
         Examples: `!equip "Longbow" weapon ev:4 dmg:1d6 range:100 hands:2`

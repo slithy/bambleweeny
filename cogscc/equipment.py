@@ -190,13 +190,7 @@ class Wearable(Equipment):
 
 
 class Weapon(Equipment):
-    DefaultAmmo = {
-        'crossbow': 'bolt',
-        'bow': 'arrow',
-        'sling': 'stone'
-    }
-
-    def __init__(self, description: str, dmg: str, bth: int, hands: int, range: int, ammo: str, ev: float, value: int):
+    def __init__(self, description: str, dmg: str, bth: int, hands: int, range: int, ev: float, value: int):
         super().__init__(description, 1, ev, value)
         self.dmg = dmg
         self.bth = bth
@@ -204,7 +198,6 @@ class Weapon(Equipment):
             raise InvalidEquipmentAttribute(f"hands:{hands}")
         self.hands = hands
         self.range = range
-        self.setAmmo(ammo)
         self.is_wielding = False
 
     def __to_json__(self):
@@ -217,8 +210,6 @@ class Weapon(Equipment):
             d['hands'] = self.hands
         if self.range != 0:
             d['range'] = self.range
-        if self.ammo != '':
-            d['ammo'] = self.ammo
         if self.is_wielding:
             d['wielding'] = True
         return d
@@ -226,21 +217,10 @@ class Weapon(Equipment):
     @classmethod
     def __from_dict__(cls, d):
         ev = d.get('ev', 1)
-        e = cls(d['description'], d['dmg'], d.get('bth', 0), d.get('hands', 1), d.get('range', 0), d.get('ammo', ''), ev if ev >= 0.002 else 1, d.get('value', 0))
+        e = cls(d['description'], d['dmg'], d.get('bth', 0), d.get('hands', 1), d.get('range', 0), ev if ev >= 0.002 else 1, d.get('value', 0))
         e.__from_dict_super__(d)
         e.is_wielding = d.get('wielding', False)
         return e
-
-    def setAmmo(self, ammo: str):
-        if ammo:
-            self.ammo = ammo
-        elif self.range != 0:
-            for weapon, ammo in Weapon.DefaultAmmo.items():
-                if weapon in self.description.lower():
-                    self.ammo = ammo
-                    break
-        else:
-            self.ammo = ''
 
     def isEquipment(self):
         return not self.is_wielding and self.value == 0
@@ -281,8 +261,8 @@ class Container(Equipment):
         d = super().__to_json__()
         d['type'] = 'container'
         d['capacity'] = self.capacity
-        if contents:
-            d['contents'] = contents
+        if self.contents:
+            d['contents'] = self.contents
         return d
 
     @classmethod
@@ -541,7 +521,7 @@ class EquipmentList:
 
     def addWeapon(self, description: str, d: dict):
         for key in d.keys():
-            if key not in ['name','count','ev','value','damage','bth','hands','range','ammo']:
+            if key not in ['name','count','ev','value','damage','bth','hands','range']:
                 raise InvalidEquipmentAttribute(key)
         count = d.get('count', 1)
         if count != 1:
@@ -552,7 +532,7 @@ class EquipmentList:
         itemno = self.find(description, True)
         if itemno < 0:
             newitem = Weapon(description, d['damage'], int(d.get('bth',0)), int(d.get('hands',1)),
-                int(d.get('range',0)), d.get('ammo',''), float(d.get('ev',1)), int(d.get('value',0)))
+                int(d.get('range',0)), float(d.get('ev',1)), int(d.get('value',0)))
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
         else:
