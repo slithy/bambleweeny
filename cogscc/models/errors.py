@@ -55,6 +55,11 @@ class SelectionCancelled(SelectionException):
     def __init__(self):
         super().__init__("Selection timed out or was cancelled.")
 
+class InventorySectionNotFound(BambleweenyException):
+    """Raised when trying to list something that is not a container or pre-defined inventory section."""
+    def __init__(self, msg: str = "Inventory section not found."):
+        super().__init__(msg)
+
 class ItemNotFound(BambleweenyException):
     """Raised when an item can't be found in the inventory."""
     def __init__(self, msg: str = "Item not found."):

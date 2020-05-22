@@ -1,8 +1,8 @@
 import gc
 from copy import copy
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidContainerItem, \
-    InvalidEquipmentAttribute, ItemNotFound, ItemNotMutable, ItemNotWieldable, ItemNotWearable, \
-    MissingArgument, NestedContainer, NotWearingItem, OutOfRange, UniqueItem
+    InvalidEquipmentAttribute, InventorySectionNotFound, ItemNotFound, ItemNotMutable, ItemNotWieldable, \
+    ItemNotWearable, MissingArgument, NestedContainer, NotWearingItem, OutOfRange, UniqueItem
 
 
 class Equipment:
@@ -21,7 +21,7 @@ class Equipment:
         # Set article and plural
         self.article = ''
         for default_article in ['a','an','the','-']:
-            if self.description.lower().startswith(default_article + ' '):
+            if self.lower().startswith(default_article + ' '):
                 self.article = default_article
                 self.description = self.description[len(default_article)+1:]
         if not self.article:
@@ -61,6 +61,9 @@ class Equipment:
         e.article = d.get('article', e.defaultArticle())
         e.plural = d.get('plural', '')
         e.gm_note = d.get('gm_note', '')
+
+    def lower(self):
+        return self.description.lower()
 
     def defaultArticle(self):
         return 'an' if self.description[0].lower() in { 'a', 'e', 'i', 'o', 'u' } else 'a'
@@ -118,11 +121,11 @@ class Equipment:
             number = f"{self.count} "
             if self.plural:
                 desc = self.plural
-            elif self.description.lower().endswith(('o','s','sh','ch','x','z')):
+            elif self.lower().endswith(('o','s','sh','ch','x','z')):
                 desc = self.description + 'es'
-            elif self.description.lower().endswith(('ay','ey','iy','oy','uy')):
+            elif self.lower().endswith(('ay','ey','iy','oy','uy')):
                 desc = self.description + 's'
-            elif self.description.lower().endswith('y'):
+            elif self.lower().endswith('y'):
                 desc = self.description[:-1] + 'ies'
             else:
                 desc = self.description + 's'
@@ -310,18 +313,8 @@ class Container(Equipment):
             item.removeFromContainer()
         self.contents.append(item)
 
-    def showContents(self, options: list = []):
-        detail = ''
-        if self.value > 0:
-            ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
-            detail = f" ({self.value * self.count} gp{ev})"
-        elif 'ev' in options:
-            detail = f" (EV {int(self.getEV() + 0.5)})"
-        detail += ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
-        equip_list = f"**{self.description}**{detail} Capacity {self.capacity}\n"
-        for item in self.contents:
-            equip_list += f"  {item.show(options)}\n"
-        return equip_list
+    def getContents(self, options: list):
+        return [ item.show(options) for item in self.contents ]
 
 
 class Coin:
@@ -436,24 +429,26 @@ class EquipmentList:
         e.recalculateAC()
         return e
 
-    def find(self, description: str, exactMatch: bool = False):
+    def find(self, description: str, exactMatch: bool = False, inlist: list = []):
+        if not inlist:
+            inlist = self.equipment
         num_results = 0
         found_item = -1
         # Search for exact matches first
-        for item_no in range(len(self.equipment)):
-            if self.equipment[item_no].description.lower() == description.lower():
+        for item_no in range(len(inlist)):
+            if inlist[item_no].lower() == description.lower():
                 num_results = 1
                 found_item = item_no
         # If we didn't find one, try partial matches at the start of the string
         if num_results == 0 and not exactMatch:
-          for item_no in range(len(self.equipment)):
-            if self.equipment[item_no].description.lower().startswith(description.lower()):
+          for item_no in range(len(inlist)):
+            if inlist[item_no].lower().startswith(description.lower()):
                 num_results += 1
                 found_item = item_no
         # If we still didn't find one, try partial matches anywhere in the string
         if num_results == 0 and not exactMatch:
-          for item_no in range(len(self.equipment)):
-            if description.lower() in self.equipment[item_no].description.lower():
+          for item_no in range(len(inlist)):
+            if description.lower() in inlist[item_no].lower():
                 num_results += 1
                 found_item = item_no
 
@@ -701,40 +696,42 @@ class EquipmentList:
         return f"has {self.coin.current(denomination)}."
 
     def getInventory(self, section: str = "", options: list = []):
-        wear_list = "**Wearing**\n"
-        has_wear = False
-        wield_list = "**Wielding**\n"
-        has_wield = False
-        equip_list = "**Carrying**\n"
-        has_equipment = False
-        treasure_list = "**Treasure**\n"
-        has_treasure = False
-        container_list = []
+        section_list = [ 'Wearing', 'Wielding' ]
+        section_list.extend(sorted([item.description for item in self.equipment if item.isContainer()]))
+        section_list.append('Carrying')
+
+        if section and section.lower() != 'all':
+            section_list.append('Treasure')
+            sectionno = self.find(section, False, section_list)
+            if sectionno < 0:
+                raise InventorySectionNotFound(f"I don't know what you mean by \"{section}\" (not a container).")
+            section_list = [section_list[sectionno]]
+        section_dict = { key : list([]) for key in section_list }
 
         for item in self.equipment:
-            if item.isWearing():
-                has_wear = True
-                wear_list += f"  {item.show(options)}\n"
-            if item.isWielding():
-                has_wield = True
-                wield_list += f"  {item.show(options)}\n"
-            elif item.isContainer():
-                container_list.append(item)
-            elif item.isEquipment() and not item.isInContainer():
-                has_equipment = True
-                equip_list += f"  {item.show(options)}\n"
-            elif item.isTreasure():
-                has_treasure = True
-                treasure_list += f"  {item.show(options)}\n"
-        if not self.coin.empty():
-            has_treasure = True
-            treasure_list += f"{self.coin.show(options)}\n"
-        inventory = (wear_list if has_wear else '') + \
-                    (wield_list if has_wield else '')
-        container_list.sort()
-        for item in container_list:
-            inventory += item.showContents()
-        inventory += (equip_list if has_equipment else '') + \
-                     (treasure_list if has_treasure else '')
-        return inventory
+            if item.isWearing() and 'Wearing' in section_dict:
+                section_dict['Wearing'].append(item.show(options))
+            elif item.isWielding() and 'Wielding' in section_dict:
+                section_dict['Wielding'].append(item.show(options))
+            elif not item.isContainer() and not item.isInContainer() and 'Carrying' in section_dict:
+                section_dict['Carrying'].append(item.show(options))
+            elif item.isContainer() and section and item.description in section_dict:
+                section_dict[item.description] = item.getContents(options)
+            if item.isTreasure() and 'Treasure' in section_dict:
+                section_dict['Treasure'].append(item.show(options))
 
+        inventory = ''
+        for section_key, item_list in section_dict.items():
+            if not item_list:
+                if section_key in [ 'Wearing','Wielding','Carrying','Treasure' ]:
+                    continue
+                elif section:
+                    item_list.append('(Empty)')
+            inventory += f"**{section_key}**\n"
+            for item in item_list:
+                inventory += f"  {item}\n"
+
+        if self.coin and (not section or section.lower() == 'all' or 'Treasure' in section_dict):
+            inventory += f"{self.coin.show(options)}\n"
+
+        return inventory

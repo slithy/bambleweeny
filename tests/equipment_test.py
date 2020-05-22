@@ -1,7 +1,7 @@
 import cogscc.equipment as eq
 from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidContainerItem, \
-    InvalidEquipmentAttribute, ItemNotFound, ItemNotWieldable, ItemNotWearable, NotWearingItem, \
-    MissingArgument, NestedContainer, OutOfRange, UniqueItem
+    InvalidEquipmentAttribute, InventorySectionNotFound, ItemNotFound, ItemNotWieldable, ItemNotWearable, \
+    NotWearingItem, MissingArgument, NestedContainer, OutOfRange, UniqueItem
 
 eqList = eq.EquipmentList()
 
@@ -200,13 +200,24 @@ except NestedContainer:
 print(eqList.put("arrow","backpack"))
 print(eqList.put("diamond","backpack"))
 
+print("No args:")
 print(eqList.getInventory())
-print(eqList.getInventory("blooby"))
+try:
+    print(eqList.getInventory("blooby"))
+except InventorySectionNotFound:
+    print("blooby is not a valid section")
+print("wear:")
 print(eqList.getInventory("wear"))
+print("wield:")
 print(eqList.getInventory("wield"))
+print("backpack:")
 print(eqList.getInventory("backpack"))
+print("sack:")
 print(eqList.getInventory("sack"))
+print("barrel:")
 print(eqList.getInventory("barrel"))
+print("treas:")
 print(eqList.getInventory("treas"))
+print("all:")
 print(eqList.getInventory("all"))
 
