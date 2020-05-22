@@ -305,8 +305,8 @@ class Character(BaseCharacter):
 
     # Manage inventory
 
-    def showInventory(self, showNotes: bool = False):
-        inventory = self.equipment.getInventory(False, showNotes)
+    def showInventory(self, section: str = "", options: list = []):
+        inventory = self.equipment.getInventory(section, options)
         return inventory if inventory else f"{self.name} is not carrying anything."
 
     def addEquipment(self, description: str, d: dict):

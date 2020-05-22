@@ -27,7 +27,7 @@ except OutOfRange:
 print(eqList.getInventory())
 
 print("List with EV")
-print(eqList.getInventory(True))
+print(eqList.getInventory('', ['ev']))
 
 print("Dropping some stuff and getting new stuff")
 eqList.drop("N")
@@ -93,7 +93,7 @@ except CreditLimitExceeded:
     print("Can't drop money you don't have")
 
 print("Inventory with coins and EV")
-print(eqList.getInventory(True))
+print(eqList.getInventory('', ['ev']))
 
 print("Wearables")
 print(eqList.addWearable("- Padded Armour", { 'ac':1, 'ev':2 }))
@@ -115,7 +115,7 @@ except ItemNotWearable:
 print(eqList.addWearable("Indiana Jones hat", {}))
 print(eqList.wear("Bill","Indiana","on head"))
 print(eqList.wear("Bill","Padded","on body"))
-print(eqList.getInventory(True))
+print(eqList.getInventory('', ['ev']))
 try:
     eqList.takeOff("Chiwawa")
 except ItemNotFound:
@@ -199,10 +199,14 @@ except NestedContainer:
     print("Containers cannot be nested.")
 print(eqList.put("arrow","backpack"))
 print(eqList.put("diamond","backpack"))
-print(eqList.wear("Bill","padded"))
-print(eqList.wield("Bill","longbow"))
-print(eqList.takeOff("beet"))
 
 print(eqList.getInventory())
+print(eqList.getInventory("blooby"))
+print(eqList.getInventory("wear"))
+print(eqList.getInventory("wield"))
+print(eqList.getInventory("backpack"))
+print(eqList.getInventory("sack"))
+print(eqList.getInventory("barrel"))
+print(eqList.getInventory("treas"))
+print(eqList.getInventory("all"))
 
-# Add magic arrows! Need an ammunition property for equipment, with bonus to hit/dmg

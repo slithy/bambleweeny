@@ -339,7 +339,7 @@ class Game(commands.Cog):
         else:
             self.gm_only(ctx)
             player = self.getPlayer(character)
-            await ctx.send(self.characters.get(player).showInventory(True))
+            await ctx.send(self.characters.get(player).showInventory("", ['gm_note']))
 
     @commands.command(name='equip', aliases=['pick','get'])
     async def addEquipment(self, ctx, description: str, *args):

@@ -130,14 +130,14 @@ class Equipment:
             number = f"{self.article} "
         return f"{number}{desc}"
 
-    def show(self, showEV: bool = False, showNotes: bool = False):
+    def show(self, options: list = []):
         detail = ''
         if self.value > 0:
-            ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
+            ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
             detail = f" ({self.value * self.count} gp{ev})"
-        elif showEV:
+        elif 'ev' in options:
             detail = f" (EV {int(self.getEV() + 0.5)})"
-        detail += ' :small_blue_diamond:' if showNotes and self.gm_note else ''
+        detail += ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
         return f"{self.getDescription()}{detail}"
 
 
@@ -196,14 +196,14 @@ class Wearable(Equipment):
     def takeOff(self):
         self.is_worn = False
 
-    def show(self, showEV: bool = False, showNotes: bool = False):
+    def show(self, options: list = []):
         if not self.is_worn:
-            return super().show(showEV, showNotes)
+            return super().show(options)
         else:
             loc = f", {self.location}" if self.location else ''
-            ev = f" (EV {int(self.ev + 0.5)})" if showEV else ''
+            ev = f" (EV {int(self.ev + 0.5)})" if 'ev' in options else ''
             ac = f", {self.ac:+} AC" if self.ac != 0 else ''
-            notes = ' :small_blue_diamond:' if showNotes and self.gm_note else ''
+            notes = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
             return f"{self.getDescription()}{loc}{ac}{ev}{notes}"
 
 
@@ -259,14 +259,14 @@ class Weapon(Equipment):
     def unwield(self):
         self.is_wielding = False
 
-    def show(self, showEV: bool = False, showNotes: bool = False):
+    def show(self, options: list = []):
         if not self.is_wielding:
-            return super().show(showEV, showNotes)
+            return super().show(options)
         else:
             dmg = f"{self.dmg} dmg" if self.bth == 0 else f"BtH {self.bth:+}, {self.dmg} dmg"
             range = f", range {self.range}'" if self.range > 0 else ""
-            ev = f" (EV {int(self.ev + 0.5)})" if showEV else ''
-            notes = ' :small_blue_diamond:' if showNotes and self.gm_note else ''
+            ev = f" (EV {int(self.ev + 0.5)})" if 'ev' in options else ''
+            notes = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
             return f"{self.getDescription()}, {dmg}{range}{ev}{notes}"
 
 
@@ -310,17 +310,17 @@ class Container(Equipment):
             item.removeFromContainer()
         self.contents.append(item)
 
-    def showContents(self, showEV: bool = False, showNotes: bool = False):
+    def showContents(self, options: list = []):
         detail = ''
         if self.value > 0:
-            ev = f", EV {int(self.getEV() + 0.5)}" if showEV else ''
+            ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
             detail = f" ({self.value * self.count} gp{ev})"
-        elif showEV:
+        elif 'ev' in options:
             detail = f" (EV {int(self.getEV() + 0.5)})"
-        detail += ' :small_blue_diamond:' if showNotes and self.gm_note else ''
+        detail += ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
         equip_list = f"**{self.description}**{detail} Capacity {self.capacity}\n"
         for item in self.contents:
-            equip_list += f"  {item.show(showEV, showNotes)}\n"
+            equip_list += f"  {item.show(options)}\n"
         return equip_list
 
 
@@ -397,14 +397,14 @@ class Coin:
             raise InvalidCoinType()
         return f"{self.coin[denomination]} {denomination}"
 
-    def show(self, showEV: bool = False):
-        total_ev = f" (EV {int(self.getEV()+0.5)})" if showEV else ''
+    def show(self, options: list = []):
+        total_ev = f" (EV {int(self.getEV()+0.5)})" if 'ev' in options else ''
         coin = f"  :moneybag:{total_ev}\n"
         has_coin = False
         for den, amt in self.coin.items():
             if amt > 0:
                 has_coin = True
-                ev = f" (EV {int(self.getEV(den)+0.5)})" if showEV else ''
+                ev = f" (EV {int(self.getEV(den)+0.5)})" if 'ev' in options else ''
                 coin += f"  {amt} {den}{ev}"
         coin += '\n'
         return coin if has_coin else ''
@@ -700,7 +700,7 @@ class EquipmentList:
         self.coin.drop(amount, denomination)
         return f"has {self.coin.current(denomination)}."
 
-    def getInventory(self, showEV: bool = False, showNotes: bool = False):
+    def getInventory(self, section: str = "", options: list = []):
         wear_list = "**Wearing**\n"
         has_wear = False
         wield_list = "**Wielding**\n"
@@ -714,21 +714,21 @@ class EquipmentList:
         for item in self.equipment:
             if item.isWearing():
                 has_wear = True
-                wear_list += f"  {item.show(showEV, showNotes)}\n"
+                wear_list += f"  {item.show(options)}\n"
             if item.isWielding():
                 has_wield = True
-                wield_list += f"  {item.show(showEV, showNotes)}\n"
+                wield_list += f"  {item.show(options)}\n"
             elif item.isContainer():
                 container_list.append(item)
             elif item.isEquipment() and not item.isInContainer():
                 has_equipment = True
-                equip_list += f"  {item.show(showEV, showNotes)}\n"
+                equip_list += f"  {item.show(options)}\n"
             elif item.isTreasure():
                 has_treasure = True
-                treasure_list += f"  {item.show(showEV, showNotes)}\n"
+                treasure_list += f"  {item.show(options)}\n"
         if not self.coin.empty():
             has_treasure = True
-            treasure_list += f"{self.coin.show(showEV)}\n"
+            treasure_list += f"{self.coin.show(options)}\n"
         inventory = (wear_list if has_wear else '') + \
                     (wield_list if has_wield else '')
         container_list.sort()
