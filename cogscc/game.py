@@ -57,11 +57,15 @@ class Game(commands.Cog):
         self.characters = {}
         self.monsters = []
 
-    def gm_only(self, ctx):
+    def isGm(self, ctx):
         for role in ctx.author.roles:
             if role.name in Game.gm_roles:
-                return
-        raise NotAllowed(f"Only the Game Master can do that!")
+                return True
+        return False
+
+    def gmOnly(self, ctx):
+        if not self.isGm(ctx):
+            raise NotAllowed(f"Only the Game Master can do that!")
 
     def getGmList(self, ctx):
         gm_list = []
@@ -76,7 +80,7 @@ class Game(commands.Cog):
             # Specified character name: if the caller is not a GM, it must be controlled by the player
             player = self.getPlayer(character)
             if not player.startswith(str(ctx.author)):
-                self.gm_only(ctx)
+                self.gmOnly(ctx)
         else:
             # Player's own character (if it exists)
             player = str(ctx.author)
@@ -257,7 +261,7 @@ class Game(commands.Cog):
     @commands.command(name='initiative', aliases=['init'])
     async def rollForInitiative(self, ctx):
         """Roll for initiative!"""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         initList = []
         initRolls = ''
         for player, character in sorted(self.characters.items()):
@@ -285,7 +289,7 @@ class Game(commands.Cog):
     async def damage(self, ctx, character: str, dmg: str):
         """Does damage to the specified character.
         Usage: !damage <character> <damage_dice>"""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].damage(dmg))
 
@@ -293,7 +297,7 @@ class Game(commands.Cog):
     async def energyDrain(self, ctx, character: str, levels: int = 1):
         """Drains life energy level(s) from the specified character.
         Usage: !energy_drain <character> <no_levels>"""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].energyDrain(levels))
 
@@ -315,7 +319,7 @@ class Game(commands.Cog):
     @commands.command(name='rest')
     async def rest(self, ctx, duration: int = 1):
         """Rest for 1 or more days."""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         result = ''
         if duration < 2:
             duration = 1
@@ -328,20 +332,42 @@ class Game(commands.Cog):
     # Manage inventory
 
     @commands.command(name='inventory', aliases=['inv'])
-    async def inventory(self, ctx, character: str = ''):
-        """List your inventory."""
+    async def inventory(self, ctx, *args):
+        """List your inventory.
+        Usage: !inventory [all|treasure|wearing|wielding|<container name>] [ev]
+               where ev means show Encumbrance Values
+                     all means show the contents of all containers
+                     treasure means show all valuables regardless of where they are carried
+                     wearing/wielding/<container name> show only the specified section of the inventory"""
+
+        options = []
+        character = ''
+        section = ''
+        for arg in args: 
+            if arg.lower().startswith('ch:'):
+                s = arg.split(':', 1)
+                character = s[1]
+            elif arg.lower() == 'ev':
+                options.append('ev')
+            elif section:
+                await ctx.send(f"Usage: !inventory [all|treasure|wearing|wielding|<container name>] [ev]")
+                return
+            else:
+                section = arg
+
         if character == '':
             player = str(ctx.author)
             if player not in self.characters:
                 await ctx.send(f"{player} does not have a character.")
                 return
-            await ctx.send(self.characters.get(player).showInventory())
+            await ctx.send(self.characters.get(player).showInventory(section,options))
         else:
-            self.gm_only(ctx)
+            self.gmOnly(ctx)
             player = self.getPlayer(character)
-            await ctx.send(self.characters.get(player).showInventory("", ['gm_note']))
+            options.append('gm_note')
+            await ctx.send(self.characters.get(player).showInventory(section,options))
 
-    @commands.command(name='equip', aliases=['pick','get'])
+    @commands.command(name='equip', aliases=['pickup','get'])
     async def addEquipment(self, ctx, description: str, *args):
         """Add an item to your equipment list.
         Usage: !equip "Item Description" [weapon|wearable|<count>] [<attributes>]
@@ -484,7 +510,7 @@ class Game(commands.Cog):
     @commands.command(name='load')
     async def loadJson(self, ctx, filename: str = 'characters.json'):
         """Load characters from a JSON-formatted file."""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         with open(f"/save/{basename(filename)}", 'r') as f:
             chars = json.load(f)
             for player, character in chars.items():
@@ -497,7 +523,7 @@ class Game(commands.Cog):
     @commands.command(name='load_npc')
     async def loadNPC(self, ctx):
         """Load new NPCs, animal companions, familiars, mounts, etc."""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         npcs = cogscc.npc.load()
         for player, npc in npcs.items():
             self.characters[player] = npc
@@ -522,7 +548,7 @@ class Game(commands.Cog):
     @commands.command(name='disable')
     async def disable(self, ctx, character: str):
         """Disables the specified character."""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         player = self.getPlayer(character)
         self.characters[player].disabled = True
         await ctx.send(f"{player}'s character has been disabled for this session.")
@@ -530,7 +556,7 @@ class Game(commands.Cog):
     @commands.command(name='enable')
     async def enable(self, ctx, character: str):
         """Enables the specified character."""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         player = self.getPlayer(character)
         self.characters[player].disabled = False
         await ctx.send(f"{player}'s character has been re-enabled.")
@@ -539,35 +565,35 @@ class Game(commands.Cog):
     async def gmNote(self, ctx, character: str, item: str, description: str = ''):
         """Adds a secret note to an item or views the note.
         Usage: !gm_note <character> <item> [<description>]"""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].gmNote(item, description))
 
     @commands.command(name='level_up',aliases=['levelup'])
     async def levelUp(self, ctx, character: str):
         """Levels up the specified character."""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].levelUp())
 
     @commands.command(name='euthanise')
     async def deleteCharacter(self, ctx, player: str):
         """Ends the suffering of the character belonging to the specified player."""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         del self.characters[player]
         await ctx.send(f"The suffering of {player}'s character has been ended.")
 
     @commands.command(name='monster_reset', aliases=['mr'])
     async def monsterReset(self, ctx):
         """Resets monsters at the start of a new combat."""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         self.monsters = []
         await ctx.send(f"Monsters reset.")
 
     @commands.command(name='monster_add', aliases=['ma'])
     async def monsterAdd(self, ctx, name: str, *args):
         """Adds a new monster to the combat."""
-        self.gm_only(ctx)
+        self.gmOnly(ctx)
         argDict = getArgDict(*args)
         if 'ac' not in argDict:
             argDict['ac'] = 10

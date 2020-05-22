@@ -188,9 +188,6 @@ class Wearable(Equipment):
     def isWearing(self):
         return self.is_worn
 
-    def isTreasure(self):
-        return not self.is_worn and self.value > 0
-
     def wear(self, location: str):
         self.removeFromContainer()
         self.is_worn = True
@@ -204,10 +201,11 @@ class Wearable(Equipment):
             return super().show(options)
         else:
             loc = f", {self.location}" if self.location else ''
-            ev = f" (EV {int(self.ev + 0.5)})" if 'ev' in options else ''
             ac = f", {self.ac:+} AC" if self.ac != 0 else ''
+            ev = f", EV {int(self.ev + 0.5)}" if 'ev' in options else ''
+            value = f" ({self.value} gp)" if self.value > 0 else ''
             notes = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
-            return f"{self.getDescription()}{loc}{ac}{ev}{notes}"
+            return f"{self.getDescription()}{loc}{ac}{ev}{value}{notes}"
 
 
 class Weapon(Equipment):
@@ -268,9 +266,10 @@ class Weapon(Equipment):
         else:
             dmg = f"{self.dmg} dmg" if self.bth == 0 else f"BtH {self.bth:+}, {self.dmg} dmg"
             range = f", range {self.range}'" if self.range > 0 else ""
-            ev = f" (EV {int(self.ev + 0.5)})" if 'ev' in options else ''
+            ev = f", EV {int(self.ev + 0.5)}" if 'ev' in options else ''
+            value = f" ({self.value} gp)" if self.value > 0 else ''
             notes = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
-            return f"{self.getDescription()}, {dmg}{range}{ev}{notes}"
+            return f"{self.getDescription()}, {dmg}{range}{ev}{value}{notes}"
 
 
 class Container(Equipment):
@@ -713,7 +712,7 @@ class EquipmentList:
                 section_dict['Wearing'].append(item.show(options))
             elif item.isWielding() and 'Wielding' in section_dict:
                 section_dict['Wielding'].append(item.show(options))
-            elif not item.isContainer() and not item.isInContainer() and 'Carrying' in section_dict:
+            elif not item.isWearing() and not item.isWielding() and not item.isContainer() and not item.isInContainer() and 'Carrying' in section_dict:
                 section_dict['Carrying'].append(item.show(options))
             elif item.isContainer() and section and item.description in section_dict:
                 section_dict[item.description] = item.getContents(options)
@@ -723,7 +722,9 @@ class EquipmentList:
         inventory = ''
         for section_key, item_list in section_dict.items():
             if not item_list:
-                if section_key in [ 'Wearing','Wielding','Carrying','Treasure' ]:
+                if len(section_dict) > 1 and section_key in [ 'Wearing','Wielding','Carrying','Treasure' ]:
+                    continue
+                elif section_key == 'Treasure' and not self.coin.empty():
                     continue
                 elif section:
                     item_list.append('(Empty)')
@@ -731,7 +732,7 @@ class EquipmentList:
             for item in item_list:
                 inventory += f"  {item}\n"
 
-        if self.coin and (not section or section.lower() == 'all' or 'Treasure' in section_dict):
-            inventory += f"{self.coin.show(options)}\n"
+        if not self.coin.empty() and (not section or section.lower() == 'all' or 'Treasure' in section_dict):
+            inventory += self.coin.show(options)
 
         return inventory
