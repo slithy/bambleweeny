@@ -5,8 +5,13 @@ from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoi
     ItemNotWearable, MissingArgument, NestedContainer, NotWearingItem, OutOfRange, UniqueItem
 
 
+# Helper function to check if a dictionary is trying to change the value of an attribute in an existing item
+def isAttrDifferent(d: dict, attr: str, itemattr):
+    return attr in d.keys() and d.get(attr) != itemattr
+
+
 class Equipment:
-    def __init__(self, description: str, count: int, ev: float, value: int):
+    def __init__(self, description: str, count: int, ev: float, value: int, plural: str = ''):
         # 1 cp is 1/500 of an EV, that's the lightest thing that can be carried
         if ev < 0.002:
             raise OutOfRange("Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
@@ -26,7 +31,7 @@ class Equipment:
                 self.description = self.description[len(default_article)+1:]
         if not self.article:
             self.article = self.defaultArticle()
-        self.plural = ''
+        self.plural = plural
 
         self.ev = ev
         self.count = count
@@ -273,8 +278,8 @@ class Weapon(Equipment):
 
 
 class Container(Equipment):
-    def __init__(self, description: str, capacity: int, ev: float, value: int):
-        super().__init__(description, 1, ev, value)
+    def __init__(self, description: str, count: int, capacity: int, ev: float, value: int, plural: str = ''):
+        super().__init__(description, count, ev, value, plural)
         self.capacity = capacity
         self.contents = []
 
@@ -316,6 +321,15 @@ class Container(Equipment):
 
     def getContents(self, options: list):
         return [ item.show(options) for item in self.contents ]
+
+    def getEV(self):
+        return int(sum([ item.getEV() for item in self.contents ])/2) + (self.ev*self.count)
+
+    def show(self, options: list = []):
+        ev = f"  Capacity {self.capacity*self.count}, EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
+        value = f" ({self.value * self.count} gp)" if self.value > 0 else ''
+        gm_note = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
+        return f"**{self.getDescription()}**{ev}{value}{gm_note}"
 
 
 class Coin:
@@ -392,7 +406,7 @@ class Coin:
         return f"{self.coin[denomination]} {denomination}"
 
     def show(self, options: list = []):
-        total_ev = f" (EV {int(self.getEV()+0.5)})" if 'ev' in options else ''
+        total_ev = f" EV {int(self.getEV()+0.5)}" if 'ev' in options else ''
         coin = f"  :moneybag:{total_ev}\n"
         has_coin = False
         for den, amt in self.coin.items():
@@ -510,9 +524,9 @@ class EquipmentList:
             return f"gets {newitem.show()}."
         elif type(self.equipment[itemno]) is not Equipment:
             raise UniqueItem(f"You already have a {self.equipment[itemno].show()} and this type of item is unique.")
-        elif 'ev' in d.keys() and d.get('ev') != self.equipment[itemno].ev:
-            raise ItemNotMutable(f"EV:{d.get('ev')} is different from the EV of {self.equipment[itemno].show(True)}")
-        elif 'value' in d.keys() and d.get('value') != self.equipment[itemno].value:
+        elif isAttrDifferent(d, 'ev', self.equipment[itemno].ev):
+            raise ItemNotMutable(f"EV:{d.get('ev')} is different from the EV of {self.equipment[itemno].show(['ev'])}")
+        elif isAttrDifferent(d, 'value', self.equipment[itemno].value):
             raise ItemNotMutable(f"Value:{d.get('value')} is different from the value of {self.equipment[itemno].show()}")
         else:
             self.equipment[itemno].count += count 
@@ -625,23 +639,27 @@ class EquipmentList:
 
     def addContainer(self, description: str, d: dict):
         for key in d.keys():
-            if key not in ['name','count','capacity','ev','value']:
+            if key not in ['name','count','capacity','ev','value','plural']:
                 raise InvalidEquipmentAttribute(key)
-        count = d.get('count', 1)
-        if count != 1:
-            raise UniqueItem("Containers are unique (count must be 1)")
-        if not d.get('ev',''):
-            raise MissingArgument(f"You need to specify the Encumbrance Value (EV) for {description}.")
-        if not d.get('capacity',''):
-            raise MissingArgument(f"You need to specify the capacity for {description}.")
 
         itemno = self.find(description, True)
         if itemno < 0:
-            newitem = Container(description, int(d['capacity']), float(d['ev']), int(d.get('value',0)))
+            if not d.get('ev',''):
+                raise MissingArgument(f"You need to specify the Encumbrance Value (EV) for {description}.")
+            if not d.get('capacity',''):
+                raise MissingArgument(f"You need to specify the capacity for {description}.")
+            newitem = Container(description, d.get('count',1), int(d['capacity']), float(d['ev']), int(d.get('value',0)), d.get('plural',''))
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
+        elif isAttrDifferent(d, 'capacity', self.equipment[itemno].capacity):
+            raise ItemNotMutable(f"Capacity:{d.get('capacity')} is different from the capacity of {super(Container,self.equipment[itemno]).show()}")
+        elif isAttrDifferent(d, 'ev', self.equipment[itemno].ev):
+            raise ItemNotMutable(f"EV:{d.get('ev')} is different from the EV of {super(Container,self.equipment[itemno]).show(['ev'])}")
+        elif isAttrDifferent(d, 'value', self.equipment[itemno].value):
+            raise ItemNotMutable(f"Value:{d.get('value')} is different from the value of {super(Container,self.equipment[itemno]).show()}")
         else:
-            raise UniqueItem(f"Containers are unique and you already have {self.equipment[itemno].show()}.")
+            self.equipment[itemno].count += d.get('count',1)
+            return f"now has {super(Container,self.equipment[itemno]).show()}."
 
     def put(self, description: str, container: str):
         itemno = self.find(description)
@@ -712,6 +730,7 @@ class EquipmentList:
                 raise InventorySectionNotFound(f"I don't know what you mean by \"{section}\" (not a container).")
             section_list = [section_list[sectionno]]
         section_dict = { key : list([]) for key in section_list }
+        section_desc = { key : f"**{key}**\n" for key in section_list }
 
         for item in self.equipment:
             if item.isWearing() and 'Wearing' in section_dict:
@@ -721,6 +740,7 @@ class EquipmentList:
             elif not item.isWearing() and not item.isWielding() and not item.isContainer() and not item.isInContainer() and 'Carrying' in section_dict:
                 section_dict['Carrying'].append(item.show(options))
             elif item.isContainer() and section and item.description in section_dict:
+                section_desc[item.description] = f"{item.show(options)}\n"
                 section_dict[item.description] = item.getContents(options)
             if item.isTreasure() and 'Treasure' in section_dict:
                 section_dict['Treasure'].append(item.show(options))
@@ -734,7 +754,7 @@ class EquipmentList:
                     continue
                 elif section:
                     item_list.append('(Empty)')
-            inventory += f"**{section_key}**\n"
+            inventory += section_desc[section_key]
             for item in item_list:
                 inventory += f"  {item}\n"
 

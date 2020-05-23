@@ -179,9 +179,11 @@ print(eqList.getInventory())
 
 # Containers
 
+print(eqList.addContainer("Belt pouch", { 'ev': 0.1, 'capacity': 1, 'count': 2 }))
 print(eqList.addContainer("Large Sack made of silk", { 'ev': 2, 'capacity': 10, 'value': 50 }))
+print(eqList.addContainer("Large Sack made of silk", { 'plural': 'Large Sacks made of silk' }))
 print(eqList.addContainer("Large Barrel", { 'ev': 9, 'capacity': 9 }))
-print(eqList.addContainer("Backpack", { 'ev': 2, 'capacity': 8 }))
+print(eqList.addContainer("Backpack", { 'ev': 1, 'capacity': 8 }))
 print(eqList.getInventory())
 
 print(eqList.put("beet","backpack"))
@@ -201,6 +203,8 @@ print(eqList.put("arrow","backpack"))
 print(eqList.put("diamond","backpack"))
 print(eqList.wear("Bill","armour"))
 print(eqList.add("rock",{ 'count':20 }))
+
+print(eqList.put("amulet","sack"))
 
 print("No args:")
 print(eqList.getInventory())
