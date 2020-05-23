@@ -334,8 +334,9 @@ class Game(commands.Cog):
     @commands.command(name='inventory', aliases=['inv'])
     async def inventory(self, ctx, *args):
         """List your inventory.
-        Usage: !inventory [all|treasure|wearing|wielding|<container name>] [ev]
+        Usage: !inventory [ev] [detail] [all|treasure|wearing|wielding|<container name>]
                where ev means show Encumbrance Values
+                     detail means show all the attributes of the items as key:value pairs
                      all means show the contents of all containers
                      treasure means show all valuables regardless of where they are carried
                      wearing/wielding/<container name> show only the specified section of the inventory"""
@@ -347,8 +348,8 @@ class Game(commands.Cog):
             if arg.lower().startswith('ch:'):
                 s = arg.split(':', 1)
                 character = s[1]
-            elif arg.lower() == 'ev':
-                options.append('ev')
+            elif arg.lower() in ['ev','detail']:
+                options.append(arg.lower())
             elif section:
                 await ctx.send(f"Usage: !inventory [all|treasure|wearing|wielding|<container name>] [ev]")
                 return
@@ -407,6 +408,15 @@ class Game(commands.Cog):
                 await ctx.send(self.characters.get(player).addContainer(description, argDict))
             else:
                 await ctx.send(self.characters.get(player).addEquipment(description, argDict))
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='detail')
+    async def detail(self, ctx, description: str):
+        """Show all the details of an item in your equipment list as key:value pairs."""
+        player = str(ctx.author)
+        if player in self.characters:
+            await ctx.send(self.characters.get(player).detail(description))
         else:
             await ctx.send(f"{player} does not have a character.")
 

@@ -248,3 +248,6 @@ print(eqList.put("arrow","barrel"))
 print(eqList.rename("arrow", "bolt", ""))
 print(eqList.getInventory("barrel"))
 
+# edit details
+print(eqList.getInventory("",['detail']))
+

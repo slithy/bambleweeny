@@ -137,7 +137,20 @@ class Equipment:
             self.article = self.defaultArticle()
         self.plural = plural
 
+    def showDetail(self):
+        d = self.__to_json__()
+        result = f"**{d['description']}** "
+        d.pop('description', None)
+        d.pop('contents', None)
+        d.pop('gm_note', None)
+        d['ev'] = d.get('ev', 1.0)
+        for (key, value) in sorted(d.items()):
+            result += f"{key}:{value} "
+        return result
+
     def show(self, options: list = []):
+        if 'detail' in options:
+            return self.showDetail()
         ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
         value = f" ({self.value * self.count} gp)" if self.value > 0 else ''
         gm_note = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
@@ -198,7 +211,7 @@ class Wearable(Equipment):
         self.is_worn = False
 
     def show(self, options: list = []):
-        if not self.is_worn:
+        if not self.is_worn or 'detail' in options:
             return super().show(options)
         else:
             loc = f", {self.location}" if self.location else ''
@@ -262,7 +275,7 @@ class Weapon(Equipment):
         self.is_wielding = False
 
     def show(self, options: list = []):
-        if not self.is_wielding:
+        if not self.is_wielding or 'detail' in options:
             return super().show(options)
         else:
             dmg = f"{self.dmg} dmg" if self.bth == 0 else f"BtH {self.bth:+}, {self.dmg} dmg"
@@ -330,6 +343,8 @@ class Container(Equipment):
         return int(sum([ item.getEV() for item in self.contents ])/2) + (self.ev*self.count)
 
     def show(self, options: list = []):
+        if 'detail' in options:
+            return super().show(options)
         ev = f"  Capacity {self.capacity*self.count}, EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
         value = f" ({self.value * self.count} gp)" if self.value > 0 else ''
         gm_note = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
@@ -533,6 +548,12 @@ class EquipmentList:
             self.equipment[itemno].removeFromContainer()
         self.equipment[itemno].count += count
         return f"now has {self.equipment[itemno].show()}."
+
+    def showDetail(self, description: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"{description} not found.")
+        return self.equipment[itemno].showDetail()
 
     def rename(self, description: str, new_description: str, plural: str):
         itemno = self.find(description)
