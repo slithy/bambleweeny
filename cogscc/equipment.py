@@ -79,7 +79,8 @@ class Equipment:
     def isPushable(self, e):
         return True if type(self) == type(e) and \
                           self.ev == e.ev and \
-                       self.value == e.value else False
+                       self.value == e.value and \
+                     self.gm_note == e.gm_note else False
 
     def isWeapon(self):
         return False
@@ -305,6 +306,9 @@ class Container(Equipment):
 
     def isContainer(self):
         return True
+
+    def isPushable(self, e):
+        return False
 
     def put(self, item):
         if item.isContainer():
@@ -544,6 +548,13 @@ class EquipmentList:
         else:
             return f"{self.equipment[itemno].show()} has no secret note."
 
+    def isPushable(self, description: str, e):
+        itemno_src = self.find(description)
+        if itemno_src < 0:
+            raise ItemNotFound(f"You don't have any {description}.")
+        itemno_dest = e.find(self.equipment[itemno_src].description, True)
+        return itemno_dest < 0 or self.equipment[itemno_src].isPushable(self.equipment[itemno_dest])
+
     def push(self, e):
         itemno = self.find(e.description, True)
         if itemno < 0:
@@ -552,6 +563,27 @@ class EquipmentList:
             raise UniqueItem()
         else:
             self.equipment[itemno].count += e.count 
+
+    def pop(self, description: str, count: int = 1):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"You don't have any {description}.")
+        elif count >= self.equipment[itemno].count:
+            reply = ''
+            if self.equipment[itemno].isWearing():
+                self.equipment[itemno].takeOff()
+                self.recalculateAC()
+            elif self.equipment[itemno].isWielding():
+                self.equipment[itemno].unwield()
+            else:
+                self.equipment[itemno].removeFromContainer()
+            e = copy(self.equipment[itemno])
+            del self.equipment[itemno]
+        else:
+            e = copy(self.equipment[itemno])
+            self.equipment[itemno].count -= count
+            e.count = count
+        return e
 
     def addWeapon(self, description: str, d: dict):
         for key in d.keys():
@@ -670,27 +702,6 @@ class EquipmentList:
             raise ItemNotFound(f"You don't have any {container}.")
         self.equipment[contno].put(self.equipment[itemno])
         return f"puts {self.equipment[itemno].show()} into {self.equipment[contno].show()}"
-
-    def pop(self, description: str, count: int = 1):
-        itemno = self.find(description)
-        if itemno < 0:
-            raise ItemNotFound(f"You don't have any {description}.")
-        elif count >= self.equipment[itemno].count:
-            reply = ''
-            if self.equipment[itemno].isWearing():
-                self.equipment[itemno].takeOff()
-                self.recalculateAC()
-            elif self.equipment[itemno].isWielding():
-                self.equipment[itemno].unwield()
-            else:
-                self.equipment[itemno].removeFromContainer()
-            e = copy(self.equipment[itemno])
-            del self.equipment[itemno]
-        else:
-            e = copy(self.equipment[itemno])
-            self.equipment[itemno].count -= count
-            e.count = count
-        return e
 
     def drop(self, description: str, count: int = 1):
         itemno = self.find(description)

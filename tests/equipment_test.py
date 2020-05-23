@@ -180,8 +180,8 @@ print(eqList.getInventory())
 # Containers
 
 print(eqList.addContainer("Belt pouch", { 'ev': 0.1, 'capacity': 1, 'count': 2 }))
-print(eqList.addContainer("Large Sack made of silk", { 'ev': 2, 'capacity': 10, 'value': 50 }))
-print(eqList.addContainer("Large Sack made of silk", { 'plural': 'Large Sacks made of silk' }))
+print(eqList.addContainer("Large Sack made of silk", { 'ev': 2, 'capacity': 10, 'value': 50, 'plural': 'Large Sacks made of silk' }))
+print(eqList.addContainer("Large Sack made of silk", { }))
 print(eqList.addContainer("Large Barrel", { 'ev': 9, 'capacity': 9 }))
 print(eqList.addContainer("Backpack", { 'ev': 1, 'capacity': 8 }))
 print(eqList.getInventory())
@@ -227,3 +227,15 @@ print(eqList.getInventory("treas"))
 print("all:")
 print(eqList.getInventory("all",['ev']))
 
+eqList2 = eq.EquipmentList()
+print(eqList2.addContainer("Backpack", { 'ev': 1, 'capacity': 8 }))
+if not eqList.isPushable("pack", eqList2):
+    print(f"recipient already has an item with the same name but different properties. Try renaming it.")
+if not eqList.isPushable("sack", eqList2):
+    print(f"recipient already has an item with the same name but different properties. Try renaming it.")
+else:
+    e = eqList.pop("sack", 1)
+    eqList2.push(e)
+    print(f"Bill gives {e.show()} to recipient.")
+print(eqList.getInventory("",[]))
+print(eqList2.getInventory("all",[]))

@@ -335,13 +335,11 @@ class Character(BaseCharacter):
     def give(self, count: int, description: str, recipient):
         if recipient is self:
             return "Only crazy people give things to themselves."
+        elif not self.equipment.isPushable(description, recipient.equipment):
+            return f"{recipient.name} already has an item with the same name but different properties. Try renaming it."
         else:
             e = self.equipment.pop(description, count)
-            try:
-                recipient.equipment.push(e)
-            except UniqueItem:
-                self.equipment.push(e)
-                return f"{recipient.name} already has an item like {e.show()} with different properties"
+            recipient.equipment.push(e)
             return f"{self.name} gives {e.show()} to {recipient.name}"
 
     def dropEquipment(self, description: str, count: int):
