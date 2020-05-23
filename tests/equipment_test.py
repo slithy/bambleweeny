@@ -1,5 +1,5 @@
 import cogscc.equipment as eq
-from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidContainerItem, \
+from cogscc.models.errors import AmbiguousMatch, ContainerFull, CreditLimitExceeded, InvalidCoinType, InvalidContainerItem, \
     InvalidEquipmentAttribute, InventorySectionNotFound, ItemNotFound, ItemNotWieldable, ItemNotWearable, \
     NotWearingItem, MissingArgument, NestedContainer, OutOfRange, UniqueItem
 
@@ -202,7 +202,6 @@ except NestedContainer:
 print(eqList.put("arrow","backpack"))
 print(eqList.put("diamond","backpack"))
 print(eqList.wear("Bill","armour"))
-print(eqList.add("rock",{ 'count':20 }))
 
 print(eqList.put("amulet","sack"))
 
@@ -227,6 +226,7 @@ print(eqList.getInventory("treas"))
 print("all:")
 print(eqList.getInventory("all",['ev']))
 
+# give
 eqList2 = eq.EquipmentList()
 print(eqList2.addContainer("Backpack", { 'ev': 1, 'capacity': 8 }))
 if not eqList.isPushable("pack", eqList2):
@@ -238,4 +238,11 @@ else:
     eqList2.push(e)
     print(f"Bill gives {e.show()} to recipient.")
 print(eqList.getInventory("",[]))
-print(eqList2.getInventory("all",[]))
+
+# capacity limit
+print(eqList2.add("rock", {}))
+print(eqList2.put("rock", "pack"))
+for i in range(100):
+    print(eqList2.add("rock", {}))
+
+print(eqList2.getInventory("all",['ev']))

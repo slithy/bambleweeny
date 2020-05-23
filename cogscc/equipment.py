@@ -1,6 +1,6 @@
 import gc
 from copy import copy
-from cogscc.models.errors import AmbiguousMatch, CreditLimitExceeded, InvalidCoinType, InvalidContainerItem, \
+from cogscc.models.errors import AmbiguousMatch, ContainerFull, CreditLimitExceeded, InvalidCoinType, InvalidContainerItem, \
     InvalidEquipmentAttribute, InventorySectionNotFound, ItemNotFound, ItemNotMutable, ItemNotWieldable, \
     ItemNotWearable, MissingArgument, NestedContainer, NotWearingItem, OutOfRange, UniqueItem
 
@@ -72,9 +72,6 @@ class Equipment:
 
     def defaultArticle(self):
         return 'an' if self.description[0].lower() in { 'a', 'e', 'i', 'o', 'u' } else 'a'
-
-    def isEquipment(self):
-        return self.value == 0
 
     def isPushable(self, e):
         return True if type(self) == type(e) and \
@@ -177,9 +174,6 @@ class Wearable(Equipment):
         e.is_worn = d.get('wearing', False)
         e.location = d.get('location', '')
         return e
-
-    def isEquipment(self):
-        return not self.is_worn and self.value == 0
 
     def isPushable(self, e):
         return False
@@ -312,7 +306,9 @@ class Container(Equipment):
 
     def put(self, item):
         if item.isContainer():
-            raise NestedContainer(f"You try to put {item.show()} inside {self.show()}. This tears a hole in the fabric of space-time. You are sucked in and die. :skull:")
+            raise NestedContainer(f"You try to put {item.show()} inside {super(Container, self).show()}. This tears a hole in the fabric of space-time. You are sucked in and die. :skull:")
+        elif item.getEV() > self.getCapacity():
+            raise ContainerFull(f"{super(Container, self).show()} does not have space for {item.show()}.")
         elif item.isWearing():
             item.takeOff()
         elif item.isWielding():
@@ -325,6 +321,9 @@ class Container(Equipment):
 
     def getContents(self, options: list):
         return [ item.show(options) for item in self.contents ]
+
+    def getCapacity(self):
+        return self.capacity - sum([ item.ev for item in self.contents ])
 
     def getEV(self):
         return int(sum([ item.getEV() for item in self.contents ])/2) + (self.ev*self.count)
@@ -522,19 +521,16 @@ class EquipmentList:
             raise OutOfRange("count must be a positive integer")
 
         itemno = self.find(description, True)
+        newitem = Equipment(description, count, float(d.get('ev',1)), int(d.get('value',0)))
         if itemno < 0:
-            newitem = Equipment(description, count, float(d.get('ev',1)), int(d.get('value',0)))
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
-        elif type(self.equipment[itemno]) is not Equipment:
+        elif not self.equipment[itemno].isPushable(newitem):
             raise UniqueItem(f"You already have a {self.equipment[itemno].show()} and this type of item is unique.")
-        elif isAttrDifferent(d, 'ev', self.equipment[itemno].ev):
-            raise ItemNotMutable(f"EV:{d.get('ev')} is different from the EV of {self.equipment[itemno].show(['ev'])}")
-        elif isAttrDifferent(d, 'value', self.equipment[itemno].value):
-            raise ItemNotMutable(f"Value:{d.get('value')} is different from the value of {self.equipment[itemno].show()}")
-        else:
-            self.equipment[itemno].count += count 
-            return f"now has {self.equipment[itemno].show()}."
+        elif self.equipment[itemno].isInContainer():
+            self.equipment[itemno].removeFromContainer()
+        self.equipment[itemno].count += count
+        return f"now has {self.equipment[itemno].show()}."
 
     def gmNote(self, item, description = ''):
         itemno = self.find(item)
@@ -750,9 +746,10 @@ class EquipmentList:
                 section_dict['Wielding'].append(item.show(options))
             elif not item.isWearing() and not item.isWielding() and not item.isContainer() and not item.isInContainer() and 'Carrying' in section_dict:
                 section_dict['Carrying'].append(item.show(options))
-            elif item.isContainer() and section and item.description in section_dict:
+            elif item.isContainer() and item.description in section_dict:
                 section_desc[item.description] = f"{item.show(options)}\n"
-                section_dict[item.description] = item.getContents(options)
+                if section:
+                    section_dict[item.description] = item.getContents(options)
             if item.isTreasure() and 'Treasure' in section_dict:
                 section_dict['Treasure'].append(item.show(options))
 

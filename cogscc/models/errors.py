@@ -95,6 +95,11 @@ class NestedContainer(BambleweenyException):
     def __init__(self, msg: str = "Containers cannot be nested."):
         super().__init__(msg)
 
+class ContainerFull(BambleweenyException):
+    """Raised when there is an attempt to add something to a container with insufficient capacity."""
+    def __init__(self, msg: str = "Container full."):
+        super().__init__(msg)
+
 class ItemNotWieldable(BambleweenyException):
     """Raised when there is an attempt to wield an item that is not wieldable."""
     def __init__(self, msg: str = "Only weapons can be wielded."):
