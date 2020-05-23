@@ -105,7 +105,7 @@ class Game(commands.Cog):
     async def saveJson(self, ctx, filename: str = 'characters.json'):
         """Save characters to a file in JSON format."""
         with open(f"/save/{basename(filename)}", 'w') as f:
-            json.dump(self.characters, f, cls=ToJson)
+            json.dump(self.characters, f, cls=ToJson, indent=2, ensure_ascii=False)
         ts = time.gmtime()
         timestamp = time.strftime("%Y%m%d%H%M%S", ts)
         filename_backup = f"{basename(filename)}.{timestamp}"
