@@ -287,10 +287,12 @@ class Container(Equipment):
         return d
 
     @classmethod
-    def __from_dict__(cls, d):
+    def __from_dict__(cls, equiplist, d):
         e = cls(d['description'], d['capacity'], d.get('ev', 1.0), d.get('value', 0))
         e.__from_dict_super__(d)
-        e.contents = d.get('contents', [])
+        for equipitem in d.get('contents', []):
+            EquipmentList.__from_dict_type__(e.contents, equipitem)
+        equiplist.extend(e.contents)
         return e
 
     def __lt__(self, other):
@@ -409,24 +411,29 @@ class EquipmentList:
         self.ac = 0
 
     def __to_json__(self):
-        return { 'items': self.equipment, 'coin': self.coin.coin }
+        saveList = [ item for item in self.equipment if not item.isInContainer() ]
+        return { 'items': saveList, 'coin': self.coin.coin }
 
     @classmethod
     def __from_dict__(cls, d):
         e = EquipmentList()
         for equipitem in d['items']:
-            type = equipitem.get('type', 'normal')
-            if type == 'wearable':
-                e.equipment.append(Wearable.__from_dict__(equipitem))
-            elif type == 'weapon':
-                e.equipment.append(Weapon.__from_dict__(equipitem))
-            elif type == 'container':
-                e.equipment.append(Container.__from_dict__(equipitem))
-            else:
-                e.equipment.append(Equipment.__from_dict__(equipitem))
+            EquipmentList.__from_dict_type__(e.equipment, equipitem)
         e.coin = Coin.__from_dict__(d.get('coin'))
         e.recalculateAC()
         return e
+
+    @classmethod
+    def __from_dict_type__(cls, equiplist: list, equipitem: dict):
+        type = equipitem.get('type', 'normal')
+        if type == 'wearable':
+            equiplist.append(Wearable.__from_dict__(equipitem))
+        elif type == 'weapon':
+            equiplist.append(Weapon.__from_dict__(equipitem))
+        elif type == 'container':
+            equiplist.append(Container.__from_dict__(equiplist, equipitem))
+        else:
+            equiplist.append(Equipment.__from_dict__(equipitem))
 
     def find(self, description: str, exactMatch: bool = False, inlist: list = []):
         if not inlist:

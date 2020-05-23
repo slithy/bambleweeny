@@ -7,7 +7,7 @@ from cogscc.stats import BaseStats
 from cogscc.hitpoints import HP, Wound
 from cogscc.equipment import EquipmentList
 from cogscc.funcs.dice import roll
-from cogscc.models.errors import InvalidArgument
+from cogscc.models.errors import InvalidArgument, UniqueItem
 
 
 class Character(BaseCharacter):
