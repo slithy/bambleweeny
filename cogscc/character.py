@@ -314,6 +314,9 @@ class Character(BaseCharacter):
     def detail(self, description: str):
         return f"{self.equipment.showDetail(description)}"
 
+    def edit(self, description: str, d: dict):
+        return f"{self.equipment.edit(description, d)}"
+
     def rename(self, description: str, new_description: str, plural: str):
         return f"{self.equipment.rename(description, new_description, plural)}"
 

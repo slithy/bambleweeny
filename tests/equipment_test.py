@@ -250,4 +250,13 @@ print(eqList.getInventory("barrel"))
 
 # edit details
 print(eqList.getInventory("",['detail']))
+print(eqList.edit("shield", { 'ac':'3' }))
+print(eqList.edit("sword", { 'type':'wearable' }))
+print(eqList.edit("beetr", { 'plural':'Bleatroot' }))
+print(eqList.edit("Apple", { 'capacity':'100' }))
+print(eqList.edit("sword", { 'description': 'Amazing Sword of Awesomeness', 'bth':'10', 'dmg':'10d10' }))
+print(eqList.wear("Bill","shield"))
+print(eqList.wield("Bill","awesome"))
+print("")
+print(eqList.getInventory("all"))
 

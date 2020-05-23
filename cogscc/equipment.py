@@ -137,6 +137,23 @@ class Equipment:
             self.article = self.defaultArticle()
         self.plural = plural
 
+    def edit(self, d: dict):
+        warning = ''
+        d.pop('contents', None)
+        if 'description' in d:
+            self.rename(d['description'], d.get('plural',''))
+            d.pop('description')
+        if 'type' in d:
+            warning += f"type cannot be edited\n"
+            d.pop('type')
+        for key,value in d.items():
+            if key in self.__dict__:
+                t = type(self.__dict__[key])
+                self.__dict__[key] = t(value)
+            else:
+                warning += f"{key} is not a property of {type(self)}\n"
+        return warning
+
     def showDetail(self):
         d = self.__to_json__()
         result = f"**{d['description']}** "
@@ -225,7 +242,7 @@ class Wearable(Equipment):
 class Weapon(Equipment):
     def __init__(self, description: str, dmg: str, bth: int, hands: int, range: int, ev: float, value: int):
         super().__init__(description, 1, ev, value, '')
-        self.dmg = dmg
+        self.damage = dmg
         self.bth = bth
         if hands < 1 or hands > 2:
             raise InvalidEquipmentAttribute(f"hands:{hands}")
@@ -236,7 +253,7 @@ class Weapon(Equipment):
     def __to_json__(self):
         d = super().__to_json__()
         d['type'] = 'weapon'
-        d['dmg'] = self.dmg
+        d['dmg'] = self.damage
         if self.bth != 0:
             d['bth'] = self.bth
         if self.hands != 1:
@@ -278,7 +295,7 @@ class Weapon(Equipment):
         if not self.is_wielding or 'detail' in options:
             return super().show(options)
         else:
-            dmg = f"{self.dmg} dmg" if self.bth == 0 else f"BtH {self.bth:+}, {self.dmg} dmg"
+            dmg = f"{self.damage} dmg" if self.bth == 0 else f"BtH {self.bth:+}, {self.damage} dmg"
             range = f", range {self.range}'" if self.range > 0 else ""
             ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
             value = f" ({self.value} gp)" if self.value > 0 else ''
@@ -554,6 +571,13 @@ class EquipmentList:
         if itemno < 0:
             raise ItemNotFound(f"{description} not found.")
         return self.equipment[itemno].showDetail()
+
+    def edit(self, description: str, d: dict):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"{description} not found.")
+        w = self.equipment[itemno].edit(d)
+        return f"{w}{self.equipment[itemno].showDetail()}"
 
     def rename(self, description: str, new_description: str, plural: str):
         itemno = self.find(description)

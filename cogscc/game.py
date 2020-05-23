@@ -420,6 +420,17 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
+    @commands.command(name='edit')
+    async def edit(self, ctx, description: str, *args):
+        """Edit properties of an item on your equipment list. Use `!detail` to see the current properties of the item.
+           Usage: `!edit "Item description" [key:value]...`"""
+        player = str(ctx.author)
+        if player in self.characters:
+            argDict = getArgDict(*args)
+            await ctx.send(self.characters.get(player).edit(description, argDict))
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
     @commands.command(name='rename')
     async def renameEquipment(self, ctx, description: str, new_description: str, plural: str = ''):
         """Rename an item in your equipment list.
