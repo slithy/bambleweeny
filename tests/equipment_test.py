@@ -199,6 +199,8 @@ except NestedContainer:
     print("Containers cannot be nested.")
 print(eqList.put("arrow","backpack"))
 print(eqList.put("diamond","backpack"))
+print(eqList.wear("Bill","armour"))
+print(eqList.add("rock",{ 'count':20 }))
 
 print("No args:")
 print(eqList.getInventory())
@@ -219,5 +221,5 @@ print(eqList.getInventory("barrel"))
 print("treas:")
 print(eqList.getInventory("treas"))
 print("all:")
-print(eqList.getInventory("all"))
+print(eqList.getInventory("all",['ev']))
 

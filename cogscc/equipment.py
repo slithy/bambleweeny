@@ -134,14 +134,10 @@ class Equipment:
         return f"{number}{desc}"
 
     def show(self, options: list = []):
-        detail = ''
-        if self.value > 0:
-            ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
-            detail = f" ({self.value * self.count} gp{ev})"
-        elif 'ev' in options:
-            detail = f" (EV {int(self.getEV() + 0.5)})"
-        detail += ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
-        return f"{self.getDescription()}{detail}"
+        ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
+        value = f" ({self.value * self.count} gp)" if self.value > 0 else ''
+        gm_note = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
+        return f"{self.getDescription()}{ev}{value}{gm_note}"
 
 
 class Wearable(Equipment):
@@ -188,6 +184,10 @@ class Wearable(Equipment):
     def isWearing(self):
         return self.is_worn
 
+    def getEV(self):
+        ev = self.ev-1 if self.is_worn else self.ev
+        return ev if ev > 0 else 0
+
     def wear(self, location: str):
         self.removeFromContainer()
         self.is_worn = True
@@ -202,7 +202,7 @@ class Wearable(Equipment):
         else:
             loc = f", {self.location}" if self.location else ''
             ac = f", {self.ac:+} AC" if self.ac != 0 else ''
-            ev = f", EV {int(self.ev + 0.5)}" if 'ev' in options else ''
+            ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
             value = f" ({self.value} gp)" if self.value > 0 else ''
             notes = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
             return f"{self.getDescription()}{loc}{ac}{ev}{value}{notes}"
@@ -266,7 +266,7 @@ class Weapon(Equipment):
         else:
             dmg = f"{self.dmg} dmg" if self.bth == 0 else f"BtH {self.bth:+}, {self.dmg} dmg"
             range = f", range {self.range}'" if self.range > 0 else ""
-            ev = f", EV {int(self.ev + 0.5)}" if 'ev' in options else ''
+            ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
             value = f" ({self.value} gp)" if self.value > 0 else ''
             notes = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
             return f"{self.getDescription()}, {dmg}{range}{ev}{value}{notes}"
@@ -398,8 +398,7 @@ class Coin:
         for den, amt in self.coin.items():
             if amt > 0:
                 has_coin = True
-                ev = f" (EV {int(self.getEV(den)+0.5)})" if 'ev' in options else ''
-                coin += f"  {amt} {den}{ev}"
+                coin += f"  {amt} {den}"
         coin += '\n'
         return coin if has_coin else ''
 
