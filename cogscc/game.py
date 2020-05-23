@@ -137,7 +137,7 @@ class Game(commands.Cog):
                 "goes for a swim in a pool of acid", "didn't realise that the treasure chest was a mimic",
                 "decides to split the party", "finds the cursed katana of seppuku",
                 "decides to read the Necronomicon"])
-            await ctx.send(f"{name} {random_death}. :skull:\n" + self.characters.get(player).showInventory())
+            await ctx.send(f"{name} {random_death}. :skull:\n" + self.characters.get(player).showInventory("", ['all']))
             del self.characters[player]
         else:
             await ctx.send(f"{player} does not have a character.")
@@ -370,9 +370,10 @@ class Game(commands.Cog):
     @commands.command(name='equip', aliases=['pickup','get'])
     async def addEquipment(self, ctx, description: str, *args):
         """Add an item to your equipment list.
-        Usage: !equip "Item Description" [weapon|wearable|<count>] [<attributes>]
+        Usage: !equip "Item Description" [weapon|wearable|container|<count>] [<attributes>]
                where weapon means that you will be able to !wield this item
                      wearable means that you will be able to !wear this item
+                     container means you can !put things into this item
                      count is the number of this item you are carrying (default: 1)
                      attributes allow you to specify additional attributes of the item as a key-value pair:
                          ev:<number> is the Encumbrance Value from the Player's Handbook (default: 1)
@@ -382,6 +383,8 @@ class Game(commands.Cog):
                          range:<number> is the range in feet for a ranged weapon (default: 0)
                          hands:<number> is how many hands it takes to wield a weapon (default: 1)
                          ac:<number> is the Armour Class bonus that this item will give if you wear it (default: 0)
+                         capacity:<number> is the capacity (in EV units) of a container
+                         plural:<string> is the optional string to use when there is more than one of this item
         Examples: `!equip "Longbow" weapon ev:4 dmg:1d6 range:100 hands:2`
                   `!equip "Mail Shirt" wearable ev:3 ac:4`"""
         player = str(ctx.author)
@@ -404,6 +407,16 @@ class Game(commands.Cog):
                 await ctx.send(self.characters.get(player).addContainer(description, argDict))
             else:
                 await ctx.send(self.characters.get(player).addEquipment(description, argDict))
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
+    @commands.command(name='rename')
+    async def renameEquipment(self, ctx, description: str, new_description: str, plural: str = ''):
+        """Rename an item in your equipment list.
+        Usage: !equip "Old Description" "New Description" ["Plural"]"""
+        player = str(ctx.author)
+        if player in self.characters:
+            await ctx.send(self.characters.get(player).rename(description, new_description, plural))
         else:
             await ctx.send(f"{player} does not have a character.")
 

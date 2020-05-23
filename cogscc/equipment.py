@@ -11,7 +11,7 @@ def isAttrDifferent(d: dict, attr: str, itemattr):
 
 
 class Equipment:
-    def __init__(self, description: str, count: int, ev: float, value: int, plural: str = ''):
+    def __init__(self, description: str, count: int, ev: float, value: int, plural: str):
         # 1 cp is 1/500 of an EV, that's the lightest thing that can be carried
         if ev < 0.002:
             raise OutOfRange("Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
@@ -20,19 +20,7 @@ class Equipment:
         if value < 0:
             raise OutOfRange("Value must be a positive integer.")
 
-        # Remove extra spaces
-        self.description = " ".join(description.split())
-
-        # Set article and plural
-        self.article = ''
-        for default_article in ['a','an','the','-']:
-            if self.lower().startswith(default_article + ' '):
-                self.article = default_article
-                self.description = self.description[len(default_article)+1:]
-        if not self.article:
-            self.article = self.defaultArticle()
-        self.plural = plural
-
+        self.rename(description, plural)
         self.ev = ev
         self.count = count
         self.value = value
@@ -58,13 +46,12 @@ class Equipment:
     @classmethod
     def __from_dict__(cls, d):
         ev = d.get('ev', 1)
-        e = cls(d['description'], d.get('count', 1), ev if ev >= 0.002 else 1, d.get('value', 0))
+        e = cls(d['description'], d.get('count', 1), ev if ev >= 0.002 else 1, d.get('value', 0), d.get('plural', ''))
         e.__from_dict_super__(d)
         return e
 
     def __from_dict_super__(e, d):
         e.article = d.get('article', e.defaultArticle())
-        e.plural = d.get('plural', '')
         e.gm_note = d.get('gm_note', '')
 
     def lower(self):
@@ -136,6 +123,20 @@ class Equipment:
             number = f"{self.article} "
         return f"{number}{desc}"
 
+    def rename(self, description: str, plural: str):
+        # Remove extra spaces
+        self.description = " ".join(description.split())
+
+        # Set article and plural
+        self.article = ''
+        for default_article in ['a','an','the','-']:
+            if self.lower().startswith(default_article + ' '):
+                self.article = default_article
+                self.description = self.description[len(default_article)+1:]
+        if not self.article:
+            self.article = self.defaultArticle()
+        self.plural = plural
+
     def show(self, options: list = []):
         ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
         value = f" ({self.value * self.count} gp)" if self.value > 0 else ''
@@ -145,7 +146,7 @@ class Equipment:
 
 class Wearable(Equipment):
     def __init__(self, description: str, ac: int, hands: int, ev: float, value: int):
-        super().__init__(description, 1, ev, value)
+        super().__init__(description, 1, ev, value, '')
         self.ac = ac
         if hands < 0 or hands > 2:
             raise InvalidEquipmentAttribute(f"hands:{hands}")
@@ -210,7 +211,7 @@ class Wearable(Equipment):
 
 class Weapon(Equipment):
     def __init__(self, description: str, dmg: str, bth: int, hands: int, range: int, ev: float, value: int):
-        super().__init__(description, 1, ev, value)
+        super().__init__(description, 1, ev, value, '')
         self.dmg = dmg
         self.bth = bth
         if hands < 1 or hands > 2:
@@ -273,7 +274,7 @@ class Weapon(Equipment):
 
 
 class Container(Equipment):
-    def __init__(self, description: str, count: int, capacity: int, ev: float, value: int, plural: str = ''):
+    def __init__(self, description: str, count: int, capacity: int, ev: float, value: int, plural: str):
         super().__init__(description, count, ev, value, plural)
         self.capacity = capacity
         self.contents = []
@@ -288,7 +289,7 @@ class Container(Equipment):
 
     @classmethod
     def __from_dict__(cls, equiplist, d):
-        e = cls(d['description'], d['capacity'], d.get('ev', 1.0), d.get('value', 0))
+        e = cls(d['description'], d.get('count', 1), d['capacity'], d.get('ev', 1.0), d.get('value', 0), d.get('plural', ''))
         e.__from_dict_super__(d)
         for equipitem in d.get('contents', []):
             EquipmentList.__from_dict_type__(e.contents, equipitem)
@@ -306,9 +307,9 @@ class Container(Equipment):
 
     def put(self, item):
         if item.isContainer():
-            raise NestedContainer(f"You try to put {item.show()} inside {super(Container, self).show()}. This tears a hole in the fabric of space-time. You are sucked in and die. :skull:")
+            raise NestedContainer(f"You try to put {item.show()} inside {self.show()}. This tears a hole in the fabric of space-time. You are sucked in and die. :skull:")
         elif item.getEV() > self.getCapacity():
-            raise ContainerFull(f"{super(Container, self).show()} does not have space for {item.show()}.")
+            raise ContainerFull(f"{self.show()} does not have space for {item.show()}.")
         elif item.isWearing():
             item.takeOff()
         elif item.isWielding():
@@ -332,7 +333,8 @@ class Container(Equipment):
         ev = f"  Capacity {self.capacity*self.count}, EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
         value = f" ({self.value * self.count} gp)" if self.value > 0 else ''
         gm_note = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
-        return f"**{self.getDescription()}**{ev}{value}{gm_note}"
+        bold = '**' if 'heading' in options else ''
+        return f"{bold}{self.getDescription()}{bold}{ev}{value}{gm_note}"
 
 
 class Coin:
@@ -521,16 +523,27 @@ class EquipmentList:
             raise OutOfRange("count must be a positive integer")
 
         itemno = self.find(description, True)
-        newitem = Equipment(description, count, float(d.get('ev',1)), int(d.get('value',0)))
+        newitem = Equipment(description, count, float(d.get('ev',1)), int(d.get('value',0)), d.get('plural',''))
         if itemno < 0:
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
         elif not self.equipment[itemno].isPushable(newitem):
-            raise UniqueItem(f"You already have a {self.equipment[itemno].show()} and this type of item is unique.")
+            raise UniqueItem(f"You already have {self.equipment[itemno].show()} but the type of item is different.")
         elif self.equipment[itemno].isInContainer():
             self.equipment[itemno].removeFromContainer()
         self.equipment[itemno].count += count
         return f"now has {self.equipment[itemno].show()}."
+
+    def rename(self, description: str, new_description: str, plural: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"{description} not found.")
+        new_itemno = self.find(new_description)
+        if new_itemno >= 0:
+            raise UniqueItem(f"{self.equipment[new_itemno].show()} already exists.")
+        oldname = self.equipment[itemno].show()
+        self.equipment[itemno].rename(new_description,plural)
+        return f"{oldname} shall henceforth be known as {self.equipment[itemno].show()}"
 
     def gmNote(self, item, description = ''):
         itemno = self.find(item)
@@ -680,14 +693,14 @@ class EquipmentList:
             self.equipment.append(newitem)
             return f"gets {newitem.show()}."
         elif isAttrDifferent(d, 'capacity', self.equipment[itemno].capacity):
-            raise ItemNotMutable(f"Capacity:{d.get('capacity')} is different from the capacity of {super(Container,self.equipment[itemno]).show()}")
+            raise ItemNotMutable(f"Capacity:{d.get('capacity')} is different from the capacity of {self.equipment[itemno].show()}")
         elif isAttrDifferent(d, 'ev', self.equipment[itemno].ev):
-            raise ItemNotMutable(f"EV:{d.get('ev')} is different from the EV of {super(Container,self.equipment[itemno]).show(['ev'])}")
+            raise ItemNotMutable(f"EV:{d.get('ev')} is different from the EV of {self.equipment[itemno].show(['ev'])}")
         elif isAttrDifferent(d, 'value', self.equipment[itemno].value):
-            raise ItemNotMutable(f"Value:{d.get('value')} is different from the value of {super(Container,self.equipment[itemno]).show()}")
+            raise ItemNotMutable(f"Value:{d.get('value')} is different from the value of {self.equipment[itemno].show()}")
         else:
             self.equipment[itemno].count += d.get('count',1)
-            return f"now has {super(Container,self.equipment[itemno]).show()}."
+            return f"now has {self.equipment[itemno].show()}."
 
     def put(self, description: str, container: str):
         itemno = self.find(description)
@@ -747,7 +760,7 @@ class EquipmentList:
             elif not item.isWearing() and not item.isWielding() and not item.isContainer() and not item.isInContainer() and 'Carrying' in section_dict:
                 section_dict['Carrying'].append(item.show(options))
             elif item.isContainer() and item.description in section_dict:
-                section_desc[item.description] = f"{item.show(options)}\n"
+                section_desc[item.description] = f"{item.show(options + ['heading'])}\n"
                 if section:
                     section_dict[item.description] = item.getContents(options)
             if item.isTreasure() and 'Treasure' in section_dict:

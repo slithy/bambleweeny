@@ -238,11 +238,13 @@ else:
     eqList2.push(e)
     print(f"Bill gives {e.show()} to recipient.")
 print(eqList.getInventory("",[]))
-
-# capacity limit
-print(eqList2.add("rock", {}))
-print(eqList2.put("rock", "pack"))
-for i in range(100):
-    print(eqList2.add("rock", {}))
-
 print(eqList2.getInventory("all",['ev']))
+
+# rename
+print(eqList.rename("barrel", "Beer Barrel", ""))
+print(eqList.getInventory("barrel"))
+print(eqList.rename("barrel", "Apple Barrel", ""))
+print(eqList.put("arrow","barrel"))
+print(eqList.rename("arrow", "bolt", ""))
+print(eqList.getInventory("barrel"))
+

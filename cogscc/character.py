@@ -311,6 +311,9 @@ class Character(BaseCharacter):
     def addEquipment(self, description: str, d: dict):
         return f"{self.name} {self.equipment.add(description, d)}"
 
+    def rename(self, description: str, new_description: str, plural: str):
+        return f"{self.equipment.rename(description, new_description, plural)}"
+
     def addWeapon(self, description: str, d: dict):
         return f"{self.name} {self.equipment.addWeapon(description, d)}"
 
