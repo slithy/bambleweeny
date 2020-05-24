@@ -260,3 +260,9 @@ print(eqList.wield("Bill","awesome"))
 print("")
 print(eqList.getInventory("all"))
 
+print(eqList.showDetail("arrowroot"))
+print(eqList.edit("arrowroot", { 'ev':'0.1' }))
+print(eqList.edit("arrowroot", { 'value':'10', 'capacity':'1', 'hands':'1', 'count':'10' }))
+
+print(eqList.getInventory("carry", ['ev']))
+

@@ -18,7 +18,7 @@ class Equipment:
         if count < 1:
             raise OutOfRange("Number of items must be a positive integer.")
         if value < 0:
-            raise OutOfRange("Value must be a positive integer.")
+            raise OutOfRange("Value must be zero or a positive integer.")
 
         self.rename(description, plural)
         self.ev = ev
@@ -36,7 +36,7 @@ class Equipment:
         if self.count > 1:
             d['count'] = self.count
         if self.ev != 1.0:
-            d['ev'] = self.ev
+            d['ev'] = float(self.ev)
         if self.value != 0:
             d['value'] = self.value
         if self.gm_note:
@@ -306,6 +306,8 @@ class Weapon(Equipment):
 class Container(Equipment):
     def __init__(self, description: str, count: int, capacity: int, ev: float, value: int, plural: str):
         super().__init__(description, count, ev, value, plural)
+        if capacity < 1:
+            raise OutOfRange("Capacity must be a positive integer.")
         self.capacity = capacity
         self.contents = []
 
@@ -576,6 +578,17 @@ class EquipmentList:
         itemno = self.find(description)
         if itemno < 0:
             raise ItemNotFound(f"{description} not found.")
+        # Range checking
+        if float(d.get('ev','1.0')) < 0.002:
+            raise OutOfRange("ev must be a positive number.")
+        if int(d.get('count','1')) < 1:
+            raise OutOfRange("count must be a positive integer.")
+        if int(d.get('value','0')) < 0:
+            raise OutOfRange("value must be zero or a positive integer.")
+        if int(d.get('capacity','1')) < 1:
+            raise OutOfRange("capacity must be a positive integer.")
+        if not 0 <= int(d.get('hands','1')) <= 2:
+            raise OutOfRange(f"hands must be an integer between 0 and 2")
         w = self.equipment[itemno].edit(d)
         return f"{w}{self.equipment[itemno].showDetail()}"
 
