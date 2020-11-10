@@ -1,4 +1,3 @@
-import random
 import time
 import json
 from os.path import basename
@@ -58,6 +57,7 @@ class Game(commands.Cog):
         self.monsters = []
 
     def isGm(self, ctx):
+        #return ctx.author.name == 'slithy'
         for role in ctx.author.roles:
             if role.name in Game.gm_roles:
                 return True
@@ -69,6 +69,7 @@ class Game(commands.Cog):
 
     def getGmList(self, ctx):
         gm_list = []
+        #gm_list.append(self.bot.get_user(689169847166304299))
         for member in ctx.guild.members:
             for role in member.roles: 
                 if role.name in Game.gm_roles:
