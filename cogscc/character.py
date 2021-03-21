@@ -182,6 +182,51 @@ class Character(BaseCharacter):
         else:
             raise InvalidArgument(f"{self.xclass} is not a valid class.")
 
+    def getAttacks(self):
+
+        out = []
+        BtH = self.getBtH()
+
+        wieldedItems = self.equipment.getWieldedItems()
+        for idx, weapon in enumerate(wieldedItems):
+            wbth = weapon.bth
+            ss = f"[{weapon.description}:] +1d20 +{BtH} [BtH] +{wbth} [w BtH]"
+
+            # ranged weapon?
+            if weapon.range <= 1:
+                str = self.stats.getMod("str")
+                ss += f" +{str} [str]"
+            else:
+                dex = self.stats.getMod("dex")
+                ss += f" +{dex} [dex]"
+
+            if len(wieldedItems) > 1:
+                dex = self.stats.getMod("dex")
+                ss += f" -{3 * (idx + 1)} [dual w] +{dex} [dex]"
+
+            print(ss)
+            out.append(roll(ss))
+
+        return out
+
+    def getDmgs(self):
+
+        out = []
+
+        wieldedItems = self.equipment.getWieldedItems()
+        for idx, weapon in enumerate(wieldedItems):
+            wdmg = weapon.damage
+            ss = f"[{weapon.description}:] +{wdmg} [w dmg]"
+
+            # ranged weapon?
+            if weapon.range <= 1:
+                str = self.stats.getMod("str")
+                ss += f" +{str} [str]"
+
+            out.append(roll(ss))
+
+        return out
+
     def levelUp(self):
         """Level up and roll new hit points."""
         hd: int

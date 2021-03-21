@@ -523,6 +523,13 @@ class EquipmentList:
             if self.equipment[item_no].isWearing():
                 self.ac += self.equipment[item_no].ac
 
+    def getWieldedItems(self):
+        out = []
+        for item_no in range(len(self.equipment)):
+            if self.equipment[item_no].isWielding():
+                out.append(self.equipment[item_no])
+        return out
+
     def freeHands(self, hands: int, name: str):
         free_hands = 2
         reply = ''
