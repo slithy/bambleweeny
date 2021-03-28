@@ -1,8 +1,6 @@
 import gc
 from copy import copy
-from cogscc.models.errors import AmbiguousMatch, ContainerFull, CreditLimitExceeded, InvalidCoinType, InvalidContainerItem, \
-    InvalidEquipmentAttribute, InventorySectionNotFound, ItemNotFound, ItemNotMutable, ItemNotWieldable, \
-    ItemNotWearable, MissingArgument, NestedContainer, NotWearingItem, OutOfRange, UniqueItem
+from cogscc.models.errors import *
 
 
 # Helper function to check if a dictionary is trying to change the value of an attribute in an existing item
@@ -42,6 +40,9 @@ class Equipment:
         if self.gm_note:
             d['gm_note'] = self.gm_note
         return d
+
+    def __str__(self):
+        return self.__to_json__().__str__()
 
     @classmethod
     def __from_dict__(cls, d):
@@ -397,6 +398,9 @@ class Coin:
                 d[den] = amt
         return { 'coin': d }
 
+    def __str__(self):
+        return self.__to_json__().__str__()
+
     @classmethod
     def __from_dict__(cls, d):
         c = Coin()
@@ -466,6 +470,13 @@ class EquipmentList:
         saveList = [ item for item in self.equipment if not item.isInContainer() ]
         return { 'items': saveList, 'coin': self.coin.coin }
 
+    def __str__(self):
+        out = f"coin: {self.coin}\nac: {self.ac}\n"
+        for item in self.equipment:
+            out += item.__str__() + "\n"
+        return out
+
+
     @classmethod
     def __from_dict__(cls, d):
         e = EquipmentList()
@@ -527,8 +538,17 @@ class EquipmentList:
         out = []
         for item_no in range(len(self.equipment)):
             if self.equipment[item_no].isWielding():
-                out.append(self.equipment[item_no])
+                out.append((self.equipment[item_no], item_no))
         return out
+
+    def swapWeapons(self):
+        wi = self.getWieldedItems();
+        if (len(wi)) != 2:
+            raise NotAllowed("You are not wielding 2 weapons. I cannot swap them")
+        idx0 = wi[0][1]
+        idx1 = wi[1][1]
+        self.equipment[idx1], self.equipment[idx0] = self.equipment[idx0], self.equipment[idx1]
+
 
     def freeHands(self, hands: int, name: str):
         free_hands = 2
