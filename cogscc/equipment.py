@@ -23,6 +23,7 @@ class Equipment:
         self.count = count
         self.value = value
         self.gm_note = ''
+        self.addTags()
 
     def __to_json__(self):
         # Save only non-default values
@@ -55,8 +56,34 @@ class Equipment:
         e.article = d.get('article', e.defaultArticle())
         e.gm_note = d.get('gm_note', '')
 
+    def addTags(self):
+        self.tags = set()
+        pass
+
     def lower(self):
         return self.description.lower()
+
+    def hasTag(self, s: str):
+        return s in self.tags
+
+    def hasAnyTag(self, l: list):
+        for i in l:
+            if self.hasTag(i):
+                return True
+        return False
+
+    def hasAllTags(self, l: list):
+        for i in l:
+            if not self.hasTag(i):
+                return False
+        return True
+
+    def _anyInDescription(self, s: list):
+        lowerDescription = self.lower()
+        for i in s:
+            if i in lowerDescription:
+                return True
+        return False
 
     def defaultArticle(self):
         return 'an' if self.description[0].lower() in { 'a', 'e', 'i', 'o', 'u' } else 'a'
@@ -251,6 +278,7 @@ class Weapon(Equipment):
         self.range = range
         self.is_wielding = False
 
+
     def __to_json__(self):
         d = super().__to_json__()
         d['type'] = 'weapon'
@@ -272,6 +300,19 @@ class Weapon(Equipment):
         e.__from_dict_super__(d)
         e.is_wielding = d.get('wielding', False)
         return e
+
+    def addTags(self):
+        super().addTags()
+
+        if self._anyInDescription(["sword", "dagger", "club", "spear", "axe", "hammer"]):
+            self.tags.add("melee")
+        if self._anyInDescription(["dagger", "club", "spear", "hand axe", "throwing hammer", "javelin", "stone",
+                                   "dart", "whip"]):
+            self.tags.add("throw")
+        if self._anyInDescription(["bow", "sling"]):
+            self.tags.add("shoot")
+        if self._anyInDescription(["arrow", "quarrel", "sling bullet"]):
+            self.tags.add("ammo")
 
     def isEquipment(self):
         return not self.is_wielding and self.value == 0
