@@ -39,6 +39,9 @@ class Character(BaseCharacter):
 
     # Character generation
 
+    def swapWeapons(self):
+        self.equipment.swapWeapons()
+
     def setRace(self, race: str):
         if race.title() not in RACE_NAMES:
             raise InvalidArgument(f"{race} is not a valid race.")
@@ -188,7 +191,7 @@ class Character(BaseCharacter):
         BtH = self.getBtH()
 
         wieldedItems = self.equipment.getWieldedItems()
-        for idx, weapon in enumerate(wieldedItems):
+        for idx, (weapon, _) in enumerate(wieldedItems):
             wbth = weapon.bth
             ss = f"[{weapon.description}:] +1d20 +{BtH} [BtH] +{wbth} [w BtH]"
 
@@ -214,7 +217,7 @@ class Character(BaseCharacter):
         out = []
 
         wieldedItems = self.equipment.getWieldedItems()
-        for idx, weapon in enumerate(wieldedItems):
+        for idx, (weapon, _) in enumerate(wieldedItems):
             wdmg = weapon.damage
             ss = f"[{weapon.description}:] +{wdmg} [w dmg]"
 
