@@ -10,19 +10,26 @@ c.assignStats(18,17,18,7,7,7,31)
 c.setPrimes('str','dex','None')
 eqList = eq.EquipmentList()
 eqList.addWeapon("Hammer", { 'damage': '1d8 + 1', "bth":"5" })
-eqList.addWeapon("Sword", { 'damage': '1d8' })
-eqList.wield("Bill", "Sword")
+eqList.addWeapon("Throwing hammer", { 'damage': '1d8' })
+eqList.wield("Bill", "Throwing hammer")
 eqList.wield("Bill", "Hammer")
 eqList.addCoin(3, "gp")
 eqList.addCoin(4, "sp")
 c.equipment = eqList
 print(c.showSummary())
 
-print(c.equipment)
 c.swapWeapons()
-print(c.equipment)
+print(c.equipment.equipment[0])
+print(c.equipment.equipment[0].hasTag("melee"))
+print(c.equipment.equipment[0].hasTag("throw"))
+print(c.equipment.equipment[0].hasAllTags(["throw", "melee"]))
 
-for d in c.getAttacks():
-    print(d)
-for d in c.getDmgs():
-    print(d)
+
+# print(c.equipment)
+# c.swapWeapons()
+# print(c.equipment)
+
+# for d in c.getAttacks():
+#     print(d)
+# for d in c.getDmgs():
+#     print(d)
