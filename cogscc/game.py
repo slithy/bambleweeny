@@ -6,7 +6,7 @@ from cogscc.funcs.dice import roll
 from cogscc.character import Character
 from cogscc.monster import Monster
 import cogscc.npc
-from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, MissingArgument, NotAllowed
+from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, MissingArgument, NotAllowed, NotWieldingItems
 
 def getArgDict(*args):
     synonymDict = { 'cap': 'capacity', 'dmg': 'damage', 'rng': 'range', 'val': 'value' }
@@ -656,9 +656,13 @@ class Game(commands.Cog):
         # we throw like attacking in melee
         dmgs = self.characters.get(player).getDmgs(isRanged=False)
         for i in atks:
-            await ctx.send(roll(i).__str__())
+            r = roll(i)
+            await ctx.send(f"{r.__str__()}: {r.result}")
         for i in dmgs:
-            await ctx.send(roll(i).__str__())
+            r = roll(i)
+            await ctx.send(f"{r.__str__()}: {r.result}")
+        if len(atks) == 0 or len(dmgs) == 0:
+            raise NotWieldingItems
 
 def setup(bot):
     bot.add_cog(Game(bot))

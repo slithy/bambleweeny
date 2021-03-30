@@ -2,6 +2,7 @@ from cogscc.funcs.dice import roll, DiceResult
 from cogscc.character import Character
 from cogscc.hitpoints import HP
 import cogscc.equipment as eq
+from cogscc.models.errors import *
 
 import json
 
@@ -13,8 +14,8 @@ eqList = eq.EquipmentList()
 # eqList.wield("Bill", "bow")
 eqList.addWeapon("Hammer", { 'damage': '1d8 + 1', "bth":"5" })
 eqList.addWeapon("Throwing hammer", { 'damage': '1d8', "bth":"4" })
-eqList.wield("Bill", "Throwing hammer")
-eqList.wield("Bill", "Hammer")
+# eqList.wield("Bill", "Throwing hammer")
+# eqList.wield("Bill", "Hammer")
 eqList.addCoin(3, "gp")
 eqList.addCoin(4, "sp")
 c.equipment = eqList
@@ -22,10 +23,17 @@ print(c.showSummary())
 
 atks = c.getAtks(isRanged = True)
 dmgs = c.getDmgs(isRanged = True)
+
+
 for i in atks:
-    print(roll(i).__str__().replace("\n", " "))
+    r = roll(i)
+    print(f"{r.__str__()}: {r.result}")
 for i in dmgs:
-    print(roll(i).__str__().replace("\n", " "))
+    r = roll(i)
+    print(f"{r.__str__()}: {r.result}")
+
+if len(atks) == 0:
+    raise NotWieldingItems
 
 # c.swapWeapons()
 # print(c.equipment.equipment[0])
