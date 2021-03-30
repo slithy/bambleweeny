@@ -22,6 +22,7 @@ class Character(BaseCharacter):
         self.hp = HP(1)
         self.equipment = EquipmentList()
         self.disabled = False
+        self.setGod(None)
 
     def __to_json__(self):
         return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
@@ -54,6 +55,9 @@ class Character(BaseCharacter):
 
     def setLevel(self, level: int):
         self.level = level
+
+    def setGod(self, god: str):
+        self.god = god
 
     def setAlignment(self, alignment: str):
         if alignment == 'XX':
@@ -97,6 +101,9 @@ class Character(BaseCharacter):
         elif self.alignment[1] == 'E':
             evil_axis = 'Evil'
         return law_axis + ' ' + evil_axis
+
+    def getGod(self):
+        return self.god
 
     def assignStats(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, hp: int):
         self.stats.set(strength, dexterity, constitution, intelligence, wisdom, charisma)
@@ -185,56 +192,96 @@ class Character(BaseCharacter):
         else:
             raise InvalidArgument(f"{self.xclass} is not a valid class.")
 
-    def getAtks(self, isRanged: bool):
+    def getAtks(self, type:str = "melee", items: list = None):
+
+        if items is None:
+            items = [weapon.description for weapon in self.equipment.getWieldedItems()]
 
         out = []
         BtH = self.getBtH()
 
-        items = self.equipment.getWieldedItems()
+        for description in items:
+            itemno = self.equipment.find(description)
+            if itemno < 0:
+                continue
 
-        for idx, (weapon, _) in enumerate(items):
-            wbth = weapon.bth
-            ss = f"[{weapon.description} atk:] +1d20 +{BtH} [BtH] +{wbth} [w BtH]"
+            weapon = self.equipment.equipment[itemno]
+            if not weapon.isWeapon():
+                continue
+
+            if weapon.isMarkedAsDropped():
+                continue
+
+            if not weapon.isWielding() and type != "throw":
+                continue
 
             # ranged weapon?
-            if isRanged and not weapon.hasAnyTag(["throw", "shoot"]):
+            if not weapon.hasTag(type):
                 continue
 
-            if not isRanged and not weapon.hasAnyTag(["melee"]):
-                continue
+            wbth = weapon.bth
+            ss = f"[{weapon.description} {type} atk:] +1d20 +{BtH} [BtH] +{wbth} [w BtH]"
 
-            if isRanged:
+            if type != "melee":
                 dex = self.stats.getMod("dex")
                 ss += f" +{dex} [dex]"
             else:
                 str = self.stats.getMod("str")
                 ss += f" +{str} [str]"
 
-            if len(items) > 1:
-                dex = self.stats.getMod("dex")
-                ss += f" -{3 * (idx + 1)} [dual w] +{dex} [dex]"
+            if type == "throw" and self.getGod() == "Odin" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+                ss += f" +3 [god]"
 
-            out.append(roll(ss).__str__())
+            out.append(ss)
 
         if len(out) == 0:
             raise NotWieldingItems
 
+        elif len(out) == 2 and type == "melee":
+            dex = self.stats.getMod("dex")
+            out[0] += f" -3 [dual w] +{dex} [dex]"
+            out[1] += f" -6 [dual w] +{dex} [dex]"
+
+        for idx, i in enumerate(out):
+            out[idx] = roll(i).__str__()
+
         return out
 
-    def getDmgs(self, isRanged: bool):
+    def getDmgs(self, type: str = "melee", items: list = None):
         out = []
 
+        if items is None:
+            items = [weapon.description for weapon in self.equipment.getWieldedItems()]
+
         str = self.stats.getMod("str")
-        items = self.equipment.getWieldedItems()
 
-        if len(items) == 0:
-            raise NotWieldingItems
+        for description in items:
+            itemno = self.equipment.find(description)
+            if itemno < 0:
+                continue
 
-        for idx, (weapon, _) in enumerate(items):
+            weapon = self.equipment.equipment[itemno]
+            if not weapon.isWeapon():
+                continue
+
+            if weapon.isMarkedAsDropped():
+                continue
+
+            if not weapon.isWielding() and type != "throw":
+                continue
+
+            if not weapon.hasTag(type):
+                continue
+
             wdmg = weapon.damage
-            ss = f"[{weapon.description} dmg:] +{wdmg} [w dmg]"
-            if not isRanged and weapon.hasAnyTag(["melee", "throw"]):
+            ss = f"[{weapon.description} {type} dmg:] +{wdmg} [w dmg]"
+
+            if type == "melee" or type == "throw":
                 ss += f" +{str} [str]"
+
+            if self.getGod() == "Odin" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+                ss += f" +2 [god]"
+
             out.append(roll(ss).__str__())
 
         if len(out) == 0:
@@ -339,9 +386,10 @@ class Character(BaseCharacter):
         return f"{message}{self.name} the {self.race} {self.xclass} Level {self.level}"
 
     def showCharacter(self, message: str = ""):
-        return f"{self.name}, {self.race} {self.xclass}, {self.getAlignment()}, Level {self.level} {message}\n" + \
+        return f"{self.name}, {self.race} {self.xclass}, {self.getAlignment()}, Level: {self.level} {message}, " \
+               f"God: {self.god}\n" + \
                f"**AC:** {self.getAC()}  **BtH:** {self.getBtH():+}  {self.hp}\n" + \
-               f"{self.stats}"
+               f"{self.stats} "
 
     def showHp(self):
         num_moons = int(self.hp.max/4 + 0.75)
