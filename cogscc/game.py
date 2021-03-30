@@ -611,7 +611,7 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].levelUp())
 
-    @commands.command(name='euthanise')
+    @commands.command(name='euthanise', aliases=['kill'])
     async def deleteCharacter(self, ctx, player: str):
         """Ends the suffering of the character belonging to the specified player."""
         self.gmOnly(ctx)
@@ -636,6 +636,21 @@ class Game(commands.Cog):
             argDict['hd'] = 1
         self.monsters.append(Monster(name, argDict))
         await ctx.send(f"Added {name} to combat.")
+
+    @commands.command(name='attack', aliases=['atk'])
+    async def attack(self, ctx, character: str = ''):
+        """Character performs standard melee attacks."""
+        player = self.selfOrGm(ctx, character)
+        await ctx.send(self.characters.get(player).getAtks(isRanged=False))
+        await ctx.send(self.characters.get(player).getDmgs(isRanged=False))
+
+    @commands.command(name='throw')
+    async def throw(self, ctx, character: str='', *args):
+        """Character performs a standard throw attacks."""
+        player=self.selfOrGm(ctx, character)
+        await ctx.send(self.characters.get(player).getAtks(isRanged=True))
+        # we throw like attacking in melee
+        await ctx.send(self.characters.get(player).getDmgs(isRanged=False))
 
 def setup(bot):
     bot.add_cog(Game(bot))
