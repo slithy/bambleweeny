@@ -637,7 +637,7 @@ class Game(commands.Cog):
         self.monsters.append(Monster(name, argDict))
         await ctx.send(f"Added {name} to combat.")
 
-    @commands.command(name='attack', aliases=['atk'])
+    @commands.command(name='attack', aliases=['attacks', 'atk', 'atks'])
     async def attack(self, ctx, character: str = ''):
         """Character performs standard melee attacks."""
         player = self.selfOrGm(ctx, character)
