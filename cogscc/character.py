@@ -185,50 +185,48 @@ class Character(BaseCharacter):
         else:
             raise InvalidArgument(f"{self.xclass} is not a valid class.")
 
-    def getAttacks(self):
+    def getAtks(self, isRanged: bool):
 
         out = []
         BtH = self.getBtH()
 
-        wieldedItems = self.equipment.getWieldedItems()
-        for idx, (weapon, _) in enumerate(wieldedItems):
+        items = self.equipment.getWieldedItems()
+        for idx, (weapon, _) in enumerate(items):
             wbth = weapon.bth
             ss = f"[{weapon.description}:] +1d20 +{BtH} [BtH] +{wbth} [w BtH]"
 
             # ranged weapon?
-            if weapon.range <= 1:
-                str = self.stats.getMod("str")
-                ss += f" +{str} [str]"
+            if isRanged:
+                 if weapon.hasAnyTag(["throw", "shoot"]):
+                     dex = self.stats.getMod("dex")
+                     ss += f" +{dex} [dex]"
             else:
-                dex = self.stats.getMod("dex")
-                ss += f" +{dex} [dex]"
+                if weapon.hasTag("melee"):
+                    str = self.stats.getMod("str")
+                    ss += f" +{str} [str]"
 
-            if len(wieldedItems) > 1:
+            if len(items) > 1:
                 dex = self.stats.getMod("dex")
                 ss += f" -{3 * (idx + 1)} [dual w] +{dex} [dex]"
 
-            print(ss)
             out.append(roll(ss))
 
         return out
 
-    def getDmgs(self):
-
+    def getDmgs(self, isRanged: bool):
         out = []
 
-        wieldedItems = self.equipment.getWieldedItems()
-        for idx, (weapon, _) in enumerate(wieldedItems):
+        str = self.stats.getMod("str")
+        items = self.equipment.getWieldedItems()
+        for idx, (weapon, _) in enumerate(items):
             wdmg = weapon.damage
             ss = f"[{weapon.description}:] +{wdmg} [w dmg]"
-
-            # ranged weapon?
-            if weapon.range <= 1:
-                str = self.stats.getMod("str")
+            if not isRanged and weapon.hasAnyTag(["melee", "throw"]):
                 ss += f" +{str} [str]"
-
             out.append(roll(ss))
 
         return out
+
 
     def levelUp(self):
         """Level up and roll new hit points."""
