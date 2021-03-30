@@ -643,6 +643,10 @@ class Game(commands.Cog):
         player = self.selfOrGm(ctx, character)
         atks = self.characters.get(player).getAtks(isRanged=False)
         dmgs = self.characters.get(player).getDmgs(isRanged=False)
+
+        if len(atks) == 0:
+            raise NotWieldingItems
+
         for i in atks:
             await ctx.send(i)
         for i in dmgs:
@@ -655,14 +659,16 @@ class Game(commands.Cog):
         atks = self.characters.get(player).getAtks(isRanged=True)
         # we throw like attacking in melee
         dmgs = self.characters.get(player).getDmgs(isRanged=False)
-        for i in atks:
-            r = roll(i)
-            await ctx.send(f"{r.__str__()}: {r.result}")
-        for i in dmgs:
-            r = roll(i)
-            await ctx.send(f"{r.__str__()}: {r.result}")
-        if len(atks) == 0 or len(dmgs) == 0:
+        
+        if len(atks) == 0:
             raise NotWieldingItems
+
+        for i in atks:
+            await ctx.send(i)
+        for i in dmgs:
+            await ctx.send(i)
+
+
 
 def setup(bot):
     bot.add_cog(Game(bot))

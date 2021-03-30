@@ -209,7 +209,7 @@ class Character(BaseCharacter):
                 dex = self.stats.getMod("dex")
                 ss += f" -{3 * (idx + 1)} [dual w] +{dex} [dex]"
 
-            out.append(ss)
+            out.append(roll(ss).__str__())
 
         return out
 
@@ -223,7 +223,7 @@ class Character(BaseCharacter):
             ss = f"[{weapon.description} dmg:] +{wdmg} [w dmg]"
             if not isRanged and weapon.hasAnyTag(["melee", "throw"]):
                 ss += f" +{str} [str]"
-            out.append(ss)
+            out.append(roll(ss).__str__())
 
         return out
 
