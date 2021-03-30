@@ -583,7 +583,7 @@ class EquipmentList:
         return out
 
     def swapWeapons(self):
-        wi = self.getWieldedItems();
+        wi = self.getWieldedItems()
         if (len(wi)) != 2:
             raise NotAllowed("You are not wielding 2 weapons. I cannot swap them")
         idx0 = wi[0][1]
@@ -855,6 +855,35 @@ class EquipmentList:
         else:
             self.equipment[itemno].count -= count
             return f"now has {self.equipment[itemno].show()}."
+
+    def markAsDropped(self, description: str):
+        """This is useful when you throw an item and you do not want to completely drop it"""
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"You don't have any {description}.")
+        elif self.equipment[itemno].description.find("[dropped]") == -1:
+            self.equipment[itemno].description += " [dropped]"
+            if self.equipment[itemno].isWearing():
+                self.equipment[itemno].takeOff()
+                self.recalculateAC()
+            elif self.equipment[itemno].isWielding():
+                self.equipment[itemno].unwield()
+
+            return f"leaves {self.equipment[itemno].show()} temporarily on the ground."
+        else:
+            raise ItemNotFound(f"{self.equipment[itemno].show()} was already dropped.")
+
+    def pickUp(self, description: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"yo do not have any {description}.")
+        else:
+            new_desc = self.equipment[itemno].description.replace(" [dropped]", "")
+            if len(new_desc) !=  self.equipment[itemno].description:
+                self.equipment[itemno].description = new_desc
+                return f"re-equips {self.equipment[itemno].show()}."
+            else:
+                raise ItemNotFound(f"{self.equipment[itemno].show()} is not temporarily dropped.")
 
     def addCoin(self, amount: int, denomination: str):
         self.coin.add(amount, denomination)

@@ -13,25 +13,33 @@ eqList = eq.EquipmentList()
 # eqList.addWeapon("bow", { 'damage': '1d8 + 1', "bth":"5", "range":40 })
 # eqList.wield("Bill", "bow")
 eqList.addWeapon("Hammer", { 'damage': '1d8 + 1', "bth":"5" })
-eqList.addWeapon("Throwing hammer", { 'damage': '1d8', "bth":"4" })
-eqList.wield("Bill", "Throwing hammer")
-eqList.wield("Bill", "Hammer")
-eqList.addCoin(3, "gp")
-eqList.addCoin(4, "sp")
+# eqList.addWeapon("Hammer2", { 'damage': '1d8 + 1', "bth":"5" })
+# eqList.addWeapon("Throwing hammer", { 'damage': '1d8', "bth":"4" })
+# eqList.wield("Bill", "Throwing hammer")
+# eqList.wield("Bill", "Hammer")
+# eqList.wield("Bill", "Hammer2")
+# eqList.addCoin(3, "gp")
+# eqList.addCoin(4, "sp")
 c.equipment = eqList
 print(c.showSummary())
 
-atks = c.getAtks(isRanged = True)
-dmgs = c.getDmgs(isRanged = True)
+c.equipment.markAsDropped(0)
+print(c.equipment)
+c.equipment.pickUp(0)
+print(c.equipment)
 
 
-for i in atks:
-    print(i)
-for i in dmgs:
-    print(i)
-
-if len(atks) == 0:
-    raise NotWieldingItems
+# atks = c.getAtks(isRanged = True)
+# dmgs = c.getDmgs(isRanged = False)
+#
+#
+# for i in atks:
+#     print(i)
+# for i in dmgs:
+#     print(i)
+#
+# if len(atks) == 0:
+#     raise NotWieldingItems
 
 # c.swapWeapons()
 # print(c.equipment.equipment[0])

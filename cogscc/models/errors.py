@@ -107,7 +107,7 @@ class ItemNotWieldable(BambleweenyException):
 
 class NotWieldingItems(BambleweenyException):
     """Raised when there is an attempt to attack without wielding any items."""
-    def __init__(self, msg: str = "Your are not wielding any items."):
+    def __init__(self, msg: str = "Your are not wielding any items that can perform this action."):
         super().__init__(msg)
 
 class ItemNotWearable(BambleweenyException):
