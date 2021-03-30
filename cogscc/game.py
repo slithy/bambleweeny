@@ -1,5 +1,6 @@
 import time
 import json
+import random
 from os.path import basename
 from discord.ext import commands
 from cogscc.funcs.dice import roll
