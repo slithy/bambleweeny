@@ -56,6 +56,9 @@ class Equipment:
         e.article = d.get('article', e.defaultArticle())
         e.gm_note = d.get('gm_note', '')
 
+    def isMarkedAsDropped(self):
+        return self.description.find("[dropped]") != -1
+
     def addTags(self):
         self.tags = set()
         pass
@@ -579,7 +582,7 @@ class EquipmentList:
         out = []
         for item_no in range(len(self.equipment)):
             if self.equipment[item_no].isWielding():
-                out.append((self.equipment[item_no], item_no))
+                out.append(self.equipment[item_no])
         return out
 
     def swapWeapons(self):
@@ -861,7 +864,7 @@ class EquipmentList:
         itemno = self.find(description)
         if itemno < 0:
             raise ItemNotFound(f"You don't have any {description}.")
-        elif self.equipment[itemno].description.find("[dropped]") == -1:
+        elif not self.equipment[itemno].isMarkedAsDropped():
             self.equipment[itemno].description += " [dropped]"
             if self.equipment[itemno].isWearing():
                 self.equipment[itemno].takeOff()
@@ -877,13 +880,13 @@ class EquipmentList:
         itemno = self.find(description)
         if itemno < 0:
             raise ItemNotFound(f"yo do not have any {description}.")
+        elif not self.equipment[itemno].isMarkedAsDropped():
+            raise ItemNotFound(f"{self.equipment[itemno].show()} is not temporarily dropped.")
         else:
-            new_desc = self.equipment[itemno].description.replace(" [dropped]", "")
-            if len(new_desc) !=  self.equipment[itemno].description:
-                self.equipment[itemno].description = new_desc
-                return f"re-equips {self.equipment[itemno].show()}."
-            else:
-                raise ItemNotFound(f"{self.equipment[itemno].show()} is not temporarily dropped.")
+            self.equipment[itemno].description = self.equipment[itemno].description.replace(" [dropped]", "")
+            return f"re-equips {self.equipment[itemno].show()}."
+
+
 
     def addCoin(self, amount: int, denomination: str):
         self.coin.add(amount, denomination)

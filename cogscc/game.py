@@ -648,8 +648,8 @@ class Game(commands.Cog):
     async def attack(self, ctx, character: str = ''):
         """Character performs standard melee attacks."""
         player = self.selfOrGm(ctx, character)
-        atks = self.characters.get(player).getAtks(isRanged=False)
-        dmgs = self.characters.get(player).getDmgs(isRanged=False)
+        atks = self.characters.get(player).getAtks(type="melee")
+        dmgs = self.characters.get(player).getDmgs(type="melee")
 
         if len(atks) == 0:
             raise NotWieldingItems
@@ -660,17 +660,52 @@ class Game(commands.Cog):
             await ctx.send(i)
 
     @commands.command(name='throw')
-    async def throw(self, ctx, character: str='', *args):
+    async def throw(self, ctx, character: str='', weapon_description: str = ''):
         """Character performs a standard throw attacks."""
         player=self.selfOrGm(ctx, character)
-        atks = self.characters.get(player).getAtks(isRanged=True)
+        atks = self.characters.get(player).getAtks(type="throw", items=[weapon_description])
         # we throw like attacking in melee
-        dmgs = self.characters.get(player).getDmgs(isRanged=False)
+        dmgs = self.characters.get(player).getDmgs(type="throw", items=[weapon_description])
 
         for i in atks:
             await ctx.send(i)
         for i in dmgs:
             await ctx.send(i)
+
+        await ctx.send(self.characters.get(player).equipment.markAsDropped(weapon_description))
+
+    @commands.command(name='shoot')
+    async def shoot(self, ctx, character: str = ''):
+        """Character performs standard melee attacks."""
+        player = self.selfOrGm(ctx, character)
+        atks = self.characters.get(player).getAtks(type="shoot")
+        dmgs = self.characters.get(player).getDmgs(type="shoot")
+
+        if len(atks) == 0:
+            raise NotWieldingItems
+
+        for i in atks:
+            await ctx.send(i)
+        for i in dmgs:
+            await ctx.send(i)
+
+
+    @commands.command(name='pick_up')
+    async def pickUp(self, ctx, character: str='', weapon_description: str = ''):
+        """Pick up a dropped item."""
+        player=self.selfOrGm(ctx, character)
+        await ctx.send(self.characters.get(player).equipment.pickUp(weapon_description))
+
+    @commands.command(name='god')
+    async def setAlignment(self, ctx, god: str):
+        """Sets character god."""
+        player = str(ctx.author)
+        if player in self.characters:
+            self.characters.get(player).setGod(god)
+            await ctx.send(f"{self.characters.get(player).getName()} worships"
+                           f" {self.characters.get(player).getGod()} now.")
+        else:
+            await ctx.send(f"{player} does not have a character.")
 
 
 
