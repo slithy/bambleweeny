@@ -20,8 +20,12 @@ eqList.addCoin(4, "sp")
 c.equipment = eqList
 print(c.showSummary())
 
-print(c.getAtks(isRanged = True))
-print(c.getDmgs(isRanged = True))
+atks = c.getAtks(isRanged = True)
+dmgs = c.getDmgs(isRanged = True)
+for i in atks:
+    print(roll(i).__str__().replace("\n", " "))
+for i in dmgs:
+    print(roll(i).__str__().replace("\n", " "))
 
 # c.swapWeapons()
 # print(c.equipment.equipment[0])
