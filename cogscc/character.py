@@ -7,7 +7,7 @@ from cogscc.stats import BaseStats
 from cogscc.hitpoints import HP, Wound
 from cogscc.equipment import EquipmentList
 from cogscc.funcs.dice import roll
-from cogscc.models.errors import InvalidArgument, UniqueItem
+from cogscc.models.errors import *
 
 
 class Character(BaseCharacter):
@@ -191,25 +191,33 @@ class Character(BaseCharacter):
         BtH = self.getBtH()
 
         items = self.equipment.getWieldedItems()
+
         for idx, (weapon, _) in enumerate(items):
             wbth = weapon.bth
             ss = f"[{weapon.description} atk:] +1d20 +{BtH} [BtH] +{wbth} [w BtH]"
 
             # ranged weapon?
+            if isRanged and not weapon.hasAnyTag(["throw", "shoot"]):
+                continue
+
+            if not isRanged and not weapon.hasAnyTag(["melee"]):
+                continue
+
             if isRanged:
-                 if weapon.hasAnyTag(["throw", "shoot"]):
-                     dex = self.stats.getMod("dex")
-                     ss += f" +{dex} [dex]"
+                dex = self.stats.getMod("dex")
+                ss += f" +{dex} [dex]"
             else:
-                if weapon.hasTag("melee"):
-                    str = self.stats.getMod("str")
-                    ss += f" +{str} [str]"
+                str = self.stats.getMod("str")
+                ss += f" +{str} [str]"
 
             if len(items) > 1:
                 dex = self.stats.getMod("dex")
                 ss += f" -{3 * (idx + 1)} [dual w] +{dex} [dex]"
 
             out.append(roll(ss).__str__())
+
+        if len(out) == 0:
+            raise NotWieldingItems
 
         return out
 
@@ -218,12 +226,19 @@ class Character(BaseCharacter):
 
         str = self.stats.getMod("str")
         items = self.equipment.getWieldedItems()
+
+        if len(items) == 0:
+            raise NotWieldingItems
+
         for idx, (weapon, _) in enumerate(items):
             wdmg = weapon.damage
             ss = f"[{weapon.description} dmg:] +{wdmg} [w dmg]"
             if not isRanged and weapon.hasAnyTag(["melee", "throw"]):
                 ss += f" +{str} [str]"
             out.append(roll(ss).__str__())
+
+        if len(out) == 0:
+            raise NotWieldingItems
 
         return out
 

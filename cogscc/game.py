@@ -638,6 +638,12 @@ class Game(commands.Cog):
         self.monsters.append(Monster(name, argDict))
         await ctx.send(f"Added {name} to combat.")
 
+    @commands.command(name='swap_weapons')
+    async def swapWeapons(self, ctx, character: str = ''):
+        """Character swaps weapons."""
+        player = self.selfOrGm(ctx, character)
+        self.characters.get(player).swapWeapons()
+
     @commands.command(name='attack', aliases=['attacks', 'atk', 'atks'])
     async def attack(self, ctx, character: str = ''):
         """Character performs standard melee attacks."""
@@ -660,9 +666,6 @@ class Game(commands.Cog):
         atks = self.characters.get(player).getAtks(isRanged=True)
         # we throw like attacking in melee
         dmgs = self.characters.get(player).getDmgs(isRanged=False)
-        
-        if len(atks) == 0:
-            raise NotWieldingItems
 
         for i in atks:
             await ctx.send(i)
