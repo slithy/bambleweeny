@@ -193,7 +193,7 @@ class Character(BaseCharacter):
         items = self.equipment.getWieldedItems()
         for idx, (weapon, _) in enumerate(items):
             wbth = weapon.bth
-            ss = f"[{weapon.description}:] +1d20 +{BtH} [BtH] +{wbth} [w BtH]"
+            ss = f"[{weapon.description} atk:] +1d20 +{BtH} [BtH] +{wbth} [w BtH]"
 
             # ranged weapon?
             if isRanged:
@@ -211,11 +211,7 @@ class Character(BaseCharacter):
 
             out.append(ss)
 
-        ss = ""
-        for i in out:
-            ss += roll(i).skeleton + "\n"
-
-        return ss
+        return out
 
     def getDmgs(self, isRanged: bool):
         out = []
@@ -224,16 +220,12 @@ class Character(BaseCharacter):
         items = self.equipment.getWieldedItems()
         for idx, (weapon, _) in enumerate(items):
             wdmg = weapon.damage
-            ss = f"[{weapon.description}:] +{wdmg} [w dmg]"
+            ss = f"[{weapon.description} dmg:] +{wdmg} [w dmg]"
             if not isRanged and weapon.hasAnyTag(["melee", "throw"]):
                 ss += f" +{str} [str]"
             out.append(ss)
 
-        ss = ""
-        for i in out:
-            ss += roll(i).skeleton + "\n"
-
-        return ss
+        return out
 
 
     def levelUp(self):

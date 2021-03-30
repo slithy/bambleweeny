@@ -641,16 +641,24 @@ class Game(commands.Cog):
     async def attack(self, ctx, character: str = ''):
         """Character performs standard melee attacks."""
         player = self.selfOrGm(ctx, character)
-        await ctx.send(self.characters.get(player).getAtks(isRanged=False))
-        await ctx.send(self.characters.get(player).getDmgs(isRanged=False))
+        atks = self.characters.get(player).getAtks(isRanged=False)
+        dmgs = self.characters.get(player).getDmgs(isRanged=False)
+        for i in atks:
+            await ctx.send(i)
+        for i in dmgs:
+            await ctx.send(i)
 
     @commands.command(name='throw')
     async def throw(self, ctx, character: str='', *args):
         """Character performs a standard throw attacks."""
         player=self.selfOrGm(ctx, character)
-        await ctx.send(self.characters.get(player).getAtks(isRanged=True))
+        atks = self.characters.get(player).getAtks(isRanged=True)
         # we throw like attacking in melee
-        await ctx.send(self.characters.get(player).getDmgs(isRanged=False))
+        dmgs = self.characters.get(player).getDmgs(isRanged=False)
+        for i in atks:
+            await ctx.send(roll(i).__str__())
+        for i in dmgs:
+            await ctx.send(roll(i).__str__())
 
 def setup(bot):
     bot.add_cog(Game(bot))
