@@ -14,8 +14,8 @@ eqList = eq.EquipmentList()
 # eqList.wield("Bill", "bow")
 eqList.addWeapon("Hammer", { 'damage': '1d8 + 1', "bth":"5" })
 eqList.addWeapon("Throwing hammer", { 'damage': '1d8', "bth":"4" })
-# eqList.wield("Bill", "Throwing hammer")
-# eqList.wield("Bill", "Hammer")
+eqList.wield("Bill", "Throwing hammer")
+eqList.wield("Bill", "Hammer")
 eqList.addCoin(3, "gp")
 eqList.addCoin(4, "sp")
 c.equipment = eqList
@@ -26,11 +26,9 @@ dmgs = c.getDmgs(isRanged = True)
 
 
 for i in atks:
-    r = roll(i)
-    print(f"{r.__str__()}: {r.result}")
+    print(i)
 for i in dmgs:
-    r = roll(i)
-    print(f"{r.__str__()}: {r.result}")
+    print(i)
 
 if len(atks) == 0:
     raise NotWieldingItems
