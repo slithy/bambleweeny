@@ -209,9 +209,13 @@ class Character(BaseCharacter):
                 dex = self.stats.getMod("dex")
                 ss += f" -{3 * (idx + 1)} [dual w] +{dex} [dex]"
 
-            out.append(roll(ss))
+            out.append(ss)
 
-        return out
+        ss = ""
+        for i in out:
+            ss += roll(i).skeleton + "\n"
+
+        return ss
 
     def getDmgs(self, isRanged: bool):
         out = []
@@ -223,9 +227,13 @@ class Character(BaseCharacter):
             ss = f"[{weapon.description}:] +{wdmg} [w dmg]"
             if not isRanged and weapon.hasAnyTag(["melee", "throw"]):
                 ss += f" +{str} [str]"
-            out.append(roll(ss))
+            out.append(ss)
 
-        return out
+        ss = ""
+        for i in out:
+            ss += roll(i).skeleton + "\n"
+
+        return ss
 
 
     def levelUp(self):

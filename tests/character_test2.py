@@ -11,19 +11,17 @@ c.setPrimes('str','dex','None')
 eqList = eq.EquipmentList()
 # eqList.addWeapon("bow", { 'damage': '1d8 + 1', "bth":"5", "range":40 })
 # eqList.wield("Bill", "bow")
-# eqList.addWeapon("Hammer", { 'damage': '1d8 + 1', "bth":"5" })
+eqList.addWeapon("Hammer", { 'damage': '1d8 + 1', "bth":"5" })
 eqList.addWeapon("Throwing hammer", { 'damage': '1d8', "bth":"4" })
 eqList.wield("Bill", "Throwing hammer")
-# eqList.wield("Bill", "Hammer")
+eqList.wield("Bill", "Hammer")
 eqList.addCoin(3, "gp")
 eqList.addCoin(4, "sp")
 c.equipment = eqList
 print(c.showSummary())
 
-for i in c.getAtks(isRanged = True):
-    print(i)
-for i in c.getDmgs(isRanged = True):
-    print(i)
+print(c.getAtks(isRanged = True))
+print(c.getDmgs(isRanged = True))
 
 # c.swapWeapons()
 # print(c.equipment.equipment[0])
