@@ -674,6 +674,7 @@ class Game(commands.Cog):
 
         await ctx.send(self.characters.get(player).equipment.markAsDropped(weapon_description))
 
+
     @commands.command(name='shoot')
     async def shoot(self, ctx, character: str = ''):
         """Character performs standard melee attacks."""
