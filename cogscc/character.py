@@ -220,7 +220,7 @@ class Character(BaseCharacter):
                 continue
 
             wbth = weapon.bth
-            desc = f"[{weapon.description} {type} atk:]"
+            desc = f"[{weapon.description} {type} atk:]\n"
             ss = f"+1d20 +{BtH} [BtH] +{wbth} [w BtH]"
 
             if type != "melee":
@@ -277,7 +277,7 @@ class Character(BaseCharacter):
                 continue
 
             wdmg = weapon.damage
-            desc = f"[{weapon.description} {type} dmg:]"
+            desc = f"[{weapon.description} {type} dmg:]\n"
             ss = f" +{wdmg} [w dmg]"
 
             if type == "melee" or type == "throw":
