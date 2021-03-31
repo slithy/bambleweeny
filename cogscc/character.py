@@ -220,7 +220,8 @@ class Character(BaseCharacter):
                 continue
 
             wbth = weapon.bth
-            ss = f"[{weapon.description} {type} atk:] +1d20 +{BtH} [BtH] +{wbth} [w BtH]"
+            desc = f"[{weapon.description} {type} atk:]"
+            ss = f"+1d20 +{BtH} [BtH] +{wbth} [w BtH]"
 
             if type != "melee":
                 dex = self.stats.getMod("dex")
@@ -234,18 +235,18 @@ class Character(BaseCharacter):
             ).find("hammer") != -1:
                 ss += f" +3 [god]"
 
-            out.append(ss)
+            out.append((desc,ss))
 
         if len(out) == 0:
             raise NotWieldingItems
 
         elif len(out) == 2 and type == "melee":
             dex = self.stats.getMod("dex")
-            out[0] += f" -3 [dual w] +{dex} [dex]"
-            out[1] += f" -6 [dual w] +{dex} [dex]"
+            out[0] += (out[0][0], f" -3 [dual w] +{dex} [dex]")
+            out[1] += (out[1][0], f" -6 [dual w] +{dex} [dex]")
 
-        # for idx, i in enumerate(out):
-        #     out[idx] = roll(i).__str__()
+        for idx, i in enumerate(out):
+            out[idx] = i[0] + roll(i[1]).__str__()
 
         return out
 
@@ -276,7 +277,8 @@ class Character(BaseCharacter):
                 continue
 
             wdmg = weapon.damage
-            ss = f"[{weapon.description} {type} dmg:] +{wdmg} [w dmg]"
+            desc = f"[{weapon.description} {type} dmg:]"
+            ss = f" +{wdmg} [w dmg]"
 
             if type == "melee" or type == "throw":
                 ss += f" +{str} [str]"
@@ -284,8 +286,7 @@ class Character(BaseCharacter):
             if self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
                 ss += f" +2 [god]"
 
-            # out.append(roll(ss).__str__())
-            out.append(ss)
+            out.append(desc + roll(ss).__str__())
 
         if len(out) == 0:
             raise NotWieldingItems
