@@ -582,7 +582,7 @@ class EquipmentList:
         out = []
         for item_no in range(len(self.equipment)):
             if self.equipment[item_no].isWielding():
-                out.append(self.equipment[item_no])
+                out.append((self.equipment[item_no], item_no))
         return out
 
     def swapWeapons(self):
