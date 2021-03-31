@@ -244,8 +244,8 @@ class Character(BaseCharacter):
             out[0] += f" -3 [dual w] +{dex} [dex]"
             out[1] += f" -6 [dual w] +{dex} [dex]"
 
-        for idx, i in enumerate(out):
-            out[idx] = roll(i).__str__()
+        # for idx, i in enumerate(out):
+        #     out[idx] = roll(i).__str__()
 
         return out
 
@@ -284,7 +284,8 @@ class Character(BaseCharacter):
             if self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
                 ss += f" +2 [god]"
 
-            out.append(roll(ss).__str__())
+            # out.append(roll(ss).__str__())
+            out.append(ss)
 
         if len(out) == 0:
             raise NotWieldingItems
