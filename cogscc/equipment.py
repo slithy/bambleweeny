@@ -49,7 +49,6 @@ class Equipment:
     def __from_dict__(cls, d):
         ev = d.get('ev', 1)
         e = cls(d['description'], d.get('count', 1), ev if ev >= 0.002 else 1, d.get('value', 0), d.get('plural', ''))
-        e.addTags()
         e.__from_dict_super__(d)
         return e
 
