@@ -229,7 +229,9 @@ class Character(BaseCharacter):
                 str = self.stats.getMod("str")
                 ss += f" +{str} [str]"
 
-            if type == "throw" and self.getGod() == "Odin" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+            if type == "throw" and self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower(
+
+            ).find("hammer") != -1:
                 ss += f" +3 [god]"
 
             out.append(ss)
@@ -279,7 +281,7 @@ class Character(BaseCharacter):
             if type == "melee" or type == "throw":
                 ss += f" +{str} [str]"
 
-            if self.getGod() == "Odin" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+            if self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
                 ss += f" +2 [god]"
 
             out.append(roll(ss).__str__())

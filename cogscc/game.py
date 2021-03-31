@@ -638,21 +638,18 @@ class Game(commands.Cog):
         self.monsters.append(Monster(name, argDict))
         await ctx.send(f"Added {name} to combat.")
 
-    @commands.command(name='swap_weapons')
-    async def swapWeapons(self, ctx, character: str = ''):
+    @commands.command(name='swap_weapons', aliases=['swap_weapon'])
+    async def swapWeapons(self, ctx):
         """Character swaps weapons."""
-        player = self.selfOrGm(ctx, character)
+        player = str(ctx.author)
         self.characters.get(player).swapWeapons()
 
     @commands.command(name='attack', aliases=['attacks', 'atk', 'atks'])
-    async def attack(self, ctx, character: str = ''):
+    async def attack(self, ctx):
         """Character performs standard melee attacks."""
-        player = self.selfOrGm(ctx, character)
+        player = str(ctx.author)
         atks = self.characters.get(player).getAtks(type="melee")
         dmgs = self.characters.get(player).getDmgs(type="melee")
-
-        if len(atks) == 0:
-            raise NotWieldingItems
 
         for i in atks:
             await ctx.send(i)
@@ -660,9 +657,9 @@ class Game(commands.Cog):
             await ctx.send(i)
 
     @commands.command(name='throw')
-    async def throw(self, ctx, character: str='', weapon_description: str = ''):
+    async def throw(self, ctx, weapon_description: str):
         """Character performs a standard throw attacks."""
-        player=self.selfOrGm(ctx, character)
+        player = str(ctx.author)
         atks = self.characters.get(player).getAtks(type="throw", items=[weapon_description])
         # we throw like attacking in melee
         dmgs = self.characters.get(player).getDmgs(type="throw", items=[weapon_description])
@@ -676,14 +673,11 @@ class Game(commands.Cog):
 
 
     @commands.command(name='shoot')
-    async def shoot(self, ctx, character: str = ''):
+    async def shoot(self, ctx):
         """Character performs standard melee attacks."""
-        player = self.selfOrGm(ctx, character)
+        player = str(ctx.author)
         atks = self.characters.get(player).getAtks(type="shoot")
         dmgs = self.characters.get(player).getDmgs(type="shoot")
-
-        if len(atks) == 0:
-            raise NotWieldingItems
 
         for i in atks:
             await ctx.send(i)
@@ -692,9 +686,9 @@ class Game(commands.Cog):
 
 
     @commands.command(name='pick_up')
-    async def pickUp(self, ctx, character: str='', weapon_description: str = ''):
+    async def pickUp(self, ctx, weapon_description: str):
         """Pick up a dropped item."""
-        player=self.selfOrGm(ctx, character)
+        player = str(ctx.author)
         await ctx.send(self.characters.get(player).equipment.pickUp(weapon_description))
 
     @commands.command(name='god')

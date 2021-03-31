@@ -34,11 +34,12 @@ c.equipment = eqList
 # c.equipment.pickUp(0)
 # print(c.equipment)
 
+# c.swapWeapons()
 
 # atks = c.getAtks()
 # dmgs = c.getDmgs()
-atks = c.getAtks(type="throw", items=["throwing"])
-dmgs = c.getDmgs(type="throw", items=["throwing"])
+atks = c.getAtks(type="throw", items=["hammer"])
+dmgs = c.getDmgs(type="throw", items=["hammer"])
 
 
 for i in atks:
@@ -46,19 +47,19 @@ for i in atks:
 for i in dmgs:
     print(i)
 
-print(c.equipment.markAsDropped("throwing") )
-
-print(c.equipment.pickUp("throwing") )
-
-atks = c.getAtks(type="throw", items=["throwing"])
-dmgs = c.getDmgs(type="throw", items=["throwing"])
-
-for i in atks:
-    print(i)
-for i in dmgs:
-    print(i)
-
-print(c.equipment.markAsDropped("throwing") )
+# print(c.equipment.markAsDropped("throwing") )
+#
+# print(c.equipment.pickUp("throwing") )
+#
+# atks = c.getAtks(type="throw", items=["throwing"])
+# dmgs = c.getDmgs(type="throw", items=["throwing"])
+#
+# for i in atks:
+#     print(i)
+# for i in dmgs:
+#     print(i)
+#
+# print(c.equipment.markAsDropped("throwing") )
 
 #
 # if len(atks) == 0:
