@@ -642,7 +642,7 @@ class Game(commands.Cog):
     async def swapWeapons(self, ctx):
         """Character swaps weapons."""
         player = str(ctx.author)
-        self.characters.get(player).swapWeapons()
+        await ctx.send(self.characters.get(player).swapWeapons())
 
     @commands.command(name='attack', aliases=['attacks', 'atk', 'atks'])
     async def attack(self, ctx):

@@ -41,7 +41,7 @@ class Character(BaseCharacter):
     # Character generation
 
     def swapWeapons(self):
-        self.equipment.swapWeapons()
+        return self.equipment.swapWeapons()
 
     def setRace(self, race: str):
         if race.title() not in RACE_NAMES:
@@ -195,7 +195,7 @@ class Character(BaseCharacter):
     def getAtks(self, type:str = "melee", items: list = None):
 
         if items is None:
-            items = [weapon.description for weapon in self.equipment.getWieldedItems()]
+            items = [weapon.description for weapon, idx in self.equipment.getWieldedItems()]
 
         out = []
         BtH = self.getBtH()
@@ -253,7 +253,7 @@ class Character(BaseCharacter):
         out = []
 
         if items is None:
-            items = [weapon.description for weapon in self.equipment.getWieldedItems()]
+            items = [weapon.description for weapon, idx in self.equipment.getWieldedItems()]
 
         str = self.stats.getMod("str")
 
