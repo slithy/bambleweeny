@@ -310,7 +310,7 @@ class Weapon(Equipment):
         if self._anyInDescription(["sword", "dagger", "club", "spear", "axe", "hammer", "staff"]):
             self.tags.add("melee")
         if self._anyInDescription(["dagger", "club", "spear", "hand axe", "throwing hammer", "javelin", "stone",
-                                   "dart", "whip"]):
+                                   "rock", "dart", "whip"]):
             self.tags.add("throw")
         if self._anyInDescription(["bow", "sling"]):
             self.tags.add("shoot")
