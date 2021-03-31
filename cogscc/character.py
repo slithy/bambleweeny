@@ -240,10 +240,10 @@ class Character(BaseCharacter):
         if len(out) == 0:
             raise NotWieldingItems
 
-        elif len(out) == 2 and type == "melee":
+        if len(out) == 2 and type == "melee":
             dex = self.stats.getMod("dex")
-            out[0] += (out[0][0], f" -3 [dual w] +{dex} [dex]")
-            out[1] += (out[1][0], f" -6 [dual w] +{dex} [dex]")
+            out[0] = (out[0][0], out[0][1] + f" -3 [dual w] +{dex} [dex]")
+            out[1] = (out[1][0], out[1][1] + f" -6 [dual w] +{dex} [dex]")
 
         for idx, i in enumerate(out):
             out[idx] = i[0] + roll(i[1]).__str__()
