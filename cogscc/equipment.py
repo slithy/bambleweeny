@@ -307,7 +307,7 @@ class Weapon(Equipment):
     def addTags(self):
         super().addTags()
 
-        if self._anyInDescription(["sword", "dagger", "club", "spear", "axe", "hammer"]):
+        if self._anyInDescription(["sword", "dagger", "club", "spear", "axe", "hammer", "staff"]):
             self.tags.add("melee")
         if self._anyInDescription(["dagger", "club", "spear", "hand axe", "throwing hammer", "javelin", "stone",
                                    "dart", "whip"]):
