@@ -664,12 +664,16 @@ class Game(commands.Cog):
         # we throw like attacking in melee
         dmgs = self.characters.get(player).getDmgs(type="throw", items=[weapon_description])
 
+        isNotWhip = False
         for i in atks:
+            if i.find("whip"):
+                isNotWhip = False
             await ctx.send(i)
         for i in dmgs:
             await ctx.send(i)
-
-        await ctx.send(self.characters.get(player).equipment.markAsDropped(weapon_description))
+            
+        if isNotWhip:
+            await ctx.send(self.characters.get(player).equipment.markAsDropped(weapon_description))
 
 
     @commands.command(name='shoot')
