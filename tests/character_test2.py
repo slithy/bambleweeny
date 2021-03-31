@@ -22,7 +22,7 @@ eqList.wield("Bill", "2")
 # eqList.addCoin(3, "gp")
 # eqList.addCoin(4, "sp")
 
-c.setGod("Odin")
+c.setGod("Thor")
 # print(c.getGod())
 
 
@@ -34,12 +34,32 @@ c.equipment = eqList
 # c.equipment.pickUp(0)
 # print(c.equipment)
 
-# c.swapWeapons()
+# atks = c.getAtks()
+# dmgs = c.getDmgs()
+atks = c.getAtks(type="melee")
+dmgs = c.getDmgs(type="melee")
+
+
+for i in atks:
+    print(i)
+for i in dmgs:
+    print(i)
+
+print(c.swapWeapons() )
 
 # atks = c.getAtks()
 # dmgs = c.getDmgs()
-atks = c.getAtks(type="throw", items=["hammer"])
-dmgs = c.getDmgs(type="throw", items=["hammer"])
+atks = c.getAtks(type="melee")
+dmgs = c.getDmgs(type="melee")
+
+
+for i in atks:
+    print(i)
+for i in dmgs:
+    print(i)
+
+atks = c.getAtks(type="throw", items=['throwing'])
+dmgs = c.getDmgs(type="throw", items=['throwing'])
 
 
 for i in atks:

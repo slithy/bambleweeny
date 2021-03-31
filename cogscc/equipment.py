@@ -592,6 +592,7 @@ class EquipmentList:
         idx0 = wi[0][1]
         idx1 = wi[1][1]
         self.equipment[idx1], self.equipment[idx0] = self.equipment[idx0], self.equipment[idx1]
+        return f"you successfully swapped your weapons."
 
 
     def freeHands(self, hands: int, name: str):
