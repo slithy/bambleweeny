@@ -40,6 +40,8 @@ class Equipment:
             d['value'] = self.value
         if self.gm_note:
             d['gm_note'] = self.gm_note
+        if self.tags:
+            d['tags'] = self.tags
         return d
 
     def __str__(self):
