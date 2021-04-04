@@ -192,104 +192,65 @@ class Character(BaseCharacter):
         else:
             raise InvalidArgument(f"{self.xclass} is not a valid class.")
 
-    def getAtks(self, type:str = "melee", items: list = None):
+    def getAtks(self, type:str = "melee", weapon: str = None):
 
-        if items is None:
-            items = [weapon.description for weapon, idx in self.equipment.getWieldedItems()]
+        items = []
+        if weapon is None:
+            items = [w for w, _ in self.equipment.getWieldedItems()]
+        else:
+            itemno = self.equipment.find(weapon)
+            if itemno >= 0:
+                items = [self.equipment.equipment[itemno]]
 
         out = []
-        BtH = self.getBtH()
-
-        for description in items:
-            itemno = self.equipment.find(description)
-            if itemno < 0:
-                continue
-
-            weapon = self.equipment.equipment[itemno]
-            if not weapon.isWeapon():
-                continue
-
-            if weapon.isMarkedAsDropped():
-                continue
-
-            if not weapon.isWielding() and type != "throw":
-                continue
-
-            # ranged weapon?
-            if not weapon.hasTag(type):
-                continue
-
-            wbth = weapon.bth
-            desc = f"[{weapon.description} {type} atk:]\n"
-            ss = f"+1d20 +{BtH} [BtH] +{wbth} [w BtH]"
-
-            if type != "melee":
-                dex = self.stats.getMod("dex")
-                ss += f" +{dex} [dex]"
-            else:
-                str = self.stats.getMod("str")
-                ss += f" +{str} [str]"
-
-            if type == "throw" and self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower(
-
-            ).find("hammer") != -1:
-                ss += f" +3 [god]"
-
-            out.append((desc,ss))
-
-        if len(out) == 0:
-            raise NotWieldingItems
-
-        if len(out) == 2 and type == "melee":
-            dex = self.stats.getMod("dex")
-            out[0] = (out[0][0], out[0][1] + f" -3 [dual w] +{dex} [dex]")
-            out[1] = (out[1][0], out[1][1] + f" -6 [dual w] +{dex} [dex]")
-
-        for idx, i in enumerate(out):
-            out[idx] = i[0] + roll(i[1]).__str__()
-
-        return out
-
-    def getDmgs(self, type: str = "melee", items: list = None):
-        out = []
-
-        if items is None:
-            items = [weapon.description for weapon, idx in self.equipment.getWieldedItems()]
-
+        dex = self.stats.getMod("dex")
         str = self.stats.getMod("str")
 
-        for description in items:
-            itemno = self.equipment.find(description)
-            if itemno < 0:
-                continue
-
-            weapon = self.equipment.equipment[itemno]
+        # checks
+        weapons = []
+        for weapon in items:
             if not weapon.isWeapon():
                 continue
-
             if weapon.isMarkedAsDropped():
                 continue
-
             if not weapon.isWielding() and type != "throw":
                 continue
-
             if not weapon.hasTag(type):
                 continue
+            weapons.append(weapon)
 
-            wdmg = weapon.damage
-            desc = f"[{weapon.description} {type} dmg:]\n"
-            ss = f" +{wdmg} [w dmg]"
-
-            if type == "melee" or type == "throw":
-                ss += f" +{str} [str]"
-
-            if self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
-                ss += f" +2 [god]"
-
-            out.append(desc + roll(ss).__str__())
-
-        if len(out) == 0:
+        if len(weapons) == 0:
             raise NotWieldingItems
+
+        for idx, weapon in enumerate(weapons):
+            desc = f"{weapon.description}, {type}"
+
+            atk = f"1d20 +{self.getBtH()} [BtH] +{weapon.bth} [w BtH]"
+            if type != "melee":
+                atk += f" +{dex} [dex]"
+            else:
+                atk += f" +{str} [str]"
+            if type == "throw" and self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+                atk += " +3 [god]"
+
+            if len(weapons) > 1:
+                dw_malus =  3*(1+idx)
+                atk += f" -{dw_malus} [dual w] +{dex} [dex]"
+
+            dmg = f"{weapon.damage} [w dmg]"
+            if type == "melee" or type == "throw":
+                dmg += f" +{str} [str]"
+            if self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+                dmg += f" +2 [god]"
+
+            out.append(desc)
+            out.append("- atk:")
+            out.append(roll(atk).__str__())
+            out.append("- dmg:")
+            out.append(roll(dmg).__str__())
+
+            if type == "throw":
+                out.append(self.equipment.markAsDropped(weapon.description))
 
         return out
 

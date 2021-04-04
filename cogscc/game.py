@@ -638,6 +638,17 @@ class Game(commands.Cog):
         self.monsters.append(Monster(name, argDict))
         await ctx.send(f"Added {name} to combat.")
 
+    @commands.command(name='god')
+    async def setAlignment(self, ctx, god: str):
+        """Sets character god."""
+        player = str(ctx.author)
+        if player in self.characters:
+            self.characters.get(player).setGod(god)
+            await ctx.send(f"{self.characters.get(player).getName()} worships"
+                           f" {self.characters.get(player).getGod()} now.")
+        else:
+            await ctx.send(f"{player} does not have a character.")
+
     @commands.command(name='swap_weapons', aliases=['swap_weapon'])
     async def swapWeapons(self, ctx):
         """Character swaps weapons."""
@@ -649,62 +660,32 @@ class Game(commands.Cog):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
         atks = self.characters.get(player).getAtks(type="melee")
-        dmgs = self.characters.get(player).getDmgs(type="melee")
-
         for i in atks:
-            await ctx.send(i)
-        for i in dmgs:
             await ctx.send(i)
 
     @commands.command(name='throw')
     async def throw(self, ctx, weapon_description: str):
-        """Character performs a standard throw attacks."""
+        """Character performs a standard throw attack."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getAtks(type="throw", items=[weapon_description])
-        # we throw like attacking in melee
-        dmgs = self.characters.get(player).getDmgs(type="throw", items=[weapon_description])
+        atks = self.characters.get(player).getAtks(type="throw", weapon=weapon_description)
 
-        isNotWhip = False
         for i in atks:
-            if i.find("whip"):
-                isNotWhip = False
             await ctx.send(i)
-        for i in dmgs:
-            await ctx.send(i)
-            
-        if isNotWhip:
-            await ctx.send(self.characters.get(player).equipment.markAsDropped(weapon_description))
-
 
     @commands.command(name='shoot')
     async def shoot(self, ctx):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
         atks = self.characters.get(player).getAtks(type="shoot")
-        dmgs = self.characters.get(player).getDmgs(type="shoot")
 
         for i in atks:
             await ctx.send(i)
-        for i in dmgs:
-            await ctx.send(i)
-
 
     @commands.command(name='pick_up')
     async def pickUp(self, ctx, weapon_description: str):
         """Pick up a dropped item."""
         player = str(ctx.author)
         await ctx.send(self.characters.get(player).equipment.pickUp(weapon_description))
-
-    @commands.command(name='god')
-    async def setAlignment(self, ctx, god: str):
-        """Sets character god."""
-        player = str(ctx.author)
-        if player in self.characters:
-            self.characters.get(player).setGod(god)
-            await ctx.send(f"{self.characters.get(player).getName()} worships"
-                           f" {self.characters.get(player).getGod()} now.")
-        else:
-            await ctx.send(f"{player} does not have a character.")
 
 
 
