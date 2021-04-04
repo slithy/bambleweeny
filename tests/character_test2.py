@@ -23,51 +23,35 @@ eqList.wield("Bill", "2")
 # eqList.addCoin(4, "sp")
 
 c.setGod("Thor")
-# print(c.getGod())
+print(c.getGod())
 
 
 c.equipment = eqList
-# print(c.showSummary())
-#
-# c.equipment.markAsDropped(0)
-# print(c.equipment)
-# c.equipment.pickUp(0)
-# print(c.equipment)
 
-# atks = c.getAtks()
-# dmgs = c.getDmgs()
-atks = c.getAtks(type="melee")
-dmgs = c.getDmgs(type="melee")
+# atks = c.getAtks(type="melee")
 
 
-for i in atks:
-    print(i)
-for i in dmgs:
-    print(i)
+# for i in atks:
+#     print(i)
 
-print(c.swapWeapons() )
 
-# atks = c.getAtks()
-# dmgs = c.getDmgs()
-atks = c.getAtks(type="melee")
-dmgs = c.getDmgs(type="melee")
+# print(c.swapWeapons() )
+# #
+# atks = c.getAtks(type="melee")
+# for i in atks:
+#     print(i)
 
+atks = c.getAtks(type="throw", weapon='throwing')
 
 for i in atks:
     print(i)
-for i in dmgs:
-    print(i)
 
-atks = c.getAtks(type="throw", items=['throwing'])
-dmgs = c.getDmgs(type="throw", items=['throwing'])
+print(c.showInventory())
+c.equipment.pickUp("throwing")
+print(c.showInventory())
+atks = c.getAtks(type="throw", weapon='throwing')
 
 
-for i in atks:
-    print(i)
-for i in dmgs:
-    print(i)
-
-# print(c.equipment.markAsDropped("throwing") )
 #
 # print(c.equipment.pickUp("throwing") )
 #
