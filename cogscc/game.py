@@ -370,7 +370,7 @@ class Game(commands.Cog):
             options.append('gm_note')
             await ctx.send(self.characters.get(player).showInventory(section,options))
 
-    @commands.command(name='equip', aliases=['pickup','get'])
+    @commands.command(name='equip', aliases=['get'])
     async def addEquipment(self, ctx, description: str, *args):
         """Add an item to your equipment list.
         Usage: !equip "Item Description" [weapon|wearable|container|<count>] [<attributes>]
@@ -686,6 +686,24 @@ class Game(commands.Cog):
         """Pick up a dropped item."""
         player = str(ctx.author)
         await ctx.send(self.characters.get(player).equipment.pickUp(weapon_description))
+
+    @commands.command(name='add_tag', aliases=['tag'])
+    async def addTag(self, ctx, description: str, tag: str):
+        """Pick up a dropped item."""
+        player = str(ctx.author)
+        await ctx.send(self.characters.get(player).equipment.addTag(description, tag))
+
+    @commands.command(name='remove_tag', aliases=['untag'])
+    async def removeTag(self, ctx, description: str, tag: str):
+        """Pick up a dropped item."""
+        player = str(ctx.author)
+        await ctx.send(self.characters.get(player).equipment.removeTag(description, tag))
+
+    @commands.command(name='get_tags')
+    async def getTag(self, ctx, description: str):
+        """Pick up a dropped item."""
+        player = str(ctx.author)
+        await ctx.send(self.characters.get(player).equipment.getTags(description))
 
 
 

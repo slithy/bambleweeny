@@ -9,7 +9,7 @@ def isAttrDifferent(d: dict, attr: str, itemattr):
 
 
 class Equipment:
-    def __init__(self, description: str, count: int, ev: float, value: int, plural: str):
+    def __init__(self, description: str, count: int, ev: float, value: int, plural: str, tags: set = set()):
         # 1 cp is 1/500 of an EV, that's the lightest thing that can be carried
         if ev < 0.002:
             raise OutOfRange("Items with no appreciable EV: treat the EV as 1 per 10 items carried (PHB p.46)")
@@ -23,7 +23,8 @@ class Equipment:
         self.count = count
         self.value = value
         self.gm_note = ''
-        self.addTags()
+        self.tags = tags
+        # self.addTags()
 
     def __to_json__(self):
         # Save only non-default values
@@ -40,6 +41,8 @@ class Equipment:
             d['value'] = self.value
         if self.gm_note:
             d['gm_note'] = self.gm_note
+        if self.tags:
+            d['tags'] = self.tags
         return d
 
     def __str__(self):
@@ -48,8 +51,10 @@ class Equipment:
     @classmethod
     def __from_dict__(cls, d):
         ev = d.get('ev', 1)
-        e = cls(d['description'], d.get('count', 1), ev if ev >= 0.002 else 1, d.get('value', 0), d.get('plural', ''))
+        e = cls(d['description'], d.get('count', 1), ev if ev >= 0.002 else 1, d.get('value', 0), d.get('plural', ''),
+                d.get('tags', set()))
         e.__from_dict_super__(d)
+
         return e
 
     def __from_dict_super__(e, d):
@@ -59,12 +64,28 @@ class Equipment:
     def isMarkedAsDropped(self):
         return self.description.find("[dropped]") != -1
 
-    def addTags(self):
-        self.tags = set()
-        pass
+    def checkTags(self, *tags):
+        for i in tags:
+            if i != "melee":
+                raise Exception("AAAA")
+            else:
+                self.tags.add(i)
+
+    def addTag(self, tag):
+        raise NotAllowed(f"{tag} tag cannot be added to {self.description}")
+
+    def removeTag(self, tag):
+        try:
+            self.tags.remove(tag)
+            return f"{tag} tag successfully removed."
+        except KeyError:
+            return f"There was no {tag} tag to be removed. Nothing happened."
 
     def lower(self):
         return self.description.lower()
+
+    def getTags(self):
+        return f"The tags of {self.description} are: {str(self.tags)}"
 
     def hasTag(self, s: str):
         return s in self.tags
@@ -281,6 +302,8 @@ class Weapon(Equipment):
         self.range = range
         self.is_wielding = False
 
+        self.autoTag()
+
 
     def __to_json__(self):
         d = super().__to_json__()
@@ -304,18 +327,33 @@ class Weapon(Equipment):
         e.is_wielding = d.get('wielding', False)
         return e
 
-    def addTags(self):
-        super().addTags()
+    def addTag(self, tag):
+
+        possibleTags = {"melee", "throw", "shoot", "ammo"}
+
+        if tag not in possibleTags:
+            super.addTag(tag)
+
+        oldl = len(self.tags)
+        self.tags.add(tag)
+        if oldl != len(self.tags):
+            return f"{tag} tag successfully added."
+        else:
+            return f"The item already had {tag} tag. Nothing happened."
+
+    def autoTag(self):
+        if self.tags:
+            return
 
         if self._anyInDescription(["sword", "dagger", "club", "spear", "axe", "hammer", "staff"]):
-            self.tags.add("melee")
+            self.addTag("melee")
         if self._anyInDescription(["dagger", "club", "spear", "hand axe", "throwing hammer", "javelin", "stone",
                                    "rock", "dart", "whip"]):
-            self.tags.add("throw")
+            self.addTag("throw")
         if self._anyInDescription(["bow", "sling"]):
-            self.tags.add("shoot")
+            self.addTag("shoot")
         if self._anyInDescription(["arrow", "quarrel", "sling bullet"]):
-            self.tags.add("ammo")
+            self.addTag("ammo")
 
     def isEquipment(self):
         return not self.is_wielding and self.value == 0
@@ -572,6 +610,24 @@ class EquipmentList:
         else:
             raise AmbiguousMatch(f"{description} matches more than one item, please be more specific.")
 
+    def addTag(self, description: str, tag: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"{description} not found.")
+        return self.equipment[itemno].addTag(tag)
+
+    def removeTag(self, description: str, tag: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"{description} not found.")
+        return self.equipment[itemno].removeTag(tag)
+
+    def getTags(self, description: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"{description} not found.")
+        return self.equipment[itemno].getTags()
+
     def recalculateAC(self):
         self.ac = 0
         for item_no in range(len(self.equipment)):
@@ -592,7 +648,7 @@ class EquipmentList:
         idx0 = wi[0][1]
         idx1 = wi[1][1]
         self.equipment[idx1], self.equipment[idx0] = self.equipment[idx0], self.equipment[idx1]
-        return f"you successfully swapped your weapons."
+        return f"You successfully swapped your weapons."
 
 
     def freeHands(self, hands: int, name: str):
