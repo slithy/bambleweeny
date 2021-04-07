@@ -41,6 +41,8 @@ atks = c.getAtks(type="melee")
 for i in atks:
     print(i)
 
+print(f"{c.name}:\n{c.showHp()}")
+
 
 # for i in atks:
 #     print(i)
