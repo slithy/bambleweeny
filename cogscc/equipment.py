@@ -8,6 +8,10 @@ def isAttrDifferent(d: dict, attr: str, itemattr):
     return attr in d.keys() and d.get(attr) != itemattr
 
 
+
+
+
+
 class Equipment:
     def __init__(self, description: str, count: int, ev: float, value: int, plural: str, tags: set = set()):
         # 1 cp is 1/500 of an EV, that's the lightest thing that can be carried
@@ -23,7 +27,7 @@ class Equipment:
         self.count = count
         self.value = value
         self.gm_note = ''
-        self.tags = tags
+        self.tags = set(tags.keys())
         # self.addTags()
 
     def __to_json__(self):
@@ -42,7 +46,7 @@ class Equipment:
         if self.gm_note:
             d['gm_note'] = self.gm_note
         if self.tags:
-            d['tags'] = self.tags
+            d['tags'] = {i : '' for i in self.tags}
         return d
 
     def __str__(self):
@@ -52,7 +56,7 @@ class Equipment:
     def __from_dict__(cls, d):
         ev = d.get('ev', 1)
         e = cls(d['description'], d.get('count', 1), ev if ev >= 0.002 else 1, d.get('value', 0), d.get('plural', ''),
-                d.get('tags', set()))
+                d.get('tags', {}))
         e.__from_dict_super__(d)
 
         return e

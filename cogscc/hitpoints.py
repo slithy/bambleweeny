@@ -14,7 +14,6 @@ class Bleeding(Enum):
     BLEEDING = 2
     NOT_BLEEDING = 3
 
-
 class HP:
     def __init__(self, max: int, current: int = 999, wound: Wound = Wound.NORMAL, bleeding = Bleeding.NOT_BLEEDING, conscious: bool = True):
         self.max = max

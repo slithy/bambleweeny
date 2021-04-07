@@ -6,23 +6,27 @@ from cogscc.models.errors import *
 
 import json
 
-c = Character("Skullthrax Deathbane", "Human", "Cleric", 3)
-c.assignStats(18,17,18,7,7,7,31)
-c.setPrimes('str','dex','None')
-eqList = eq.EquipmentList()
-# eqList.addWeapon("bow", { 'damage': '1d8 + 1', "bth":"5", "range":40 })
-# eqList.wield("Bill", "bow")
-# eqList.addWeapon("Hammer", { 'damage': '1d8 + 1', "bth":"5" })
-eqList.addWeapon("Hammer1", { 'damage': '1d8 + 1', "bth":"5"})
-eqList.addWearable("Shield", { 'ac': '+1', "ev":"1"})
-print(eqList.equipment[0].addTag("shoot"))
-print(eqList.equipment[0].addTag("melee"))
-# eqList.equipment[1].addTag("melee")
-print(eqList.equipment[0].getTags())
-# c.setGod("Thor")
-json_dump = c.__to_json__()
-print(json_dump)
-Character.__from_dict__(json_dump)
+# c = Character("Skullthrax Deathbane", "Human", "Cleric", 3)
+# c.assignStats(18,17,18,7,7,7,31)
+# c.setPrimes('str','dex','None')
+# eqList = eq.EquipmentList()
+# # eqList.addWeapon("bow", { 'damage': '1d8 + 1', "bth":"5", "range":40 })
+# # eqList.wield("Bill", "bow")
+# # eqList.addWeapon("Hammer", { 'damage': '1d8 + 1', "bth":"5" })
+# eqList.addWeapon("Hammer1", { 'damage': '1d8 + 1', "bth":"5"})
+# eqList.addWearable("Shield", { 'ac': '+1', "ev":"1"})
+# print(eqList.equipment[0].addTag("shoot"))
+# print(eqList.equipment[0].addTag("melee"))
+# # eqList.equipment[1].addTag("melee")
+# print(eqList.equipment[0].getTags())
+# # c.setGod("Thor")
+# json_dump = c.__to_json__()
+# print(json_dump)
+# Character.__from_dict__(json_dump)
+
+a = {'a':'b', 'c':'d'}
+b = set(a)
+print(b)
 
 
 
