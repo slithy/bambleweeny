@@ -22,7 +22,7 @@ class Character(BaseCharacter):
         self.hp = HP(1)
         self.equipment = EquipmentList()
         self.disabled = False
-        self.setGod(None)
+        self.god = None
 
     def __to_json__(self):
         return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
@@ -36,7 +36,7 @@ class Character(BaseCharacter):
         c.hp = HP.__from_dict__(d['HP'])
         c.stats = BaseStats.__from_dict__(d['Stats'])
         c.equipment = EquipmentList.__from_dict__(d['Equipment'])
-        c.god = d.get('god', None)
+        c.setGod(d.get('god', None))
         c.disabled = False
         return c
 
