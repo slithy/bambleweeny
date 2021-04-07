@@ -27,7 +27,7 @@ class Equipment:
         self.count = count
         self.value = value
         self.gm_note = ''
-        self.tags = set(tags.keys())
+        self.tags = set(tags)
         # self.addTags()
 
     def __to_json__(self):
