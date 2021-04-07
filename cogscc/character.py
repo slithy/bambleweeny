@@ -22,7 +22,7 @@ class Character(BaseCharacter):
         self.hp = HP(1)
         self.equipment = EquipmentList()
         self.disabled = False
-        self.god = None
+        self.god = ''
 
     def __to_json__(self):
         return { 'Name': self.name, 'Race': self.race, 'Class': self.xclass, 'Level': self.level,
@@ -36,7 +36,7 @@ class Character(BaseCharacter):
         c.hp = HP.__from_dict__(d['HP'])
         c.stats = BaseStats.__from_dict__(d['Stats'])
         c.equipment = EquipmentList.__from_dict__(d['Equipment'])
-        c.setGod(d.get('god', None))
+        c.setGod(d.get('god', ''))
         c.disabled = False
         return c
 
@@ -105,7 +105,7 @@ class Character(BaseCharacter):
         return law_axis + ' ' + evil_axis
 
     def getGod(self):
-        return self.god
+        return f"Your god is: {self.god}"
 
     def assignStats(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, hp: int):
         self.stats.set(strength, dexterity, constitution, intelligence, wisdom, charisma)
