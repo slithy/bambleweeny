@@ -656,10 +656,10 @@ class Game(commands.Cog):
         await ctx.send(self.characters.get(player).swapWeapons())
 
     @commands.command(name='attack', aliases=['attacks', 'atk', 'atks'])
-    async def attack(self, ctx):
+    async def attack(self, ctx, weapon_description: str):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getAtks(type="melee")
+        atks = self.characters.get(player).getAtks(type="melee", weapon=weapon_description)
         for i in atks:
             await ctx.send(i)
 
