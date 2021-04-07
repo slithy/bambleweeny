@@ -332,7 +332,7 @@ class Weapon(Equipment):
         possibleTags = {"melee", "throw", "shoot", "ammo"}
 
         if tag not in possibleTags:
-            super.addTag(tag)
+            super().addTag(tag)
 
         oldl = len(self.tags)
         self.tags.add(tag)

@@ -17,6 +17,7 @@ eqList.addWeapon("Hammer1", { 'damage': '1d8 + 1', "bth":"5"})
 eqList.addWearable("Shield", { 'ac': '+1', "ev":"1"})
 print(eqList.equipment[0].addTag("shoot"))
 print(eqList.equipment[0].addTag("melee"))
+print(eqList.equipment[0].addTag("baubau"))
 # eqList.equipment[1].addTag("melee")
 print(eqList.equipment[0].getTags())
 
