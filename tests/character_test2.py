@@ -12,12 +12,10 @@ c.setPrimes('str','dex','None')
 eqList = eq.EquipmentList()
 # eqList.addWeapon("bow", { 'damage': '1d8 + 1', "bth":"5", "range":40 })
 # eqList.wield("Bill", "bow")
-# eqList.addWeapon("Hammer", { 'damage': '1d8 + 1', "bth":"5" })
+eqList.addWeapon("Hammer2", { 'damage': '1d8 + 1', "bth":"5" })
 eqList.addWeapon("Hammer1", { 'damage': '1d8 + 1', "bth":"5"})
 eqList.addWearable("Shield", { 'ac': '+1', "ev":"1"})
-print(eqList.equipment[0].addTag("melee"))
 # eqList.equipment[1].addTag("melee")
-print(eqList.equipment[0].getTags())
 # c.setGod("Thor")
 
 
@@ -28,7 +26,7 @@ print(eqList.equipment[0].getTags())
 # eqList.addWeapon("Sword2", { 'damage': '1d8 + 1', "bth":"5" })
 # eqList.addWeapon("Throwing hammer", { 'damage': '1d8', "bth":"4" })
 eqList.wield("Bill", "1")
-# eqList.wield("Bill", "2")
+eqList.wield("Bill", "2")
 # eqList.wield("Bill", "Hammer2")
 # eqList.addCoin(3, "gp")
 # eqList.addCoin(4, "sp")
@@ -40,7 +38,8 @@ c.setGod("Thor")
 c.equipment = eqList
 
 atks = c.getAtks(type="melee")
-print(atks)
+for i in atks:
+    print(i)
 
 
 # for i in atks:
