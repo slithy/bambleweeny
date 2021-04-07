@@ -232,7 +232,8 @@ class Character(BaseCharacter):
                 atk += f" +{dex} [dex]"
             else:
                 atk += f" +{str} [str]"
-            if type == "throw" and self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+            if type == "throw" and self.god == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find(
+                    "hammer") != -1:
                 atk += " +3 [god]"
 
             if len(weapons) > 1:
@@ -242,7 +243,7 @@ class Character(BaseCharacter):
             dmg = f"{weapon.damage} [w dmg]"
             if type == "melee" or type == "throw":
                 dmg += f" +{str} [str]"
-            if self.getGod() == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+            if self.god == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
                 dmg += f" +2 [god]"
 
             out.append(desc)
