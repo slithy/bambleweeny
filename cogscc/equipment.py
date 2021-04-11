@@ -125,6 +125,9 @@ class Equipment:
     def isWeapon(self):
         return False
 
+    def isAmmo(self):
+        return False
+
     def isWielding(self):
         return False
 

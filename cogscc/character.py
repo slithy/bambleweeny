@@ -194,6 +194,134 @@ class Character(BaseCharacter):
         else:
             raise InvalidArgument(f"{self.xclass} is not a valid class.")
 
+    def getMeleeAtks(self, item_name=None):
+        items = []
+        if item_name is None:
+            items = [w for w, _ in self.equipment.getWieldedItems()]
+        else:
+            itemno = self.equipment.find(item_name)
+            if itemno >= 0:
+                items = [self.equipment.equipment[itemno]]
+
+        weapons = []
+        for weapon in items:
+            if not weapon.isWeapon():
+                continue
+            if not weapon.isWielding():
+                continue
+            if not weapon.hasTag("melee"):
+                continue
+            weapons.append(weapon)
+
+        if len(weapons) == 0:
+            raise NotWieldingItems
+
+        out = []
+        str = self.stats.getMod("str")
+
+        for idx, weapon in enumerate(weapons):
+            desc = f"{weapon.description}"
+
+            atk = f"1d20 +{self.getBtH()} [BtH] +{weapon.bth} [w BtH]"
+            atk += f" +{str} [str]"
+
+            if len(weapons) > 1:
+                dex = self.stats.getMod("dex")
+                dw_malus = 3 * (1 + idx)
+                atk += f" -{dw_malus} [dual w] +{dex} [dex]"
+
+            dmg = f"{weapon.damage} [w dmg]"
+            dmg += f" +{str} [str]"
+            if self.god == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+                dmg += f" +2 [god]"
+
+            out.append(desc)
+            out.append("- atk:")
+            out.append(roll(atk).__str__())
+            out.append("- dmg:")
+            out.append(roll(dmg).__str__())
+
+        return "\n".join(out)
+
+    def getShootAtk(self, ammo_name):
+        itemno = self.equipment.find(ammo_name)
+        if itemno >= 0:
+            ammo = [self.equipment.equipment[itemno]]
+        else:
+            raise ItemNotFound
+
+        weapon = self.equipment.getWieldedItems()
+        if not weapon:
+            raise NotWieldingItems
+        weapon = weapon[0][0]
+
+        if not weapon.hasTag("shoot"):
+            raise NotWieldingItems
+        elif not ammo.isAmmo():
+            raise NotWieldingItems(f"The item {ammo.description} is not an ammo.")
+        elif not ammo.hasAnyTags(list(weapon.tags)):
+            raise NotWieldingItems(f"The wielded weapon and the ammo are not compatible (they do not share tags).")
+
+        out = []
+        str = self.stats.getMod("dex")
+
+        desc = f"{weapon.description}"
+
+        atk = f"1d20 +{self.getBtH()} [BtH] +{weapon.bth} [w BtH] +{ammo.bth} [ammo BtH]"
+        atk += f" +{str} [dex]"
+
+        dmg = f"{weapon.damage} [w dmg] +{ammo.damage} [ammo dmg]"
+        dmg += f" +{str} [str]"
+
+        out.append(desc)
+        out.append("- atk:")
+        out.append(roll(atk).__str__())
+        out.append("- dmg:")
+        out.append(roll(dmg).__str__())
+
+        return "\n".join(out)
+
+    def getThrowAtk(self, ammo_or_weapon_name):
+        itemno = self.equipment.find(ammo_or_weapon_name)
+        if itemno >= 0:
+            weapon = [self.equipment.equipment[itemno]]
+        else:
+            raise ItemNotFound
+
+        if not weapon.hasTag("throw"):
+            raise NotWieldingItems
+        elif not weapon.isAmmo() and not weapon.isWeapon():
+            raise NotWieldingItems
+
+        out = []
+        str = self.stats.getMod("str")
+        dex = self.stats.getMod("dex")
+
+        desc = f"{weapon.description}"
+
+        atk = f"1d20 +{self.getBtH()} [BtH] +{weapon.bth} [w BtH]"
+        atk += f" +{dex} [dex]"
+        if self.god == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+            atk += " +3 [god]"
+
+        dmg = f"{weapon.damage} [w dmg]"
+        dmg += f" +{str} [str]"
+        if self.god == "Thor" and self.xclass == 'Cleric' and weapon.description.lower().find("hammer") != -1:
+            dmg += f" +2 [god]"
+
+        out.append(desc)
+        out.append("- atk:")
+        out.append(roll(atk).__str__())
+        out.append("- dmg:")
+        out.append(roll(dmg).__str__())
+
+        if weapon.isAmmo():
+            self.equipment.drop(weapon.description, 1)
+        elif weapon.isWeapon():
+            self.equipment.markdrop(weapon.description)
+
+        return "\n".join(out)
+
     def getAtks(self, type:str = "melee", weapon: str = None):
 
         items = []
@@ -255,7 +383,7 @@ class Character(BaseCharacter):
             if type == "throw":
                 out.append(self.equipment.markAsDropped(weapon.description))
 
-        return out
+        return "\n".join(out)
 
 
     def levelUp(self):

@@ -38,10 +38,13 @@ c.setGod("Thor")
 c.equipment = eqList
 
 atks = c.getAtks(type="melee")
-for i in atks:
-    print(i)
+print(atks)
 
-print(f"{c.name}:\n{c.showHp()}")
+atks = c.getMeleeAtks()
+print(atks)
+
+#
+# print(f"{c.name}:\n{c.showHp()}")
 
 
 # for i in atks:
