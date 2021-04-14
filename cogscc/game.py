@@ -406,14 +406,19 @@ class Game(commands.Cog):
                 if argDict.get('ac','') != '':
                     argDict['name'] = 'wearable'
                 elif argDict.get('damage','') != '':
-                    argDict['name'] = 'weapon'
+                    if 'ammo' in argDict or argDict.get('count', 1) != 1:
+                        argDict['name'] = 'ammo'
+                    else:
+                        argDict['name'] = 'weapon'
                 elif argDict.get('capacity','') != '':
                     argDict['name'] = 'container'
             # Add equipment by type
             if argDict.get('name','') == 'wearable':
                 await ctx.send(self.characters.get(player).addWearable(description, argDict))
-            elif argDict.get('name','') == 'weapon':
+            elif argDict.get('name', '') == 'weapon':
                 await ctx.send(self.characters.get(player).addWeapon(description, argDict))
+            elif argDict.get('name', '') == 'ammo':
+                await ctx.send(self.characters.get(player).addAmmo(description, argDict))
             elif argDict.get('name','') == 'container':
                 await ctx.send(self.characters.get(player).addContainer(description, argDict))
             else:
@@ -667,21 +672,21 @@ class Game(commands.Cog):
     async def attack(self, ctx, weapon_description: str):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getAtks(type="melee", weapon=weapon_description)
+        atks = self.characters.get(player).getMeleeAtks(weapon=weapon_description)
         ctx.send(atks)
 
     @commands.command(name='throw')
     async def throw(self, ctx, weapon_or_ammo_description: str):
         """Character performs a standard throw attack."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getAtks(type="throw", weapon=weapon_or_ammo_description)
+        atks = self.characters.get(player).getThrowAtk(weapon=weapon_or_ammo_description)
         ctx.send(atks)
 
     @commands.command(name='shoot')
     async def shoot(self, ctx, ammo_description: str):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getAtks(type="shoot", weapon=ammo_description)
+        atks = self.characters.get(player).getShootAtks(weapon=ammo_description)
         ctx.send(atks)
 
     @commands.command(name='pick_up')

@@ -68,13 +68,6 @@ class Equipment:
     def isMarkedAsDropped(self):
         return self.description.find("[dropped]") != -1
 
-    def checkTags(self, *tags):
-        for i in tags:
-            if i != "melee":
-                raise Exception("AAAA")
-            else:
-                self.tags.add(i)
-
     def addTag(self, tag):
         raise NotAllowed(f"{tag} tag cannot be added to {self.description}")
 
@@ -336,7 +329,7 @@ class Weapon(Equipment):
 
     def addTag(self, tag):
 
-        possibleTags = {"melee", "throw", "shoot", "ammo"}
+        possibleTags = {"melee", "throw", "shoot", "arrow", "bolt", "bullet"}
 
         if tag not in possibleTags:
             super().addTag(tag)
@@ -354,13 +347,20 @@ class Weapon(Equipment):
 
         if self._anyInDescription(["sword", "dagger", "club", "spear", "axe", "hammer", "staff", "mace"]):
             self.addTag("melee")
-        if self._anyInDescription(["dagger", "club", "spear", "hand axe", "throwing hammer", "javelin", "stone",
-                                   "rock", "dart", "whip"]):
+        if self._anyInDescription(["dagger", "club", "spear", "hand axe", "throwing hammer", "javelin",
+                                   "dart", "whip"]):
             self.addTag("throw")
-        if self._anyInDescription(["bow", "sling"]):
+        if self._anyInDescription(["bow"]):
             self.addTag("shoot")
-        if self._anyInDescription(["arrow", "quarrel", "sling bullet"]):
-            self.addTag("ammo")
+            self.addTag("arrow")
+        if self._anyInDescription(["crossbow"]):
+            self.addTag("shoot")
+            self.addTag("bow")
+        if self._anyInDescription(["sling"]):
+            self.addTag("shoot")
+            self.addTag("bullet")
+
+
 
     def isEquipment(self):
         return not self.is_wielding and self.value == 0
@@ -391,6 +391,77 @@ class Weapon(Equipment):
             value = f" ({self.value} gp)" if self.value > 0 else ''
             notes = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
             return f"{self.getDescription()}, {dmg}{range}{ev}{value}{notes}"
+
+
+class Ammo(Equipment):
+    def __init__(self, description: str, count: int, dmg: str, bth: int, ev: float, value: int):
+        super().__init__(description, count, ev, value, '')
+        self.damage = dmg
+        self.bth = bth
+
+        self.autoTag()
+
+
+    def __to_json__(self):
+        d = super().__to_json__()
+        d['type'] = 'ammo'
+        d['dmg'] = self.damage
+        d['bth'] = self.bth
+        return d
+
+    @classmethod
+    def __from_dict__(cls, d):
+        ev = d.get('ev', 1)
+        e = cls(d['description'], d['count'], d.get('dmg',0), d.get('bth', 0), ev if ev >= 0.002 else 1, d.get('value',
+                                                                                                             0))
+        e.__from_dict_super__(d)
+        return e
+
+    def addTag(self, tag):
+
+        possibleTags = {"arrow", "bolt", "bullet"}
+
+        if tag not in possibleTags:
+            super().addTag(tag)
+
+        oldl = len(self.tags)
+        self.tags.add(tag)
+        if oldl != len(self.tags):
+            return f"{tag} tag successfully added."
+        else:
+            return f"The item already had {tag} tag. Nothing happened."
+
+    def autoTag(self):
+        if self.tags:
+            return
+
+        if self._anyInDescription(["arrow"]):
+            self.addTag("arrow")
+        if self._anyInDescription(["bolt"]):
+            self.addTag("bolt")
+        if self._anyInDescription(["bullet", "stone", "rock"]):
+            self.addTag("bullet")
+        if self._anyInDescription(["stone", "rock"]):
+            self.addTag("throw")
+
+    def isPushable(self, e):
+        return True
+
+    def isAmmo(self):
+        return True
+
+
+    def show(self, options: list = []):
+        if 'detail' in options:
+            return super().show(options)
+        else:
+            dmg = f"{self.damage} dmg" if self.bth == 0 else f"BtH {self.bth:+}, {self.damage} dmg"
+            ev = f", EV {int(self.getEV() + 0.5)}" if 'ev' in options else ''
+            value = f" ({self.value} gp)" if self.value > 0 else ''
+            notes = ' :small_blue_diamond:' if 'gm_note' in options and self.gm_note else ''
+            return f"{self.getDescription()}, {dmg}{ev}{value}{notes}"
+
+
 
 
 class Container(Equipment):
@@ -806,6 +877,20 @@ class EquipmentList:
         else:
             raise UniqueItem(f"Weapons are unique and you already have {self.equipment[itemno].show()}.")
 
+    def addAmmo(self, description: str, d: dict):
+        for key in d.keys():
+            if key not in ['name','count','ev','value','damage','bth']:
+                raise InvalidEquipmentAttribute(key)
+
+        itemno = self.find(description, True)
+        if itemno < 0:
+            newitem = Ammo(description, int(d.get('count', 1)), str(d.get('damage', '')), int(d.get('bth',0)),
+                 float(d.get('ev',1)), int(d.get('value',0)))
+            self.equipment.append(newitem)
+            return f"gets {newitem.show()}."
+        else:
+            self.equipment[itemno].count += int(d.get('count', 1))
+
     def wield(self, name: str, description: str):
         itemno = self.find(description)
         if itemno < 0:
@@ -817,7 +902,7 @@ class EquipmentList:
             reply += f"{name} is wielding {self.equipment[itemno].show()}."
             self.equipment[itemno].wield()
             self.recalculateAC()
-            return reply
+        return reply
 
     def addWearable(self, description: str, d: dict):
         for key in d.keys():
