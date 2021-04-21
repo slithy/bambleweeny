@@ -28,7 +28,7 @@ eqList.addWeapon("Hammer2", { 'damage': '1d8 + 1', "bth":"5"})
 # eqList.addWeapon("Sword2", { 'damage': '1d8 + 1', "bth":"5" })
 # eqList.addWeapon("Throwing hammer", { 'damage': '1d8', "bth":"4" })
 # eqList.wield("Bill", "1")
-eqList.wield("Bill", "bow")
+eqList.wield("Bill", "2")
 # eqList.wield("Bill", "Hammer2")
 # eqList.addCoin(3, "gp")
 # eqList.addCoin(4, "sp")
@@ -42,7 +42,7 @@ c.equipment = eqList
 # print(c.showInventory())
 
 
-atks = c.getShootAtk("arrow")
+atks = c.getMeleeAtks()
 print(atks)
 
 # atks = c.getAtks(type="melee")
