@@ -350,12 +350,12 @@ class Weapon(Equipment):
         if self._anyInDescription(["dagger", "club", "spear", "hand axe", "throwing hammer", "javelin",
                                    "dart", "whip"]):
             self.addTag("throw")
+        if self._anyInDescription(["crossbow"]):
+            self.addTag("shoot")
+            self.addTag("bolt")
         if self._anyInDescription(["bow"]):
             self.addTag("shoot")
             self.addTag("arrow")
-        if self._anyInDescription(["crossbow"]):
-            self.addTag("shoot")
-            self.addTag("bow")
         if self._anyInDescription(["sling"]):
             self.addTag("shoot")
             self.addTag("bullet")
