@@ -669,24 +669,24 @@ class Game(commands.Cog):
         await ctx.send(self.characters.get(player).swapWeapons())
 
     @commands.command(name='attack', aliases=['attacks', 'atk', 'atks'])
-    async def attack(self, ctx, weapon_description: str):
+    async def attack(self, ctx, weapon_description: str = None):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getMeleeAtks(weapon=weapon_description)
+        atks = self.characters.get(player).getMeleeAtks(item_name=weapon_description)
         ctx.send(atks)
 
     @commands.command(name='throw')
     async def throw(self, ctx, weapon_or_ammo_description: str):
         """Character performs a standard throw attack."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getThrowAtk(weapon=weapon_or_ammo_description)
+        atks = self.characters.get(player).getThrowAtk(ammo_or_weapon_name=weapon_or_ammo_description)
         ctx.send(atks)
 
     @commands.command(name='shoot')
     async def shoot(self, ctx, ammo_description: str):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getShootAtks(weapon=ammo_description)
+        atks = self.characters.get(player).getShootAtks(ammo_name=ammo_description)
         ctx.send(atks)
 
     @commands.command(name='pick_up')
