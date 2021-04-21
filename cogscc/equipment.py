@@ -419,7 +419,7 @@ class Ammo(Equipment):
 
     def addTag(self, tag):
 
-        possibleTags = {"arrow", "bolt", "bullet"}
+        possibleTags = {"arrow", "bolt", "bullet", "throw"}
 
         if tag not in possibleTags:
             super().addTag(tag)
