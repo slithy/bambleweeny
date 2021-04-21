@@ -218,10 +218,13 @@ class Game(commands.Cog):
     @commands.command(name='party_hp')
     async def getPartyHp(self, ctx):
         """Show party hit points"""
+        out = []
         for player, character in sorted(self.characters.items()):
             if character.disabled:
                 continue
-            await ctx.send(f"{character.name}:\n{character.showHp()}")
+            out.append(f"{character.name}:\n{character.showHp()}")
+            
+        await ctx.send("\n".join(out))
 
     # Game mechanics
 
