@@ -673,21 +673,21 @@ class Game(commands.Cog):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
         atks = self.characters.get(player).getMeleeAtks(item_name=weapon_description)
-        ctx.send(atks)
+        await ctx.send(atks)
 
     @commands.command(name='throw')
     async def throw(self, ctx, weapon_or_ammo_description: str):
         """Character performs a standard throw attack."""
         player = str(ctx.author)
         atks = self.characters.get(player).getThrowAtk(ammo_or_weapon_name=weapon_or_ammo_description)
-        ctx.send(atks)
+        await ctx.send(atks)
 
     @commands.command(name='shoot')
     async def shoot(self, ctx, ammo_description: str):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
         atks = self.characters.get(player).getShootAtks(ammo_name=ammo_description)
-        ctx.send(atks)
+        await ctx.send(atks)
 
     @commands.command(name='pick_up')
     async def pickUp(self, ctx, weapon_description: str):
