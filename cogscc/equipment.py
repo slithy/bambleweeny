@@ -897,6 +897,8 @@ class EquipmentList:
             raise ItemNotFound(f"You don't have any {description}.")
         elif not self.equipment[itemno].isWeapon():
             raise ItemNotWieldable(f"{self.equipment[itemno].show()} is not something you can wield.")
+        elif self.equipment[itemno].isMarkedAsDropped():
+            raise ItemNotFound(f"{self.equipment[itemno].show()} is dropped.")
         else:
             reply = self.freeHands(self.equipment[itemno].hands, name)
             reply += f"{name} is wielding {self.equipment[itemno].show()}."
