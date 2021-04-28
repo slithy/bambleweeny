@@ -279,12 +279,14 @@ class Character(BaseCharacter):
         out.append("- dmg:")
         out.append(roll(dmg).__str__())
 
+        self.equipment.drop(ammo.description, 1)
+
         return "\n".join(out)
 
     def getThrowAtk(self, ammo_or_weapon_name):
         itemno = self.equipment.find(ammo_or_weapon_name)
         if itemno >= 0:
-            weapon = [self.equipment.equipment[itemno]]
+            weapon = self.equipment.equipment[itemno]
         else:
             raise ItemNotFound
 
@@ -318,7 +320,7 @@ class Character(BaseCharacter):
         if weapon.isAmmo():
             self.equipment.drop(weapon.description, 1)
         elif weapon.isWeapon():
-            self.equipment.markdrop(weapon.description)
+            self.equipment.markAsDropped(weapon.description)
 
         return "\n".join(out)
 
@@ -463,6 +465,9 @@ class Character(BaseCharacter):
 
     def addWeapon(self, description: str, d: dict):
         return f"{self.name} {self.equipment.addWeapon(description, d)}"
+
+    def addAmmo(self, description: str, d: dict):
+        return f"{self.name} {self.equipment.addAmmo(description, d)}"
 
     def wield(self, description: str):
         return f"{self.equipment.wield(self.name, description)}"

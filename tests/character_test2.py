@@ -15,7 +15,7 @@ eqList = eq.EquipmentList()
 # eqList.addWeapon("Hammer2", { 'damage': '1d8 + 1', "bth":"5" })
 eqList.addWeapon("Bow", { 'damage': '1d8 + 1', "bth":"5"})
 eqList.addAmmo("arrow", { 'damage': '1d3 + 1','count':10})
-eqList.addWeapon("Hammer2", { 'damage': '1d8 + 1', "bth":"5"})
+eqList.addWeapon("Throwing Hammer2", { 'damage': '1d8 + 1', "bth":"5"})
 # eqList.addWearable("Shield", { 'ac': '+1', "ev":"1"})
 # eqList.equipment[1].addTag("melee")
 # c.setGod("Thor")
@@ -28,7 +28,7 @@ eqList.addWeapon("Hammer2", { 'damage': '1d8 + 1', "bth":"5"})
 # eqList.addWeapon("Sword2", { 'damage': '1d8 + 1', "bth":"5" })
 # eqList.addWeapon("Throwing hammer", { 'damage': '1d8', "bth":"4" })
 # eqList.wield("Bill", "1")
-eqList.wield("Bill", "2")
+# eqList.wield("Bill", "2")
 # eqList.wield("Bill", "Hammer2")
 # eqList.addCoin(3, "gp")
 # eqList.addCoin(4, "sp")
@@ -42,14 +42,29 @@ c.equipment = eqList
 # print(c.showInventory())
 
 
-atks = c.getMeleeAtks()
+atks = c.getThrowAtk("2")
 print(atks)
+print(c.showInventory())
+c.equipment.pickUp("2")
+atks = c.getThrowAtk("2")
+print(atks)
+print(c.showInventory())
+
+
+eqList.wield("Bill", "bow")
+atks = c.getShootAtk("arrow")
+print(atks)
+print(c.showInventory())
+
+
 
 # atks = c.getAtks(type="melee")
 # print(atks)
 
 # atks = c.getMeleeAtks("1")
 # print(atks)
+
+
 
 #
 # print(f"{c.name}:\n{c.showHp()}")
