@@ -689,7 +689,7 @@ class Game(commands.Cog):
     async def shoot(self, ctx, ammo_description: str):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getShootAtks(ammo_name=ammo_description)
+        atks = self.characters.get(player).getShootAtk(ammo_name=ammo_description)
         await ctx.send(atks)
 
     @commands.command(name='pick_up')
