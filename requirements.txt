@@ -52,7 +52,7 @@ s3transfer==0.2.1
 sentry-sdk==0.11.1
 simpleeval==0.9.10
 six==1.12.0
-urllib3==1.25.3
+urllib3==1.25.8
 wcwidth==0.1.7
 websockets==6.0
 ws4py==0.5.1
