@@ -21,6 +21,8 @@ eqList.addWeapon("Throwing Hammer2", { 'damage': '1d8 + 1', "bth":"5"})
 # c.setGod("Thor")
 
 
+print(eqList.getItemType("Arrow"))
+
 # eqList.wield("Bill", "Bow")
 
 

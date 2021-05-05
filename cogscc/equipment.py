@@ -65,6 +65,9 @@ class Equipment:
         e.article = d.get('article', e.defaultArticle())
         e.gm_note = d.get('gm_note', '')
 
+    def getItemType(self):
+        return "Equipment"
+
     def isMarkedAsDropped(self):
         return self.description.find("[dropped]") != -1
 
@@ -258,6 +261,9 @@ class Wearable(Equipment):
         e.location = d.get('location', '')
         return e
 
+    def getItemType(self):
+        return "Wearable"
+
     def isPushable(self, e):
         return False
 
@@ -326,6 +332,9 @@ class Weapon(Equipment):
         e.__from_dict_super__(d)
         e.is_wielding = d.get('wielding', False)
         return e
+
+    def getItemType(self):
+        return "Weapon"
 
     def addTag(self, tag):
 
@@ -417,6 +426,9 @@ class Ammo(Equipment):
         e.__from_dict_super__(d)
         return e
 
+    def getItemType(self):
+        return "Ammo"
+
     def addTag(self, tag):
 
         possibleTags = {"arrow", "bolt", "bullet", "throw"}
@@ -491,6 +503,9 @@ class Container(Equipment):
 
     def __lt__(self, other):
         return self.description < other.description
+
+    def getItemType(self):
+        return "Container"
 
     def isContainer(self):
         return True
@@ -653,6 +668,8 @@ class EquipmentList:
             equiplist.append(Wearable.__from_dict__(equipitem))
         elif type == 'weapon':
             equiplist.append(Weapon.__from_dict__(equipitem))
+        elif type == 'ammo':
+            equiplist.append(Ammo.__from_dict__(equipitem))
         elif type == 'container':
             equiplist.append(Container.__from_dict__(equiplist, equipitem))
         else:
@@ -687,6 +704,12 @@ class EquipmentList:
             return found_item
         else:
             raise AmbiguousMatch(f"{description} matches more than one item, please be more specific.")
+
+    def getItemType(self, description: str):
+        itemno = self.find(description)
+        if itemno < 0:
+            raise ItemNotFound(f"{description} not found.")
+        return f"This is an item of type: {self.equipment[itemno].getItemType()}"
 
     def addTag(self, description: str, tag: str):
         itemno = self.find(description)

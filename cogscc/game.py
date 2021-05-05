@@ -665,6 +665,13 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
+    @commands.command(name='get_type', aliases=[''])
+    async def getItemType(self, ctx, description: str = None):
+        """Get the type (Equipment, weapon, etc.) of an item."""
+        player = str(ctx.author)
+        type = self.characters.get(player).equipment.getItemType(description=description)
+        await ctx.send(type)
+
     @commands.command(name='swap_weapons', aliases=['swap_weapon'])
     async def swapWeapons(self, ctx):
         """Character swaps weapons."""
