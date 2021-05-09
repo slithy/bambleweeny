@@ -14,8 +14,16 @@ class Bleeding(Enum):
     BLEEDING = 2
     NOT_BLEEDING = 3
 
+
 class HP:
-    def __init__(self, max: int, current: int = 999, wound: Wound = Wound.NORMAL, bleeding = Bleeding.NOT_BLEEDING, conscious: bool = True):
+    def __init__(
+        self,
+        max: int,
+        current: int = 999,
+        wound: Wound = Wound.NORMAL,
+        bleeding=Bleeding.NOT_BLEEDING,
+        conscious: bool = True,
+    ):
         self.max = max
         self.current = max
         if current < max:
@@ -33,16 +41,20 @@ class HP:
 
     def __to_json__(self):
         return {
-            'max': self.max, 'current': self.current, 'wound': self.wound.name, 'bleeding': self.bleeding.name, 'conscious': self.conscious
+            "max": self.max,
+            "current": self.current,
+            "wound": self.wound.name,
+            "bleeding": self.bleeding.name,
+            "conscious": self.conscious,
         }
 
     # ---------- main funcs ----------
     def recover(self, name: str, hp: int):
         if self.current == self.max:
-            return ''
+            return ""
         hp_text = f"{hp} hit points"
         if hp == 1:
-           hp_text = "1 hit point"
+            hp_text = "1 hit point"
         if self.current + hp <= self.max:
             self.current += hp
             return f"\n{name} recovers {hp_text}. :medical_symbol:  **HP**: {self.current}/{self.max}"
@@ -53,7 +65,7 @@ class HP:
     def rest(self, name: str, conMod: int, duration: int):
         if self.wound == Wound.DEAD:
             return f"{name} gets rigor mortis."
-        result = ''
+        result = ""
         if not self.conscious:
             self.conscious = True
             hours = [roll("1d6", inline=True) for _ in range(1)]
@@ -99,7 +111,7 @@ class HP:
             return f"{name} is in a stable condition. Nothing more can be achieved with first aid."
 
     def heal(self, name: str, hp_healed: int):
-        consequence = ''
+        consequence = ""
         if self.wound == Wound.DEAD:
             consequence = f"Unfortunately that doesn't really help. {name} is dead."
         elif self.wound == Wound.MORTAL:
@@ -167,7 +179,7 @@ class HP:
         return consequence
 
     def bleed(self, name):
-        status = ''
+        status = ""
         if self.wound == Wound.DEAD:
             status = f"{name} is dead."
         elif self.conscious:
@@ -190,23 +202,23 @@ class HP:
 
     def brief(self):
         if self.wound == Wound.NORMAL and not self.conscious:
-            wounded = ' :dizzy_face:'
+            wounded = " :dizzy_face:"
         elif self.wound == Wound.GRIEVOUS or self.wound == Wound.MORTAL:
             if self.conscious:
-                wounded = ' :grimacing:'
+                wounded = " :grimacing:"
             else:
-                wounded = ' :dizzy_face:'
+                wounded = " :dizzy_face:"
         elif self.wound == Wound.DEAD:
             wounded = f": skull:"
         else:
-            wounded = ''
+            wounded = ""
         return f"{self.current}/{self.max}{wounded}"
 
     def __str__(self):
         if self.conscious:
-            unconscious = ':grimacing:'
+            unconscious = ":grimacing:"
         else:
-            unconscious = '(unconscious) :dizzy_face:'
+            unconscious = "(unconscious) :dizzy_face:"
         if self.wound == Wound.NORMAL and not self.conscious:
             wounded = f"{unconscious}"
         elif self.wound == Wound.GRIEVOUS:
@@ -216,6 +228,5 @@ class HP:
         elif self.wound == Wound.DEAD:
             wounded = f"DEAD :skull:"
         else:
-            wounded = ''
+            wounded = ""
         return f"**HP**: {self.current}/{self.max} {wounded}"
-

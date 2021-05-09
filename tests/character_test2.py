@@ -16,12 +16,13 @@ eqList = eq.EquipmentList()
 eqList.addWeapon("Bow", { 'damage': '1d8 + 1', "bth":"5"})
 eqList.addAmmo("arrow", { 'damage': '1d3 + 1','count':10})
 eqList.addWeapon("Throwing Hammer2", { 'damage': '1d8 + 1', "bth":"5"})
+eqList.addWeapon("Throwing Hammer1", { 'damage': '1d8 + 1', "bth":"5"})
 # eqList.addWearable("Shield", { 'ac': '+1', "ev":"1"})
 # eqList.equipment[1].addTag("melee")
 # c.setGod("Thor")
 
 
-print(eqList.getItemType("Arrow"))
+print(eqList.find("hammer"))
 
 # eqList.wield("Bill", "Bow")
 
@@ -39,24 +40,24 @@ c.setGod("Thor")
 # print(c.getGod())
 #
 #
-c.equipment = eqList
-
+# c.equipment = eqList
+#
+# # print(c.showInventory())
+#
+#
+# atks = c.getThrowAtk("2")
+# print(atks)
 # print(c.showInventory())
-
-
-atks = c.getThrowAtk("2")
-print(atks)
-print(c.showInventory())
-c.equipment.pickUp("2")
-atks = c.getThrowAtk("2")
-print(atks)
-print(c.showInventory())
-
-
-eqList.wield("Bill", "bow")
-atks = c.getShootAtk("arrow")
-print(atks)
-print(c.showInventory())
+# c.equipment.pickUp("2")
+# atks = c.getThrowAtk("2")
+# print(atks)
+# print(c.showInventory())
+#
+#
+# eqList.wield("Bill", "bow")
+# atks = c.getShootAtk("arrow")
+# print(atks)
+# print(c.showInventory())
 
 
 

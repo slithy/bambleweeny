@@ -7,14 +7,22 @@ from cogscc.funcs.dice import roll
 from cogscc.character import Character
 from cogscc.monster import Monster
 import cogscc.npc
-from cogscc.models.errors import AmbiguousMatch, CharacterNotFound, InvalidArgument, MissingArgument, NotAllowed, NotWieldingItems
+from cogscc.models.errors import (
+    AmbiguousMatch,
+    CharacterNotFound,
+    InvalidArgument,
+    MissingArgument,
+    NotAllowed,
+    NotWieldingItems,
+)
+
 
 def getArgDict(*args):
-    synonymDict = { 'cap': 'capacity', 'dmg': 'damage', 'rng': 'range', 'val': 'value' }
+    synonymDict = {"cap": "capacity", "dmg": "damage", "rng": "range", "val": "value"}
 
     argDict = {}
     for arg in args:
-        s = arg.split(':', 1)
+        s = arg.split(":", 1)
         if len(s) == 2:
             # Arguments should be key:value pairs
             if s[0].lower() in synonymDict:
@@ -30,15 +38,15 @@ def getArgDict(*args):
             # Allow one integer and one string argument with default key
             try:
                 count = int(s[0])
-                if 'count' in argDict:
+                if "count" in argDict:
                     raise InvalidArgument(f"I don't know what to do with {s[0]}.")
                 else:
-                    argDict['count'] = count
+                    argDict["count"] = count
             except ValueError:
-                if 'name' in argDict:
+                if "name" in argDict:
                     raise InvalidArgument(f"I don't know what to do with {s[0]}.")
                 else:
-                    argDict['name'] = s[0]
+                    argDict["name"] = s[0]
     return argDict
 
 
@@ -50,7 +58,7 @@ class ToJson(json.JSONEncoder):
 
 
 class Game(commands.Cog):
-    gm_roles = [ 'Castle Keeper', 'Game Master', 'Dungeon Master' ]
+    gm_roles = ["Castle Keeper", "Game Master", "Dungeon Master"]
 
     def __init__(self, bot):
         self.bot = bot
@@ -58,7 +66,7 @@ class Game(commands.Cog):
         self.monsters = []
 
     def isGm(self, ctx):
-        #return ctx.author.name == 'slithy'
+        # return ctx.author.name == 'slithy'
         for role in ctx.author.roles:
             if role.name in Game.gm_roles:
                 return True
@@ -70,9 +78,9 @@ class Game(commands.Cog):
 
     def getGmList(self, ctx):
         gm_list = []
-        #gm_list.append(self.bot.get_user(689169847166304299))
+        # gm_list.append(self.bot.get_user(689169847166304299))
         for member in ctx.guild.members:
-            for role in member.roles: 
+            for role in member.roles:
                 if role.name in Game.gm_roles:
                     gm_list.append(member)
         return gm_list
@@ -92,71 +100,106 @@ class Game(commands.Cog):
 
     # Roll up a new character
 
-    @commands.command(name='generate')
+    @commands.command(name="generate")
     async def genStats(self, ctx):
         """Randomly generate the six base stats for a new character."""
         rolls = [roll("4d6kh3", inline=True) for _ in range(6)]
-        #self.stats.set(rolls[0].total, rolls[1].total, rolls[2].total, rolls[3].total, rolls[4].total, rolls[5].total)
-        stat_summary = '\n:game_die: '.join(r.skeleton for r in rolls)
+        # self.stats.set(rolls[0].total, rolls[1].total, rolls[2].total, rolls[3].total, rolls[4].total, rolls[5].total)
+        stat_summary = "\n:game_die: ".join(r.skeleton for r in rolls)
         total = sum([r.total for r in rolls])
-        await ctx.send(f"{ctx.message.author.mention}\nGenerated random stats:\n:game_die: {stat_summary}\nTotal = `{total}`")
+        await ctx.send(
+            f"{ctx.message.author.mention}\nGenerated random stats:\n:game_die: {stat_summary}\nTotal = `{total}`"
+        )
 
     # Save, create and destroy characters
 
-    @commands.command(name='save')
-    async def saveJson(self, ctx, filename: str = 'characters.json'):
+    @commands.command(name="save")
+    async def saveJson(self, ctx, filename: str = "characters.json"):
         """Save characters to a file in JSON format."""
-        with open(f"/save/{basename(filename)}", 'w') as f:
+        with open(f"/save/{basename(filename)}", "w") as f:
             json.dump(self.characters, f, cls=ToJson, indent=2, ensure_ascii=False)
         ts = time.gmtime()
         timestamp = time.strftime("%Y%m%d%H%M%S", ts)
         filename_backup = f"{basename(filename)}.{timestamp}"
-        with open(f"/save/{filename_backup}", 'w') as f:
+        with open(f"/save/{filename_backup}", "w") as f:
             json.dump(self.characters, f, cls=ToJson)
         await ctx.send(f"Characters saved as {filename_backup}")
 
-    @commands.command(name='create')
+    @commands.command(name="create")
     async def create(self, ctx, name: str, race: str, xclass: str, level: int = 1):
         """Create a new character.
         Usage: !create "Character Name" <race> <class> [<level>]"""
         player = str(ctx.author)
         if player in self.characters:
-            await ctx.send(self.characters.get(player).showSummary("You already have a character: "))
+            await ctx.send(
+                self.characters.get(player).showSummary(
+                    "You already have a character: "
+                )
+            )
             return
         self.characters[player] = Character(name, race, xclass, level)
         await ctx.send(self.characters.get(player).showSummary(f"{player} is playing "))
         return
 
-    @commands.command(name='suicide')
+    @commands.command(name="suicide")
     async def suicide(self, ctx):
         """Kill your character (allowing you to create a new one)."""
         player = str(ctx.author)
         if player in self.characters:
             name = self.characters[player].getName()
-            random_death = random.choice(["drinks poison and fails their saving throw",
-                "is crushed by falling rocks", "opens a chest filled with poison gas",
-                "is shot in the back by a comrade", "goes to explore the Tomb of Horrors and is never seen again", 
-                "goes for a swim in a pool of acid", "didn't realise that the treasure chest was a mimic",
-                "decides to split the party", "finds the cursed katana of seppuku",
-                "decides to read the Necronomicon"])
-            await ctx.send(f"{name} {random_death}. :skull:\n" + self.characters.get(player).showInventory("", ['all']))
+            random_death = random.choice(
+                [
+                    "drinks poison and fails their saving throw",
+                    "is crushed by falling rocks",
+                    "opens a chest filled with poison gas",
+                    "is shot in the back by a comrade",
+                    "goes to explore the Tomb of Horrors and is never seen again",
+                    "goes for a swim in a pool of acid",
+                    "didn't realise that the treasure chest was a mimic",
+                    "decides to split the party",
+                    "finds the cursed katana of seppuku",
+                    "decides to read the Necronomicon",
+                ]
+            )
+            await ctx.send(
+                f"{name} {random_death}. :skull:\n"
+                + self.characters.get(player).showInventory("", ["all"])
+            )
             del self.characters[player]
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='assign')
-    async def assignStats(self, ctx, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int, hp: int = 0):
+    @commands.command(name="assign")
+    async def assignStats(
+        self,
+        ctx,
+        strength: int,
+        dexterity: int,
+        constitution: int,
+        intelligence: int,
+        wisdom: int,
+        charisma: int,
+        hp: int = 0,
+    ):
         """Assign character's stats and optionally hit points.
         Usage: !assign <str> <dex> <con> <int> <wis> <cha> [<hp>]"""
         player = str(ctx.author)
         if player in self.characters:
-            self.characters.get(player).assignStats(strength, dexterity, constitution, intelligence, wisdom, charisma, hp)
+            self.characters.get(player).assignStats(
+                strength, dexterity, constitution, intelligence, wisdom, charisma, hp
+            )
             await ctx.send(self.characters.get(player).showCharacter())
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='prime')
-    async def setPrimes(self, ctx, first_prime: str, second_prime: str = 'None', third_prime: str = 'None'):
+    @commands.command(name="prime")
+    async def setPrimes(
+        self,
+        ctx,
+        first_prime: str,
+        second_prime: str = "None",
+        third_prime: str = "None",
+    ):
         """Assign prime stats.
         Humans have three prime attributes; non-humans have two. One prime attribute is
         determined by the character class and will be assigned automatically (it is
@@ -164,12 +207,14 @@ class Game(commands.Cog):
         Usage: !assign <first prime> [<second prime>]"""
         player = str(ctx.author)
         if player in self.characters:
-            self.characters.get(player).setPrimes(first_prime, second_prime, third_prime)
+            self.characters.get(player).setPrimes(
+                first_prime, second_prime, third_prime
+            )
             await ctx.send(self.characters.get(player).showCharacter())
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='alignment', aliases=['al'])
+    @commands.command(name="alignment", aliases=["al"])
     async def setAlignment(self, ctx, alignment: str):
         """Sets character alignment.
         Characters can be Lawful, Neutral or Chaotic and Good, Neutral or Evil.
@@ -178,44 +223,48 @@ class Game(commands.Cog):
         player = str(ctx.author)
         if player in self.characters:
             self.characters.get(player).setAlignment(alignment)
-            await ctx.send(f"{self.characters.get(player).getName()} is {self.characters.get(player).getAlignment()}")
+            await ctx.send(
+                f"{self.characters.get(player).getName()} is {self.characters.get(player).getAlignment()}"
+            )
         else:
             await ctx.send(f"{player} does not have a character.")
 
     # Display character sheet
 
-    @commands.command(name='party')
-    async def allCharacters(self, ctx, param: str = 'None'):
+    @commands.command(name="party")
+    async def allCharacters(self, ctx, param: str = "None"):
         """Show stats for all characters.
         Usage: !party [stats]"""
-        party = ''
+        party = ""
         for player, character in sorted(self.characters.items()):
-            if param != 'stats':
-                disabled = "**DISABLED** " if character.disabled else ''
-                msg = f"{player} is playing" if type(character) is Character else "(NPC) "
+            if param != "stats":
+                disabled = "**DISABLED** " if character.disabled else ""
+                msg = (
+                    f"{player} is playing" if type(character) is Character else "(NPC) "
+                )
                 party += character.showSummary(f"\n{disabled}{msg} ")
             elif not character.disabled:
-                party += '\n' + character.showCharacter(f"({player})")
+                party += "\n" + character.showCharacter(f"({player})")
             # Discord has a hard limit of 2000 chars/message
             if len(party) > 1500:
                 await ctx.send(party)
-                party = ''
+                party = ""
         if party:
             await ctx.send(party)
 
-    @commands.command(name='character', aliases=['char'])
-    async def character(self, ctx, character: str = ''):
+    @commands.command(name="character", aliases=["char"])
+    async def character(self, ctx, character: str = ""):
         """Show your character sheet."""
         player = self.selfOrGm(ctx, character)
         await ctx.send(self.characters.get(player).showCharacter())
 
-    @commands.command(name='hp')
-    async def hp(self, ctx, character: str = ''):
+    @commands.command(name="hp")
+    async def hp(self, ctx, character: str = ""):
         """Show your hit points."""
         player = self.selfOrGm(ctx, character)
         await ctx.send(self.characters.get(player).showHp())
 
-    @commands.command(name='party_hp')
+    @commands.command(name="party_hp")
     async def getPartyHp(self, ctx):
         """Show party hit points"""
         out = []
@@ -223,16 +272,18 @@ class Game(commands.Cog):
             if character.disabled:
                 continue
             out.append(f"{character.name}:\n{character.showHp()}")
-            
+
         await ctx.send("\n".join(out))
 
     # Game mechanics
 
-    @commands.command(name='check', aliases=['ck','chk','str','dex','con','int','wis','cha'])
+    @commands.command(
+        name="check", aliases=["ck", "chk", "str", "dex", "con", "int", "wis", "cha"]
+    )
     async def siegeCheck(self, ctx, *args):
         """Make an ability check.
         Usage: !check <stat> [<bonus>] [CL:<challenge level>]"""
-        if ctx.invoked_with in ['str','dex','con','int','wis','cha']:
+        if ctx.invoked_with in ["str", "dex", "con", "int", "wis", "cha"]:
             stat = ctx.invoked_with
         else:
             try:
@@ -242,14 +293,14 @@ class Game(commands.Cog):
             except IndexError:
                 raise MissingArgument("Required argument <stat> is missing.")
         argDict = getArgDict(*args)
-        character = argDict.get('name', '')
-        bonus = argDict.get('count', 0)
-        cl = argDict.get('cl', 0)
+        character = argDict.get("name", "")
+        bonus = argDict.get("count", 0)
+        cl = argDict.get("cl", 0)
         player = self.selfOrGm(ctx, character)
         await ctx.send(self.characters.get(player).siegeCheck(stat, bonus, cl))
 
-    @commands.command(name='search', aliases=['listen','smell','track','traps'])
-    async def search(self, ctx, bonus = 0):
+    @commands.command(name="search", aliases=["listen", "smell", "track", "traps"])
+    async def search(self, ctx, bonus=0):
         """Use a sense or skill to detect something or someone.
         Usage: !listen [+bonus]
                !search [+bonus]
@@ -262,7 +313,9 @@ class Game(commands.Cog):
             Dwarves get +4 to search checks and +2 to finding traps in stonework/structures"""
         player = str(ctx.author)
         if player in self.characters:
-            (message, result) = self.characters.get(player).search(ctx.invoked_with, bonus)
+            (message, result) = self.characters.get(player).search(
+                ctx.invoked_with, bonus
+            )
             await ctx.send(message)
             for gm in self.getGmList(ctx):
                 await gm.send(result)
@@ -271,12 +324,12 @@ class Game(commands.Cog):
 
     # Combat
 
-    @commands.command(name='initiative', aliases=['init'])
+    @commands.command(name="initiative", aliases=["init"])
     async def rollForInitiative(self, ctx):
         """Roll for initiative!"""
         self.gmOnly(ctx)
         initList = []
-        initRolls = ''
+        initRolls = ""
         for player, character in sorted(self.characters.items()):
             if character.disabled:
                 continue
@@ -298,7 +351,7 @@ class Game(commands.Cog):
 
     # Wounds and healing
 
-    @commands.command(name='damage', aliases=['dmg'])
+    @commands.command(name="damage", aliases=["dmg"])
     async def damage(self, ctx, character: str, dmg: str):
         """Does damage to the specified character.
         Usage: !damage <character> <damage_dice>"""
@@ -306,7 +359,7 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].damage(dmg))
 
-    @commands.command(name='energy_drain')
+    @commands.command(name="energy_drain")
     async def energyDrain(self, ctx, character: str, levels: int = 1):
         """Drains life energy level(s) from the specified character.
         Usage: !energy_drain <character> <no_levels>"""
@@ -314,14 +367,14 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].energyDrain(levels))
 
-    @commands.command(name='heal')
+    @commands.command(name="heal")
     async def heal(self, ctx, character: str, hp: str):
         """Heals the specified character.
         Usage: !heal <character> <healing_dice>"""
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].heal(hp))
 
-    @commands.command(name='first_aid', aliases=['firstaid','aid'])
+    @commands.command(name="first_aid", aliases=["firstaid", "aid"])
     async def firstAid(self, ctx, character: str):
         """Perform first aid on the specified character.
         First aid does not restore any hit points, but can stop bleeding and restore unconscious characters to consciousness.
@@ -329,11 +382,11 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].first_aid())
 
-    @commands.command(name='rest')
+    @commands.command(name="rest")
     async def rest(self, ctx, duration: int = 1):
         """Rest for 1 or more days."""
         self.gmOnly(ctx)
-        result = ''
+        result = ""
         if duration < 2:
             duration = 1
             duration_text = "1 day has passed."
@@ -344,7 +397,7 @@ class Game(commands.Cog):
 
     # Manage inventory
 
-    @commands.command(name='inventory', aliases=['inv'])
+    @commands.command(name="inventory", aliases=["inv"])
     async def inventory(self, ctx, *args):
         """List your inventory.
         Usage: !inventory [ev] [detail] [all|treasure|wearing|wielding|<container name>]
@@ -355,33 +408,35 @@ class Game(commands.Cog):
                      wearing/wielding/<container name> show only the specified section of the inventory"""
 
         options = []
-        character = ''
-        section = ''
-        for arg in args: 
-            if arg.lower().startswith('ch:'):
-                s = arg.split(':', 1)
+        character = ""
+        section = ""
+        for arg in args:
+            if arg.lower().startswith("ch:"):
+                s = arg.split(":", 1)
                 character = s[1]
-            elif arg.lower() in ['ev','detail']:
+            elif arg.lower() in ["ev", "detail"]:
                 options.append(arg.lower())
             elif section:
-                await ctx.send(f"Usage: !inventory [all|treasure|wearing|wielding|<container name>] [ev]")
+                await ctx.send(
+                    f"Usage: !inventory [all|treasure|wearing|wielding|<container name>] [ev]"
+                )
                 return
             else:
                 section = arg
 
-        if character == '':
+        if character == "":
             player = str(ctx.author)
             if player not in self.characters:
                 await ctx.send(f"{player} does not have a character.")
                 return
-            await ctx.send(self.characters.get(player).showInventory(section,options))
+            await ctx.send(self.characters.get(player).showInventory(section, options))
         else:
             self.gmOnly(ctx)
             player = self.getPlayer(character)
-            options.append('gm_note')
-            await ctx.send(self.characters.get(player).showInventory(section,options))
+            options.append("gm_note")
+            await ctx.send(self.characters.get(player).showInventory(section, options))
 
-    @commands.command(name='equip', aliases=['get'])
+    @commands.command(name="equip", aliases=["get"])
     async def addEquipment(self, ctx, description: str, *args):
         """Add an item to your equipment list.
         Usage: !equip "Item Description" [weapon|wearable|container|<count>] [<attributes>]
@@ -405,31 +460,41 @@ class Game(commands.Cog):
         if player in self.characters:
             argDict = getArgDict(*args)
             # If type not specified, try to infer it from the attributes
-            if argDict.get('name','') == '':
-                if argDict.get('ac','') != '':
-                    argDict['name'] = 'wearable'
-                elif argDict.get('damage','') != '':
-                    if 'ammo' in argDict or argDict.get('count', 1) != 1:
-                        argDict['name'] = 'ammo'
+            if argDict.get("name", "") == "":
+                if argDict.get("ac", "") != "":
+                    argDict["name"] = "wearable"
+                elif argDict.get("damage", "") != "":
+                    if "ammo" in argDict or argDict.get("count", 1) != 1:
+                        argDict["name"] = "ammo"
                     else:
-                        argDict['name'] = 'weapon'
-                elif argDict.get('capacity','') != '':
-                    argDict['name'] = 'container'
+                        argDict["name"] = "weapon"
+                elif argDict.get("capacity", "") != "":
+                    argDict["name"] = "container"
             # Add equipment by type
-            if argDict.get('name','') == 'wearable':
-                await ctx.send(self.characters.get(player).addWearable(description, argDict))
-            elif argDict.get('name', '') == 'weapon':
-                await ctx.send(self.characters.get(player).addWeapon(description, argDict))
-            elif argDict.get('name', '') == 'ammo':
-                await ctx.send(self.characters.get(player).addAmmo(description, argDict))
-            elif argDict.get('name','') == 'container':
-                await ctx.send(self.characters.get(player).addContainer(description, argDict))
+            if argDict.get("name", "") == "wearable":
+                await ctx.send(
+                    self.characters.get(player).addWearable(description, argDict)
+                )
+            elif argDict.get("name", "") == "weapon":
+                await ctx.send(
+                    self.characters.get(player).addWeapon(description, argDict)
+                )
+            elif argDict.get("name", "") == "ammo":
+                await ctx.send(
+                    self.characters.get(player).addAmmo(description, argDict)
+                )
+            elif argDict.get("name", "") == "container":
+                await ctx.send(
+                    self.characters.get(player).addContainer(description, argDict)
+                )
             else:
-                await ctx.send(self.characters.get(player).addEquipment(description, argDict))
+                await ctx.send(
+                    self.characters.get(player).addEquipment(description, argDict)
+                )
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='detail')
+    @commands.command(name="detail")
     async def detail(self, ctx, description: str):
         """Show all the details of an item in your equipment list as key:value pairs."""
         player = str(ctx.author)
@@ -438,10 +503,10 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='edit')
+    @commands.command(name="edit")
     async def edit(self, ctx, description: str, *args):
         """Edit properties of an item on your equipment list. Use `!detail` to see the current properties of the item.
-           Usage: `!edit "Item description" [key:value]...`"""
+        Usage: `!edit "Item description" [key:value]...`"""
         player = str(ctx.author)
         if player in self.characters:
             argDict = getArgDict(*args)
@@ -449,17 +514,21 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='rename')
-    async def renameEquipment(self, ctx, description: str, new_description: str, plural: str = ''):
+    @commands.command(name="rename")
+    async def renameEquipment(
+        self, ctx, description: str, new_description: str, plural: str = ""
+    ):
         """Rename an item in your equipment list.
         Usage: !equip "Old Description" "New Description" ["Plural"]"""
         player = str(ctx.author)
         if player in self.characters:
-            await ctx.send(self.characters.get(player).rename(description, new_description, plural))
+            await ctx.send(
+                self.characters.get(player).rename(description, new_description, plural)
+            )
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='give')
+    @commands.command(name="give")
     async def give(self, ctx, *args):
         """Give an item to another character.
         Usage: !give [<number>] "Item Description" [to] <character>
@@ -476,17 +545,23 @@ class Game(commands.Cog):
                 except ValueError:
                     count = 1
                 recipient = argl.pop(0)
-                if recipient == 'to':
+                if recipient == "to":
                     recipient = argl.pop(0)
                 if argl:
                     raise IndexError()
             except IndexError:
-                raise InvalidArgument("Wrong number of arguments. Try: `!give <item> to <character>`")
-            await ctx.send(self.characters.get(player).give(count, description, self.characters.get(self.getPlayer(recipient))))
+                raise InvalidArgument(
+                    "Wrong number of arguments. Try: `!give <item> to <character>`"
+                )
+            await ctx.send(
+                self.characters.get(player).give(
+                    count, description, self.characters.get(self.getPlayer(recipient))
+                )
+            )
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='wield')
+    @commands.command(name="wield")
     async def wield(self, ctx, description: str):
         """Wield a weapon you are carrying.
         Usage: !wield "Weapon Name" """
@@ -496,19 +571,32 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='wear')
-    async def wear(self, ctx, description: str, location: str = ''):
+    @commands.command(name="wear")
+    async def wear(self, ctx, description: str, location: str = ""):
         """Wear an item you are carrying.
         Usage: !wear "Item Description" ["location"]
                where location is the optional location on your body
-        Example: `wear ring "on left hand"` """
+        Example: `wear ring "on left hand"`"""
         player = str(ctx.author)
         if player in self.characters:
             await ctx.send(self.characters.get(player).wear(description, location))
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='remove', aliases=['take','take_off','takeoff','take_out','takeout','unwear','unwield','sheathe','unstring'])
+    @commands.command(
+        name="remove",
+        aliases=[
+            "take",
+            "take_off",
+            "takeoff",
+            "take_out",
+            "takeout",
+            "unwear",
+            "unwield",
+            "sheathe",
+            "unstring",
+        ],
+    )
     async def takeOff(self, ctx, description: str):
         """Take off an item you are wearing or wielding, or remove it from a container
         Usage: !remove "Item Description" """
@@ -518,11 +606,11 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='put')
-    async def put(self, ctx, description: str, instr: str, container: str = ''):
+    @commands.command(name="put")
+    async def put(self, ctx, description: str, instr: str, container: str = ""):
         """Put an item into a container
         Usage: !put "Item Description" [in] "Container" """
-        if instr != 'in' or not container:
+        if instr != "in" or not container:
             container = instr
         player = str(ctx.author)
         if player in self.characters:
@@ -530,18 +618,20 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='drop')
+    @commands.command(name="drop")
     async def dropEquipment(self, ctx, description: str, count: int = 1):
         """Remove an item from your equipment list.
         Usage: !drop "Item Description" [<count>]
                where count is the number of this item you want to drop (default: 1)"""
         player = str(ctx.author)
         if player in self.characters:
-            await ctx.send(self.characters.get(player).dropEquipment(description, count))
+            await ctx.send(
+                self.characters.get(player).dropEquipment(description, count)
+            )
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='gp', aliases=['pp','ep','sp','cp'])
+    @commands.command(name="gp", aliases=["pp", "ep", "sp", "cp"])
     async def managePurse(self, ctx, amount: int):
         """Add or remove coins from your purse.
         Usage: !gp +<amount> or !gp -<amount>
@@ -553,26 +643,28 @@ class Game(commands.Cog):
                !cp (copper pieces)"""
         player = str(ctx.author)
         if player in self.characters:
-            await ctx.send(self.characters.get(player).managePurse(ctx.invoked_with, amount))
+            await ctx.send(
+                self.characters.get(player).managePurse(ctx.invoked_with, amount)
+            )
         else:
             await ctx.send(f"{player} does not have a character.")
 
     ### GM-only commands ###
 
-    @commands.command(name='load')
-    async def loadJson(self, ctx, filename: str = 'characters.json'):
+    @commands.command(name="load")
+    async def loadJson(self, ctx, filename: str = "characters.json"):
         """Load characters from a JSON-formatted file."""
         self.gmOnly(ctx)
-        with open(f"/save/{basename(filename)}", 'r') as f:
+        with open(f"/save/{basename(filename)}", "r") as f:
             chars = json.load(f)
             for player, character in chars.items():
-                if character.get('type', ''):
+                if character.get("type", ""):
                     self.characters[player] = Monster.__from_dict__(character)
                 else:
                     self.characters[player] = Character.__from_dict__(character)
         await ctx.send(f"Characters and NPCs loaded from {filename}.")
 
-    @commands.command(name='load_npc')
+    @commands.command(name="load_npc")
     async def loadNPC(self, ctx):
         """Load new NPCs, animal companions, familiars, mounts, etc."""
         self.gmOnly(ctx)
@@ -595,9 +687,11 @@ class Game(commands.Cog):
         elif num_results == 1:
             return player_found
         else:
-            raise AmbiguousMatch(f"{character_name} is ambiguous, be more specific or use the player ID.")
+            raise AmbiguousMatch(
+                f"{character_name} is ambiguous, be more specific or use the player ID."
+            )
 
-    @commands.command(name='disable')
+    @commands.command(name="disable")
     async def disable(self, ctx, character: str):
         """Disables the specified character."""
         self.gmOnly(ctx)
@@ -605,7 +699,7 @@ class Game(commands.Cog):
         self.characters[player].disabled = True
         await ctx.send(f"{player}'s character has been disabled for this session.")
 
-    @commands.command(name='enable')
+    @commands.command(name="enable")
     async def enable(self, ctx, character: str):
         """Enables the specified character."""
         self.gmOnly(ctx)
@@ -613,116 +707,123 @@ class Game(commands.Cog):
         self.characters[player].disabled = False
         await ctx.send(f"{player}'s character has been re-enabled.")
 
-    @commands.command(name='gm_note', aliases=['ck_note','dm_note'])
-    async def gmNote(self, ctx, character: str, item: str, description: str = ''):
+    @commands.command(name="gm_note", aliases=["ck_note", "dm_note"])
+    async def gmNote(self, ctx, character: str, item: str, description: str = ""):
         """Adds a secret note to an item or views the note.
         Usage: !gm_note <character> <item> [<description>]"""
         self.gmOnly(ctx)
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].gmNote(item, description))
 
-    @commands.command(name='level_up',aliases=['levelup'])
+    @commands.command(name="level_up", aliases=["levelup"])
     async def levelUp(self, ctx, character: str):
         """Levels up the specified character."""
         self.gmOnly(ctx)
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].levelUp())
 
-    @commands.command(name='euthanise', aliases=['kill'])
+    @commands.command(name="euthanise", aliases=["kill"])
     async def deleteCharacter(self, ctx, player: str):
         """Ends the suffering of the character belonging to the specified player."""
         self.gmOnly(ctx)
         del self.characters[player]
         await ctx.send(f"The suffering of {player}'s character has been ended.")
 
-    @commands.command(name='monster_reset', aliases=['mr'])
+    @commands.command(name="monster_reset", aliases=["mr"])
     async def monsterReset(self, ctx):
         """Resets monsters at the start of a new combat."""
         self.gmOnly(ctx)
         self.monsters = []
         await ctx.send(f"Monsters reset.")
 
-    @commands.command(name='monster_add', aliases=['ma'])
+    @commands.command(name="monster_add", aliases=["ma"])
     async def monsterAdd(self, ctx, name: str, *args):
         """Adds a new monster to the combat."""
         self.gmOnly(ctx)
         argDict = getArgDict(*args)
-        if 'ac' not in argDict:
-            argDict['ac'] = 10
-        if 'hd' not in argDict:
-            argDict['hd'] = 1
+        if "ac" not in argDict:
+            argDict["ac"] = 10
+        if "hd" not in argDict:
+            argDict["hd"] = 1
         self.monsters.append(Monster(name, argDict))
         await ctx.send(f"Added {name} to combat.")
 
-    @commands.command(name='god')
+    @commands.command(name="god")
     async def setAlignment(self, ctx, god: str):
         """Sets character god."""
         player = str(ctx.author)
         if player in self.characters:
             self.characters.get(player).setGod(god)
-            await ctx.send(f"{self.characters.get(player).getName()} worships"
-                           f" {self.characters.get(player).getGod()} now.")
+            await ctx.send(
+                f"{self.characters.get(player).getName()} worships"
+                f" {self.characters.get(player).getGod()} now."
+            )
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name='get_type', aliases=[''])
+    @commands.command(name="get_type", aliases=[""])
     async def getItemType(self, ctx, description: str = None):
         """Get the type (Equipment, weapon, etc.) of an item."""
         player = str(ctx.author)
-        type = self.characters.get(player).equipment.getItemType(description=description)
+        type = self.characters.get(player).equipment.getItemType(
+            description=description
+        )
         await ctx.send(type)
 
-    @commands.command(name='swap_weapons', aliases=['swap_weapon'])
+    @commands.command(name="swap_weapons", aliases=["swap_weapon"])
     async def swapWeapons(self, ctx):
         """Character swaps weapons."""
         player = str(ctx.author)
         await ctx.send(self.characters.get(player).swapWeapons())
 
-    @commands.command(name='attack', aliases=['attacks', 'atk', 'atks'])
+    @commands.command(name="attack", aliases=["attacks", "atk", "atks"])
     async def attack(self, ctx, weapon_description: str = None):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
         atks = self.characters.get(player).getMeleeAtks(item_name=weapon_description)
         await ctx.send(atks)
 
-    @commands.command(name='throw')
+    @commands.command(name="throw")
     async def throw(self, ctx, weapon_or_ammo_description: str):
         """Character performs a standard throw attack."""
         player = str(ctx.author)
-        atks = self.characters.get(player).getThrowAtk(ammo_or_weapon_name=weapon_or_ammo_description)
+        atks = self.characters.get(player).getThrowAtk(
+            ammo_or_weapon_name=weapon_or_ammo_description
+        )
         await ctx.send(atks)
 
-    @commands.command(name='shoot')
+    @commands.command(name="shoot")
     async def shoot(self, ctx, ammo_description: str):
         """Character performs standard melee attacks."""
         player = str(ctx.author)
         atks = self.characters.get(player).getShootAtk(ammo_name=ammo_description)
         await ctx.send(atks)
 
-    @commands.command(name='pick_up')
+    @commands.command(name="pick_up")
     async def pickUp(self, ctx, weapon_description: str):
         """Pick up a dropped item."""
         player = str(ctx.author)
         await ctx.send(self.characters.get(player).equipment.pickUp(weapon_description))
 
-    @commands.command(name='add_tag', aliases=['tag'])
+    @commands.command(name="add_tag", aliases=["tag"])
     async def addTag(self, ctx, description: str, tag: str):
         """Pick up a dropped item."""
         player = str(ctx.author)
         await ctx.send(self.characters.get(player).equipment.addTag(description, tag))
 
-    @commands.command(name='remove_tag', aliases=['untag'])
+    @commands.command(name="remove_tag", aliases=["untag"])
     async def removeTag(self, ctx, description: str, tag: str):
         """Pick up a dropped item."""
         player = str(ctx.author)
-        await ctx.send(self.characters.get(player).equipment.removeTag(description, tag))
+        await ctx.send(
+            self.characters.get(player).equipment.removeTag(description, tag)
+        )
 
-    @commands.command(name='get_tags')
+    @commands.command(name="get_tags")
     async def getTag(self, ctx, description: str):
         """Pick up a dropped item."""
         player = str(ctx.author)
         await ctx.send(self.characters.get(player).equipment.getTags(description))
-
 
 
 def setup(bot):
