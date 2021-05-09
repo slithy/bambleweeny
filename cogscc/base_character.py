@@ -1,5 +1,6 @@
 from cogscc.funcs.dice import roll
 
+
 class BaseCharacter:
     def getName(self):
         return self.name
@@ -30,7 +31,7 @@ class BaseCharacter:
     # Combat
 
     def rollForInitiative(self):
-        dex_mod = self.stats.getMod('dex')
+        dex_mod = self.stats.getMod("dex")
         result = [roll(f"2d6{dex_mod:+}", inline=True) for _ in range(1)]
         init = result[0].total
         return (init, f":game_die: {self.getName()} rolls 2d6{dex_mod:+} = {init}\n")
@@ -38,7 +39,7 @@ class BaseCharacter:
     # Wounds and healing
 
     def damage(self, dmg: str):
-        dmg_roll = ''
+        dmg_roll = ""
         dmg_amt: int
         try:
             int(dmg)
@@ -50,7 +51,7 @@ class BaseCharacter:
         return f"{dmg_roll}{self.getHp().lose(self.getName(), dmg_amt)}"
 
     def heal(self, heal: str):
-        heal_roll = ''
+        heal_roll = ""
         heal_amt: int
         try:
             int(heal)
@@ -62,7 +63,9 @@ class BaseCharacter:
         return f"{heal_roll}{self.getHp().heal(self.getName(), heal_amt)}"
 
     def first_aid(self):
-        all_mods = self.getLevel() + self.stats.getMod('con') + self.stats.getPrime('con')
+        all_mods = (
+            self.getLevel() + self.stats.getMod("con") + self.stats.getPrime("con")
+        )
         result = [roll(f"1d20{all_mods:+}", inline=True) for _ in range(1)]
         total = result[0].total
         success = total > 18
@@ -70,5 +73,4 @@ class BaseCharacter:
         return self.getHp().first_aid(self.getName(), check, success)
 
     def rest(self, duration: int):
-        return self.getHp().rest(self.getName(), self.stats.getMod('con'), duration)
-
+        return self.getHp().rest(self.getName(), self.stats.getMod("con"), duration)

@@ -4,10 +4,21 @@ from cogscc.models.errors import InvalidArgument
 
 
 class BaseStats:
-    def __init__(self, strength: int, dexterity: int, constitution: int,
-                       intelligence: int, wisdom: int, charisma: int,
-                       str_p: bool = False, dex_p: bool = False, con_p: bool = False,
-                       int_p: bool = False, wis_p: bool = False, cha_p: bool = False):
+    def __init__(
+        self,
+        strength: int,
+        dexterity: int,
+        constitution: int,
+        intelligence: int,
+        wisdom: int,
+        charisma: int,
+        str_p: bool = False,
+        dex_p: bool = False,
+        con_p: bool = False,
+        int_p: bool = False,
+        wis_p: bool = False,
+        cha_p: bool = False,
+    ):
         self.set(strength, dexterity, constitution, intelligence, wisdom, charisma)
         self.setPrimes(str_p, dex_p, con_p, int_p, wis_p, cha_p)
 
@@ -17,18 +28,44 @@ class BaseStats:
 
     def __to_json__(self):
         return {
-            "strength": self.strength, "dexterity": self.dexterity, "constitution": self.constitution,
-            "intelligence": self.intelligence, "wisdom": self.wisdom, "charisma": self.charisma,
-            "str_p": self.str_p, "dex_p": self.dex_p, "con_p": self.con_p,
-            "int_p": self.int_p, "wis_p": self.wis_p, "cha_p": self.cha_p
+            "strength": self.strength,
+            "dexterity": self.dexterity,
+            "constitution": self.constitution,
+            "intelligence": self.intelligence,
+            "wisdom": self.wisdom,
+            "charisma": self.charisma,
+            "str_p": self.str_p,
+            "dex_p": self.dex_p,
+            "con_p": self.con_p,
+            "int_p": self.int_p,
+            "wis_p": self.wis_p,
+            "cha_p": self.cha_p,
         }
 
     # ---------- main funcs ----------
-    def set(self, strength: int, dexterity: int, constitution: int, intelligence: int, wisdom: int, charisma: int):
-        if strength < 1 or dexterity < 1 or constitution < 1 or \
-           intelligence < 1 or wisdom < 1 or charisma < 1 or \
-           strength > 19 or dexterity > 19 or constitution > 19 or \
-           intelligence > 19 or wisdom > 19 or charisma > 19:
+    def set(
+        self,
+        strength: int,
+        dexterity: int,
+        constitution: int,
+        intelligence: int,
+        wisdom: int,
+        charisma: int,
+    ):
+        if (
+            strength < 1
+            or dexterity < 1
+            or constitution < 1
+            or intelligence < 1
+            or wisdom < 1
+            or charisma < 1
+            or strength > 19
+            or dexterity > 19
+            or constitution > 19
+            or intelligence > 19
+            or wisdom > 19
+            or charisma > 19
+        ):
             raise InvalidArgument(f"The valid range for stats is 1-19.")
         self.strength = strength
         self.dexterity = dexterity
@@ -37,8 +74,15 @@ class BaseStats:
         self.wisdom = wisdom
         self.charisma = charisma
 
-    def setPrimes(self, str_p: bool = False, dex_p: bool = False, con_p: bool = False,
-                        int_p: bool = False, wis_p: bool = False, cha_p: bool = False):
+    def setPrimes(
+        self,
+        str_p: bool = False,
+        dex_p: bool = False,
+        con_p: bool = False,
+        int_p: bool = False,
+        wis_p: bool = False,
+        cha_p: bool = False,
+    ):
         self.str_p = str_p
         self.dex_p = dex_p
         self.con_p = con_p
@@ -47,17 +91,17 @@ class BaseStats:
         self.cha_p = cha_p
 
     def setPrime(self, prime: str):
-        if prime == 'str':
+        if prime == "str":
             self.str_p = True
-        if prime == 'dex':
+        if prime == "dex":
             self.dex_p = True
-        if prime == 'con':
+        if prime == "con":
             self.con_p = True
-        if prime == 'int':
+        if prime == "int":
             self.int_p = True
-        if prime == 'wis':
+        if prime == "wis":
             self.wis_p = True
-        if prime == 'cha':
+        if prime == "cha":
             self.cha_p = True
 
     def printPrime(self, is_prime):
@@ -71,9 +115,12 @@ class BaseStats:
         if abbr_stat not in STAT_ABBREVIATIONS:
             raise InvalidArgument(f"{stat} is not a valid stat.")
         stat_val = {
-            'str': self.strength, 'dex': self.dexterity,
-            'con': self.constitution, 'int': self.intelligence,
-            'wis': self.wisdom, 'cha': self.charisma
+            "str": self.strength,
+            "dex": self.dexterity,
+            "con": self.constitution,
+            "int": self.intelligence,
+            "wis": self.wisdom,
+            "cha": self.charisma,
         }[abbr_stat]
         if stat_val < 2:
             return -4
@@ -97,9 +144,12 @@ class BaseStats:
         if abbr_stat not in STAT_ABBREVIATIONS:
             raise InvalidArgument(f"{stat} is not a valid stat.")
         stat_prime = {
-            'str': self.str_p, 'dex': self.dex_p,
-            'con': self.con_p, 'int': self.int_p,
-            'wis': self.wis_p, 'cha': self.cha_p
+            "str": self.str_p,
+            "dex": self.dex_p,
+            "con": self.con_p,
+            "int": self.int_p,
+            "wis": self.wis_p,
+            "cha": self.cha_p,
         }[abbr_stat]
         if stat_prime:
             return 6
@@ -118,10 +168,14 @@ class BaseStats:
         elif total >= cb + cl:
             success = f"Success (CL{cl})! :grinning:"
         else:
-            success = f"Failure ({total-cb})" if name == 'secret_check' else "Failure! :scream:"
+            success = (
+                f"Failure ({total-cb})"
+                if name == "secret_check"
+                else "Failure! :scream:"
+            )
 
         # Long-form result for normal checks
-        known_cl = f"against challenge level {cl}" if cl > 0 else ''
+        known_cl = f"against challenge level {cl}" if cl > 0 else ""
         bonuses = f"{level:+} for level"
         if mod != 0:
             bonuses = bonuses + f", {mod:+} modifier"
@@ -130,16 +184,17 @@ class BaseStats:
         if bonus != 0:
             bonuses = bonuses + f", {bonus:+} bonus"
 
-        if name == 'secret_check':
+        if name == "secret_check":
             return f"{success}                                                                                \nBonuses are {bonuses} = {all_mods:+}\n:game_die: {result[0].skeleton}"
         else:
             return f"{name} makes a {stat.upper()} check {known_cl}\nBonuses are {bonuses} = {all_mods:+}\n:game_die: {result[0].skeleton}\n{success}"
 
     def __str__(self):
-        return f"**STR**: {self.strength}{self.printPrime(self.str_p)}({self.getMod('str'):+})  " \
-               f"**DEX**: {self.dexterity}{self.printPrime(self.dex_p)}({self.getMod('dex'):+})  " \
-               f"**CON**: {self.constitution}{self.printPrime(self.con_p)}({self.getMod('con'):+})  " \
-               f"**INT**: {self.intelligence}{self.printPrime(self.int_p)}({self.getMod('int'):+})  " \
-               f"**WIS**: {self.wisdom}{self.printPrime(self.wis_p)}({self.getMod('wis'):+})  " \
-               f"**CHA**: {self.charisma}{self.printPrime(self.cha_p)}({self.getMod('cha'):+})"
-
+        return (
+            f"**STR**: {self.strength}{self.printPrime(self.str_p)}({self.getMod('str'):+})  "
+            f"**DEX**: {self.dexterity}{self.printPrime(self.dex_p)}({self.getMod('dex'):+})  "
+            f"**CON**: {self.constitution}{self.printPrime(self.con_p)}({self.getMod('con'):+})  "
+            f"**INT**: {self.intelligence}{self.printPrime(self.int_p)}({self.getMod('int'):+})  "
+            f"**WIS**: {self.wisdom}{self.printPrime(self.wis_p)}({self.getMod('wis'):+})  "
+            f"**CHA**: {self.charisma}{self.printPrime(self.cha_p)}({self.getMod('cha'):+})"
+        )
