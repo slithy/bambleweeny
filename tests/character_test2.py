@@ -13,16 +13,30 @@ eqList = eq.EquipmentList()
 # eqList.addWeapon("bow", { 'damage': '1d8 + 1', "bth":"5", "range":40 })
 # eqList.wield("Bill", "bow")
 # eqList.addWeapon("Hammer2", { 'damage': '1d8 + 1', "bth":"5" })
-eqList.addWeapon("Bow", { 'damage': '1d8 + 1', "bth":"5"})
-eqList.addAmmo("arrow", { 'damage': '1d3 + 1','count':10})
-eqList.addWeapon("Throwing Hammer2", { 'damage': '1d8 + 1', "bth":"5"})
-eqList.addWeapon("Throwing Hammer1", { 'damage': '1d8 + 1', "bth":"5"})
+# eqList.addWeapon("Bow", { 'damage': '1d8 + 1', "bth":"5"})
+# eqList.addAmmo("arrow", { 'damage': '1d3 + 1','count':10})
+# eqList.addWeapon("Throwing Hammer2", { 'damage': '1d8 + 1', "bth":"5"})
+# eqList.addWeapon("Throwing Hammer1", { 'damage': '1d8 + 1', "bth":"5"})
 # eqList.addWearable("Shield", { 'ac': '+1', "ev":"1"})
 # eqList.equipment[1].addTag("melee")
 # c.setGod("Thor")
 
+eqList.addWeapon("rod", {'damage': '1d8 +1', "bth":"5"})
+eqList.addTag("rod", "melee")
 
-print(eqList.find("hammer"))
+c.equipment = eqList
+
+a = eqList.equipment[0].__to_json__()
+
+print(a)
+
+b = eq.Weapon.__from_dict__(a)
+print(b)
+
+
+
+
+# print(eqList.find("hammer"))
 
 # eqList.wield("Bill", "Bow")
 
@@ -36,7 +50,7 @@ print(eqList.find("hammer"))
 # eqList.addCoin(3, "gp")
 # eqList.addCoin(4, "sp")
 
-c.setGod("Thor")
+# c.setGod("Thor")
 # print(c.getGod())
 #
 #
