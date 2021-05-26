@@ -76,6 +76,7 @@ class Equipment:
     def __from_dict_super__(e, d):
         e.article = d.get("article", e.defaultArticle())
         e.gm_note = d.get("gm_note", "")
+        e.tags = d.get("tags", {})
 
     def getItemType(self):
         return "Equipment"
@@ -397,7 +398,7 @@ class Weapon(Equipment):
             return
 
         if self._anyInDescription(
-            ["sword", "dagger", "club", "spear", "axe", "hammer", "staff", "mace"]
+            ["sword", "dagger", "club", "spear", "axe", "hammer", "staff", "mace", "rod"]
         ):
             self.addTag("melee")
         if self._anyInDescription(
