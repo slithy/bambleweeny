@@ -22,16 +22,22 @@ eqList = eq.EquipmentList()
 # c.setGod("Thor")
 
 eqList.addWeapon("rod", {'damage': '1d8 +1', "bth":"5"})
-eqList.addTag("rod", "melee")
-
-c.equipment = eqList
-
-a = eqList.equipment[0].__to_json__()
-
-print(a)
-
-b = eq.Weapon.__from_dict__(a)
-print(b)
+eqList.addContainer("bag", {"capacity": 100, "ev":1})
+eqList.addWeapon("rod2", {'damage': '1d8 +1', "bth":"5"})
+eqList.addWeapon("rod3", {'damage': '1d8 +1', "bth":"5"})
+eqList.put("rod2", "bag")
+eqList.put("rod3", "bag")
+print(eqList.getInventory())
+# eqList.addTag("rod", "melee")
+#
+# c.equipment = eqList
+#
+# a = eqList.equipment[0].__to_json__()
+#
+# print(a)
+#
+# b = eq.Weapon.__from_dict__(a)
+# print(b)
 
 
 
@@ -48,7 +54,17 @@ print(b)
 # eqList.wield("Bill", "2")
 # eqList.wield("Bill", "Hammer2")
 # eqList.addCoin(3, "gp")
-# eqList.addCoin(4, "sp")
+# eqList.addCoin(4, "sp")                                         # eqList.addTag("rod", "melee")
+#
+# c.equipment = eqList
+#
+# a = eqList.equipment[0].__to_json__()
+#
+# print(a)
+#
+# b = eq.Weapon.__from_dict__(a)
+# print(b)
+
 
 # c.setGod("Thor")
 # print(c.getGod())
