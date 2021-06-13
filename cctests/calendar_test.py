@@ -2,7 +2,7 @@ import sys, os
 
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
 
-from cogscc.calendar import GHCalendar
+from cogscc.calendar import GHCalendar, MoonCalendar
 
 
 def test_getYear():
@@ -59,3 +59,12 @@ def test_getSeason_name():
     assert c.getSeason_name() == "High Summer"
     c = GHCalendar(28 * 9 + 7 * 3)
     assert c.getSeason_name() == "Autumn"
+
+
+def test_getMoonPhase():
+    mc = MoonCalendar(91, 5)
+    assert "Waning Gibbous" in mc.getMoonPhase_name(22 + 5)
+    assert "Waning Crescent" in mc.getMoonPhase_name(23 + 5)
+    assert "Full Moon" in mc.getMoonPhase_name(91 * 3 + 5)
+    mc = MoonCalendar(28, 364 / 2)
+    assert "Full Moon" in mc.getMoonPhase_name(28 / 2)
