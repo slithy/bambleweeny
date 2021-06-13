@@ -1,37 +1,26 @@
-import math
-
-
 class MoonCalendar:
 
     _phases = [
         "Full Moon :full_moon:",
-        "Last Quarter :last_quarter_moon:",
-        "New Moon :new_moon:",
-        "First Quarter :first_quarter_moon:",
-    ]
-    _transition_phases = [
         "Waning Gibbous :waning_gibbous_moon:",
+        "Last Quarter :last_quarter_moon:",
         "Waning Crescent :waning_crescent_moon:",
+        "New Moon :new_moon:",
         "Waxing Crescent :waxing_crescent_moon:",
+        "First Quarter :first_quarter_moon:",
         "Waxing Gibbous :waxing_gibbous_moon:",
     ]
 
-    def __init__(self, period, fullMoonDay):
+    def __init__(self, period, midFullMoonDay):
         self.period = period
-        self.fullMoonDay = fullMoonDay
+        self.startFullMoonDay = midFullMoonDay - self.period / 16
 
     def getMoonPhase(self, day):
-        day -= self.fullMoonDay
-        return (day % self.period) / (self.period / 4)
+        day -= self.startFullMoonDay
+        return (day % self.period) / (self.period / 8)
 
     def getMoonPhase_name(self, day):
-        mp = self.getMoonPhase(day)
-        fmp = int(mp)
-        cmp = math.ceil(mp) % 4
-        if fmp == cmp:
-            return self._phases[fmp]
-        else:
-            return f"{self._transition_phases[fmp]} ({self._phases[fmp]} -> {self._phases[cmp]})"
+        return self._phases[int(self.getMoonPhase(day))]
 
 
 class GHCalendar:

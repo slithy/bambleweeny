@@ -61,10 +61,27 @@ def test_getSeason_name():
     assert c.getSeason_name() == "Autumn"
 
 
-def test_getMoonPhase():
-    mc = MoonCalendar(91, 5)
-    assert "Waning Gibbous" in mc.getMoonPhase_name(22 + 5)
-    assert "Waning Crescent" in mc.getMoonPhase_name(23 + 5)
-    assert "Full Moon" in mc.getMoonPhase_name(91 * 3 + 5)
-    mc = MoonCalendar(28, 364 / 2)
-    assert "Full Moon" in mc.getMoonPhase_name(28 / 2)
+def count_freq_over_period(p, s):
+    mc = MoonCalendar(p, s)
+    out = {}
+    for i in range(p):
+        v = mc.getMoonPhase_name(i)
+        if v in out:
+            out[v] += 1
+        else:
+            out[v] = 1
+    return out
+
+
+def test_getMoonPhase_name():
+    f = count_freq_over_period(28, 0)
+    l = len(set([i for i in f.values()]))
+    assert l >= 1
+    assert l <= 2
+    f = count_freq_over_period(91, 0)
+    l = len(set([i for i in f.values()]))
+    assert l >= 1
+    assert l <= 2
+    f = count_freq_over_period(16, 0)
+    l = len(set([i for i in f.values()]))
+    assert l == 1
