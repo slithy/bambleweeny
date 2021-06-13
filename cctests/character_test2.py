@@ -7,8 +7,8 @@ from cogscc.models.errors import *
 import json
 
 c = Character("Skullthrax Deathbane", "Human", "Cleric", 3)
-c.assignStats(18,17,18,7,7,7,31)
-c.setPrimes('str','dex','None')
+c.assignStats(18, 17, 18, 7, 7, 7, 31)
+c.setPrimes("str", "dex", "None")
 eqList = eq.EquipmentList()
 # eqList.addWeapon("bow", { 'damage': '1d8 + 1', "bth":"5", "range":40 })
 # eqList.wield("Bill", "bow")
@@ -21,10 +21,10 @@ eqList = eq.EquipmentList()
 # eqList.equipment[1].addTag("melee")
 # c.setGod("Thor")
 
-eqList.addWeapon("rod", {'damage': '1d8 +1', "bth":"5"})
-eqList.addContainer("bag", {"capacity": 100, "ev":1})
-eqList.addWeapon("rod2", {'damage': '1d8 +1', "bth":"5"})
-eqList.addWeapon("rod3", {'damage': '1d8 +1', "bth":"5"})
+eqList.addWeapon("rod", {"damage": "1d8 +1", "bth": "5"})
+eqList.addContainer("bag", {"capacity": 100, "ev": 1})
+eqList.addWeapon("rod2", {"damage": "1d8 +1", "bth": "5"})
+eqList.addWeapon("rod3", {"damage": "1d8 +1", "bth": "5"})
 eqList.put("rod2", "bag")
 eqList.put("rod3", "bag")
 print(eqList.getInventory())
@@ -40,12 +40,9 @@ print(eqList.getInventory())
 # print(b)
 
 
-
-
 # print(eqList.find("hammer"))
 
 # eqList.wield("Bill", "Bow")
-
 
 
 # eqList.addWeapon("Sword2", { 'damage': '1d8 + 1', "bth":"5" })
@@ -90,13 +87,11 @@ print(eqList.getInventory())
 # print(c.showInventory())
 
 
-
 # atks = c.getAtks(type="melee")
 # print(atks)
 
 # atks = c.getMeleeAtks("1")
 # print(atks)
-
 
 
 #
