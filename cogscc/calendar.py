@@ -15,12 +15,12 @@ class MoonCalendar:
         self.period = period
         self.startFullMoonDay = midFullMoonDay - self.period / 16
 
-    def getMoonPhase(self, day):
+    def _getPhase(self, day):
         day -= self.startFullMoonDay
         return (day % self.period) / (self.period / 8)
 
-    def getMoonPhase_name(self, day):
-        return self._phases[int(self.getMoonPhase(day))]
+    def getPhase(self, day):
+        return self._phases[int(self._getPhase(day))]
 
 
 class GHCalendar:
@@ -75,8 +75,15 @@ class GHCalendar:
 
     def __init__(self, day=0):
         self.day = day
-        self.CeleneCalendar = MoonCalendar(91, 3)
-        self.LunaCalendar = MoonCalendar(28, 28 / 2)
+        self.celene_calendar = MoonCalendar(91, 364 / 2)
+        self.luna_calendar = MoonCalendar(28, 364 / 2)
+
+    def __to_json__(self):
+        return {"GHcalendar_days": self.days}
+
+    @classmethod
+    def __from_dict__(cls, d):
+        return GHCalendar(d["GHcalendar_days"])
 
     def getYear(self):
         return self.day // 364
@@ -84,23 +91,36 @@ class GHCalendar:
     def getYearDay(self):
         return self.day % 364
 
-    def getWeekDay(self):
-        return self.day % 7
-
     def getYearWeek(self):
         return self.getYearDay() // 7
 
-    def getMonthFest(self):
+    def _getWeekDay(self):
+        return self.day % 7
+
+    def getWeekDay(self):
+        return self._week_days[self._getWeekDay()]
+
+    def _getMonthFest(self):
         return self._week2monthfest[self.getYearWeek()]
 
+    def getMonthFest(self):
+        return self._monthFest[self._getMonthFest()]
+
+    def _getSeason(self):
+        return self._monthfest2season[self._getMonthFest()]
+
     def getSeason(self):
-        return self._monthfest2season[self.getMonthFest()]
+        return self._season[self._getSeason()]
 
-    def getWeekDay_name(self):
-        return self._week_days[self.getWeekDay()]
+    def getLunaPhase(self):
+        return self.luna_calendar.getPhase(self.day)
 
-    def getMonthFest_name(self):
-        return self._monthFest[self.getMonthFest()]
+    def getCelenePhase(self):
+        return self.celene_calendar.getPhase(self.day)
 
-    def getSeason_name(self):
-        return self._season[self.getSeason()]
+    def getDate(self):
+        return (
+            f"**Date:**\nYear: {self.getYear()}\nYear Week: {self.getYearWeek()}\nWeek Day: {self.getWeekDay()}\n"
+            f"Month (or Fest): {self.getMonthFest()}\nSeason: {self.getSeason()}\nLuna Phase: {self.getLunaPhase()}\n"
+            f"Celene Phase: {self.getCelenePhase()}"
+        )
