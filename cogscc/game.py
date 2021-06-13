@@ -396,7 +396,8 @@ class Game(commands.Cog):
             duration_text = "1 day has passed."
         for player, character in self.characters.items():
             result += character.rest(duration)
-        result += f"\n{duration} days have passed."
+            
+        result += f"\n{self.calendar.addDays(duration)}"
         await ctx.send(result)
 
     # Manage inventory
