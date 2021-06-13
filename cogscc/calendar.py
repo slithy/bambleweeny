@@ -124,3 +124,7 @@ class GHCalendar:
             f"Month (or Fest): {self.getMonthFest()}\nSeason: {self.getSeason()}\nLuna Phase: {self.getLunaPhase()}\n"
             f"Celene Phase: {self.getCelenePhase()}"
         )
+
+    def addDays(self, days=1):
+        self.day += days
+        return f"{days} days have passed."
