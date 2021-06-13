@@ -24,48 +24,48 @@ def test_getYearWeek():
     assert c.getYearWeek() == 2
 
 
-def test_getWeekDay_name():
+def test_getWeekDay():
     c = GHCalendar(364 + 3)
-    assert c.getWeekDay_name() == "Godsday"
+    assert c.getWeekDay() == "Godsday"
     c = GHCalendar(1)
-    assert c.getWeekDay_name() == "Sunday"
+    assert c.getWeekDay() == "Sunday"
 
 
-def test_getMonthFest_name():
+def test_getMonthFest():
     c = GHCalendar(3)
-    assert c.getMonthFest_name() == "Needfest"
+    assert c.getMonthFest() == "Needfest"
     c = GHCalendar(7 + 28 * 2 - 1)
-    assert c.getMonthFest_name() == "Readying"
+    assert c.getMonthFest() == "Readying"
     c = GHCalendar(7 + 28 * 2)
-    assert c.getMonthFest_name() == "Coldeven"
+    assert c.getMonthFest() == "Coldeven"
     c = GHCalendar(364 + 3)
-    assert c.getMonthFest_name() == "Needfest"
+    assert c.getMonthFest() == "Needfest"
     c = GHCalendar(364 - 1)
-    assert c.getMonthFest_name() == "Sunsebb"
+    assert c.getMonthFest() == "Sunsebb"
 
 
-def test_getSeason_name():
+def test_getSeason():
     c = GHCalendar(3)
-    assert c.getSeason_name() == "Winter"
+    assert c.getSeason() == "Winter"
     c = GHCalendar(364 - 2)
-    assert c.getSeason_name() == "Winter"
+    assert c.getSeason() == "Winter"
     c = GHCalendar(364 + 3)
-    assert c.getSeason_name() == "Winter"
+    assert c.getSeason() == "Winter"
     c = GHCalendar(28 * 6 + 7 * 2 + 2)
-    assert c.getSeason_name() == "Mid Summer"
+    assert c.getSeason() == "Mid Summer"
     c = GHCalendar(28 * 9 + 7 * 3 + 2)
-    assert c.getSeason_name() == "Autumn"
+    assert c.getSeason() == "Autumn"
     c = GHCalendar(28 * 9 + 7 * 3 - 1)
-    assert c.getSeason_name() == "High Summer"
+    assert c.getSeason() == "High Summer"
     c = GHCalendar(28 * 9 + 7 * 3)
-    assert c.getSeason_name() == "Autumn"
+    assert c.getSeason() == "Autumn"
 
 
 def count_freq_over_period(p, s):
     mc = MoonCalendar(p, s)
     out = {}
     for i in range(p):
-        v = mc.getMoonPhase_name(i)
+        v = mc.getPhase(i)
         if v in out:
             out[v] += 1
         else:
@@ -73,7 +73,7 @@ def count_freq_over_period(p, s):
     return out
 
 
-def test_getMoonPhase_name():
+def test_getPhase():
     f = count_freq_over_period(28, 0)
     l = len(set([i for i in f.values()]))
     assert l >= 1
@@ -85,3 +85,10 @@ def test_getMoonPhase_name():
     f = count_freq_over_period(16, 0)
     l = len(set([i for i in f.values()]))
     assert l == 1
+    c = GHCalendar(0)
+    assert "New Moon" in c.getLunaPhase()
+    assert "Full Moon" in c.getCelenePhase()
+
+
+c = GHCalendar()
+print(c.getDate())

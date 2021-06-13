@@ -15,6 +15,7 @@ from cogscc.models.errors import (
     NotAllowed,
     NotWieldingItems,
 )
+from cogscc.calendar import GHCalendar
 
 
 def getArgDict(*args):
@@ -64,6 +65,8 @@ class Game(commands.Cog):
         self.bot = bot
         self.characters = {}
         self.monsters = []
+        self.calendar = GHCalendar()
+
 
     def isGm(self, ctx):
         # return ctx.author.name == 'slithy'
@@ -117,13 +120,14 @@ class Game(commands.Cog):
     async def saveJson(self, ctx, filename: str = "characters.json"):
         """Save characters to a file in JSON format."""
         with open(f"/save/{basename(filename)}", "w") as f:
-            json.dump(self.characters, f, cls=ToJson, indent=2, ensure_ascii=False)
+            json.dump({"characters":self.characters, "calendar":self.calendar}, f, cls=ToJson, indent=2,
+                      ensure_ascii=False)
         ts = time.gmtime()
         timestamp = time.strftime("%Y%m%d%H%M%S", ts)
         filename_backup = f"{basename(filename)}.{timestamp}"
         with open(f"/save/{filename_backup}", "w") as f:
-            json.dump(self.characters, f, cls=ToJson)
-        await ctx.send(f"Characters saved as {filename_backup}")
+            json.dump({"characters":self.characters, "calendar":self.calendar}, f, cls=ToJson)
+        await ctx.send(f"Characters and calendar saved as {filename_backup}")
 
     @commands.command(name="create")
     async def create(self, ctx, name: str, race: str, xclass: str, level: int = 1):
@@ -656,13 +660,20 @@ class Game(commands.Cog):
         """Load characters from a JSON-formatted file."""
         self.gmOnly(ctx)
         with open(f"/save/{basename(filename)}", "r") as f:
-            chars = json.load(f)
+            raw = json.load(f)
+            if "calendar" not in raw:
+                chars = raw
+            else:
+                chars = raw["characters"]
+                self.calendar = GHCalendar.__from_dict__(raw["calendar"])
+
             for player, character in chars.items():
                 if character.get("type", ""):
                     self.characters[player] = Monster.__from_dict__(character)
                 else:
                     self.characters[player] = Character.__from_dict__(character)
-        await ctx.send(f"Characters and NPCs loaded from {filename}.")
+
+        await ctx.send(f"Characters, calendar and NPCs loaded from {filename}.")
 
     @commands.command(name="load_npc")
     async def loadNPC(self, ctx):
@@ -824,6 +835,20 @@ class Game(commands.Cog):
         """Pick up a dropped item."""
         player = str(ctx.author)
         await ctx.send(self.characters.get(player).equipment.getTags(description))
+
+    @commands.command(name="set_date")
+    async def setDate(self, ctx, day: int):
+        """Set calendar day. Effectively resets the whole calendar"""
+        if not isinstance(day, int):
+            raise InvalidArgument(f"To set the calendar you need to provide the number of days since day-0.")
+
+        self.calendar = GHCalendar(day)
+        await ctx.send(f"The calendar is set to: \n{self.calendar.getDate()}")
+
+    @commands.command(name="get_date")
+    async def getDate(self, ctx):
+        """Get date"""
+        await ctx.send(f"{self.calendar.getDate()}")
 
 
 def setup(bot):
