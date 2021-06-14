@@ -79,11 +79,11 @@ class GHCalendar:
         self.luna_calendar = MoonCalendar(28, 364 / 2)
 
     def __to_json__(self):
-        return {"GHcalendar_days": self.days}
+        return {"GHcalendar_day": self.day}
 
     @classmethod
     def __from_dict__(cls, d):
-        return GHCalendar(d["GHcalendar_days"])
+        return GHCalendar(d["GHcalendar_day"])
 
     def getYear(self):
         return self.day // 364
