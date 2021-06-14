@@ -547,6 +547,8 @@ class Character(BaseCharacter):
     # Manage inventory
 
     def showInventory(self, section: str = "", options: list = []):
+        if not section:
+            section = "all"
         return (
             self.equipment.getInventory(section, options)
             or f"{self.name} is not carrying anything."

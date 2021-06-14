@@ -1277,9 +1277,10 @@ class EquipmentList:
                 and "Carrying" in section_dict
             ):
                 section_dict["Carrying"].append(item.show(options))
-            elif item.isContainer():
+            elif item.isContainer() and item.description in section_dict:
                 section_desc[item.description] = f"{item.show(options + ['heading'])}\n"
-                section_dict[item.description] = item.getContents(options)
+                if section:
+                    section_dict[item.description] = item.getContents(options)
             if item.isTreasure() and "Treasure" in section_dict:
                 section_dict["Treasure"].append(item.show(options))
 
