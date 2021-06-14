@@ -71,6 +71,26 @@ class GHCalendar:
         *([14] * 4),
         *([15] * 4),
     ]
+
+    _monthfest2weeksPassed = [
+        0,
+        1,
+        5,
+        9,
+        13,
+        14,
+        18,
+        22,
+        26,
+        27,
+        31,
+        35,
+        39,
+        40,
+        44,
+        48,
+    ]
+
     _monthfest2season = [0, 0, 1, 1, 1, 2, 2, 2, 3, 4, 4, 4, 5, 5, 5, 0]
 
     def __init__(self, day=0):
@@ -100,6 +120,15 @@ class GHCalendar:
     def getWeekDay(self):
         return self._week_days[self._getWeekDay()]
 
+    def getMonthDay(self):
+        # print(f"{self.getYearWeek()} - "
+        #       f"{self._getMonthFest()} {self._monthfest2weeksPassed[self._getMonthFest()]} + {self._getWeekDay()} + 1")
+        return (
+            7 * (self.getYearWeek() - self._monthfest2weeksPassed[self._getMonthFest()])
+            + self._getWeekDay()
+            + 1
+        )
+
     def _getMonthFest(self):
         return self._week2monthfest[self.getYearWeek()]
 
@@ -120,8 +149,8 @@ class GHCalendar:
 
     def getDate(self):
         return (
-            f"**Date:**\nYear: {self.getYear()}\nYear Week: {self.getYearWeek()}\nWeek Day: {self.getWeekDay()}\n"
-            f"Month (or Fest): {self.getMonthFest()}\nSeason: {self.getSeason()}\nLuna Phase: {self.getLunaPhase()}\n"
+            f"**Date:**\n{self.getWeekDay()}, {self.getMonthDay()} {self.getMonthFest()} {self.getYear()}\n"
+            f"Season: {self.getSeason()}\nLuna Phase: {self.getLunaPhase()}\n"
             f"Celene Phase: {self.getCelenePhase()}"
         )
 

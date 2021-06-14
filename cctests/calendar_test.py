@@ -90,5 +90,14 @@ def test_getPhase():
     assert "Full Moon" in c.getCelenePhase()
 
 
-c = GHCalendar()
-print(c.getDate())
+def test_getMonthDay():
+    c = GHCalendar(0)
+    n = 0
+    name = "Needfest"
+    for i in range(364 * 2):
+        if c.getMonthFest() != name:
+            n = 0
+            name = c.getMonthFest()
+        n += 1
+        assert c.getMonthDay() == n
+        c.addDays(1)
