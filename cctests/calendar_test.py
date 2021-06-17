@@ -2,7 +2,7 @@ import sys, os
 
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
 
-from cogscc.calendar import GHCalendar, MoonCalendar
+from cogscc.calendar import GHCalendar, MoonCalendar, GHWeather
 
 
 def test_getYear():
@@ -101,3 +101,13 @@ def test_getMonthDay():
         n += 1
         assert c.getMonthDay() == n
         c.addDays(1)
+
+# for i in range(364):
+#     print(GHWeather().getTemperature(i, 0, True))
+
+
+print(GHWeather().getTemperature(364/2, 40))
+
+# from cogscc.funcs.dice import roll
+# print(roll("(+1d8+8+1d6+4)/2").total)
+
