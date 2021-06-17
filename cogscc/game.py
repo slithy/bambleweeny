@@ -846,7 +846,7 @@ class Game(commands.Cog):
         self.calendar = GHCalendar(day)
         await ctx.send(f"The calendar is set to: \n{self.calendar.getDate()}")
 
-    @commands.command(name="get_date")
+    @commands.command(name="get_date", alias=["date"])
     async def getDate(self, ctx):
         """Get date"""
         await ctx.send(f"{self.calendar.getDate()}")
