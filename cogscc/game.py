@@ -16,6 +16,7 @@ from cogscc.models.errors import (
     NotWieldingItems,
 )
 from cogscc.calendar import GHCalendar
+from cogscc.world import GHWorld
 
 
 def getArgDict(*args):
@@ -65,7 +66,7 @@ class Game(commands.Cog):
         self.bot = bot
         self.characters = {}
         self.monsters = []
-        self.calendar = GHCalendar()
+        self.world = GHWorld()
 
 
     def isGm(self, ctx):
@@ -120,13 +121,13 @@ class Game(commands.Cog):
     async def saveJson(self, ctx, filename: str = "characters.json"):
         """Save characters to a file in JSON format."""
         with open(f"/save/{basename(filename)}", "w") as f:
-            json.dump({"characters":self.characters, "calendar":self.calendar}, f, cls=ToJson, indent=2,
+            json.dump({"characters":self.characters, "world":self.world}, f, cls=ToJson, indent=2,
                       ensure_ascii=False)
         ts = time.gmtime()
         timestamp = time.strftime("%Y%m%d%H%M%S", ts)
         filename_backup = f"{basename(filename)}.{timestamp}"
         with open(f"/save/{filename_backup}", "w") as f:
-            json.dump({"characters":self.characters, "calendar":self.calendar}, f, cls=ToJson)
+            json.dump({"characters":self.characters, "world":self.world}, f, cls=ToJson)
         await ctx.send(f"Characters and calendar saved as {filename_backup}")
 
     @commands.command(name="create")
@@ -393,11 +394,12 @@ class Game(commands.Cog):
         result = ""
         if duration < 2:
             duration = 1
-            duration_text = "1 day has passed."
         for player, character in self.characters.items():
             result += character.rest(duration)
-            
-        result += f"\n{self.calendar.addDays(duration)}"
+
+        calendar_report = self.world.advance_days(duration)
+
+        result += f"\n{calendar_report}"
         await ctx.send(result)
 
     # Manage inventory
@@ -666,7 +668,10 @@ class Game(commands.Cog):
                 chars = raw
             else:
                 chars = raw["characters"]
-                self.calendar = GHCalendar.__from_dict__(raw["calendar"])
+                if "calendar" in raw:
+                    self.world = GHWorld.__from_dict__({"calendar":raw["calendar"]})
+                else:
+                    self.world = GHWorld.__from_dict__(raw["world"])
 
             for player, character in chars.items():
                 if character.get("type", ""):
@@ -843,13 +848,13 @@ class Game(commands.Cog):
         if not isinstance(day, int):
             raise InvalidArgument(f"To set the calendar you need to provide the number of days since day-0.")
 
-        self.calendar = GHCalendar(day)
-        await ctx.send(f"The calendar is set to: \n{self.calendar.getDate()}")
+        self.world.calendar = GHCalendar(day)
+        await ctx.send(f"The calendar is set to: \n{self.world.calendar.getDate()}")
 
     @commands.command(name="get_date", alias=["date"])
     async def getDate(self, ctx):
         """Get date"""
-        await ctx.send(f"{self.calendar.getDate()}")
+        await ctx.send(f"{self.world.calendar.getDate()}")
 
 
 def setup(bot):
