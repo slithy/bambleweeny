@@ -30,10 +30,18 @@ class GHWorld(BaseObj):
 
         self.advance_days(0)
 
+
+# Weather
     def reset_weather(self):
         self.weather = GHWeather()
         self.advance_days(0)
+        return f"Weather reset successfully"
 
+    def get_weather_report(self, day=0):
+        return self.weather.reports[day]
+
+
+# Date
     def set_date(self, days):
         self.calendar = GHCalendar(days)
         self.advance_days(0)
@@ -48,6 +56,7 @@ class GHWorld(BaseObj):
         else:
             return f"Missing location. Weather not set!\n{str(self.calendar)}"
 
+# Location
     def add_location(self, l):
         k = l.name
         out = f"Location {k} {'replaced' if k in self.locations else 'added'}"

@@ -35,8 +35,6 @@ class GHLocation(BaseObj):
             ("T", lambda elevation: [-int(0.003 * elevation), -int(0.003 * elevation)]),
             ("windSpeed", 0),
             ("special", [[], []]),
-            ("forbidden", []),
-            ("doubled", []),
         ],
     )
     _terrainData = _terrainData = {
@@ -103,12 +101,10 @@ class GHLocation(BaseObj):
                 [40, 70, 85, 100],
                 ["flash flood", "dust dtorm", "tornado", "earthquake"],
             ],
-            forbidden=["fog", "gale", "Hurricane"],
         ),
         "plains": TerrainData(
             windSpeed=5,
             special=[[50, 100], ["windstorm", "earthquake"]],
-            forbidden=["monsoon", "tropical storm"],
         ),
         "desert": TerrainData(
             precipitation=-30,
@@ -121,15 +117,7 @@ class GHLocation(BaseObj):
                 [25, 50, 65, 85, 100],
                 ["flash flood", "sandstorm", "oasis", "mirage oasis", "earthquake"],
             ],
-            forbidden=[
-                "fog",
-                "mist",
-                "blizzard",
-                "monsoon",
-                "tropical storm",
-                "gale",
-                "Hurricane",
-            ],
+
         ),
         "mountain": TerrainData(
             windSpeed=5,
@@ -152,7 +140,6 @@ class GHLocation(BaseObj):
             ],
             windSpeed=5,
             special=[[80, 94, 100], ["earthquake", "tsunami", "undersea volcano"]],
-            doubled=["fog", "mist"],
         ),
         "hot seacoast": TerrainData(
             precipitation=5,
@@ -162,7 +149,6 @@ class GHLocation(BaseObj):
             ],
             windSpeed=5,
             special=[[80, 94, 100], ["earthquake", "tsunami", "undersea volcano"]],
-            doubled=["fog", "mist"],
         ),
         "cold sea": TerrainData(
             precipitation=15,
@@ -175,7 +161,6 @@ class GHLocation(BaseObj):
                 [20, 40, 100],
                 ["tsunami", "undersea volcano", "undersea earthquake"],
             ],
-            doubled=["fog", "mist"],
         ),
         "hot sea": TerrainData(
             precipitation=15,
@@ -188,6 +173,5 @@ class GHLocation(BaseObj):
                 [20, 40, 100],
                 ["tsunami", "undersea volcano", "undersea earthquake"],
             ],
-            doubled=["fog", "mist"],
         ),
     }

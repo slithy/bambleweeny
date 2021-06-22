@@ -856,6 +856,16 @@ class Game(commands.Cog):
         """Get date"""
         await ctx.send(f"{self.world.calendar.getDate()}")
 
+    @commands.command(name="get_weather", alias=["weather"])
+    async def getWeather(self, ctx, n_days_in_the_future=0):
+        """Print weather"""
+        await ctx.send(str(self.world.get_weather_report(n_days_in_the_future)))
+
+    @commands.command(name="reset_weather")
+    async def resetWeather(self, ctx):
+        """Reset weather"""
+        await ctx.send(self.world.reset_weather())
+
 
 def setup(bot):
     bot.add_cog(Game(bot))
