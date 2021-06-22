@@ -871,7 +871,7 @@ class Game(commands.Cog):
     async def addLocation(self, ctx, name, terrain, latitude, altitude):
         """Add location"""
         l = GHLocation(name, terrain, latitude, altitude)
-        await ctx.send(self.world.add_location(self, l))
+        await ctx.send(self.world.add_location(l))
 
 
 def setup(bot):
