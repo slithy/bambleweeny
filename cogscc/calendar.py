@@ -146,6 +146,9 @@ class GHCalendar(BaseObj):
     def getCelenePhase(self):
         return self.celene_calendar.getPhase(self.day)
 
+    def __str__(self):
+        return f"{self.getMonthDay()} {self.getMonthFest()} {self.getYear()}"
+
     def getDate(self):
         return (
             f"**Date:**\n{self.getWeekDay()}, {self.getMonthDay()} {self.getMonthFest()} {self.getYear()}\n"

@@ -8,7 +8,7 @@ import json
 from cogscc.game import ToJson
 from cogscc.world import GHWorld
 from cogscc.calendar import GHCalendar
-from cogscc.weather import GHWeather
+from cogscc.weather import GHWeather, GHWeatherReport
 from cogscc.location import GHLocation
 
 

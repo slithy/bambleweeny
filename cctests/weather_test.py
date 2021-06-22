@@ -40,32 +40,3 @@ def test_generate_weather_days():
     w.generate_weather(c.day, l)
     check_reports(c, w)
 
-
-def test_correctTforPrecipitation():
-    T, cont = GHWeather._correctTforPrecipitation([0, 5], [float("-inf"), 7])
-    assert T == [0, 5]
-    assert not cont
-    T, cont = GHWeather._correctTforPrecipitation([0, 5], [float(-3), float("inf")])
-    assert T == [0, 5]
-    assert not cont
-    T, cont = GHWeather._correctTforPrecipitation([0, 5], [1, 7])
-    assert T == [1, 5]
-    assert not cont
-    T, cont = GHWeather._correctTforPrecipitation([0, 5], [1, 3])
-    assert T == [1, 3]
-    assert not cont
-    T, cont = GHWeather._correctTforPrecipitation([0, 5], [-5, 3])
-    assert T == [0, 3]
-    assert not cont
-    T, cont = GHWeather._correctTforPrecipitation([0, 5], [float("-inf"), -3])
-    assert T == [0, 5]
-    assert cont
-    T, cont = GHWeather._correctTforPrecipitation([0, 5], [7, float("inf")])
-    assert T == [0, 5]
-    assert cont
-    T, cont = GHWeather._correctTforPrecipitation([0, 5], [5, float("inf")])
-    assert T == [5, 5]
-    assert not cont
-    T, cont = GHWeather._correctTforPrecipitation([0, 5], [float("-inf"), 0])
-    assert T == [0, 0]
-    assert not cont
