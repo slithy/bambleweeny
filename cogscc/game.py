@@ -874,8 +874,8 @@ class Game(commands.Cog):
         await ctx.send(self.world.add_location(l))
 
     @commands.command(name="set_current_location")
-    async def addLocation(self, ctx, name):
-        """Add location"""
+    async def setCurrentLocation(self, ctx, name):
+        """Set current location"""
         await ctx.send(self.world.set_current_location(name))
 
 
