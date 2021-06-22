@@ -45,10 +45,15 @@ def test_locations():
 
 def test_fill_empty_world():
     w = GHWorld()
-    w.calendar = GHCalendar(50)
+    w.calendar = GHCalendar(545365)
     w.advance_days(0)
     assert len(w.weather.reports) == 0
     l = GHLocation("graveyard", "hill", 30, 200)
     w.add_location(l)
     w.advance_days(0)
     assert len(w.weather.reports) == w.weather._n_reports
+
+    for i in range(14):
+        print(w.get_weather_report(i))
+
+test_fill_empty_world()
