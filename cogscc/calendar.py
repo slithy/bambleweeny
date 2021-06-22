@@ -1,3 +1,6 @@
+from cogscc.base_obj import BaseObj
+
+
 class MoonCalendar:
 
     _phases = [
@@ -23,7 +26,7 @@ class MoonCalendar:
         return self._phases[int(self._getPhase(day))]
 
 
-class GHCalendar:
+class GHCalendar(BaseObj):
 
     _weekDays = [
         "Starday",
@@ -98,18 +101,10 @@ class GHCalendar:
         self.celene_calendar = MoonCalendar(91, 364 / 2)
         self.luna_calendar = MoonCalendar(28, 364 / 2)
 
+    """The moon calendars do not have a state and can be omitted"""
+
     def __to_json__(self):
         return {"day": self.day}
-
-    @classmethod
-    def __from_dict__(cls, d):
-        return GHCalendar(d.get("day", 0))
-
-    def __int__(self):
-        return self.day
-
-    def __eq__(self, other):
-        return isinstance(other, GHCalendar) and self.day == other.day
 
     def getYear(self):
         return int(self.day // 364)

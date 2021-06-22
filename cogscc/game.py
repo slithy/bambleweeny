@@ -848,7 +848,7 @@ class Game(commands.Cog):
         if not isinstance(day, int):
             raise InvalidArgument(f"To set the calendar you need to provide the number of days since day-0.")
 
-        self.world.calendar = GHCalendar(day)
+        self.world.set_date(day)
         await ctx.send(f"The calendar is set to: \n{self.world.calendar.getDate()}")
 
     @commands.command(name="get_date", alias=["date"])
