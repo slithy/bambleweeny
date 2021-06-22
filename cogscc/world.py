@@ -2,27 +2,40 @@ from cogscc.calendar import GHCalendar
 from cogscc.weather import GHWeather
 from cogscc.location import GHLocation
 from cogscc.models.errors import ItemNotFound, InvalidArgument
+from cogscc.base_obj import BaseObj
 
 
-class GHWorld:
+class GHWorld(BaseObj):
     def __init__(
         self,
-        calendar=GHCalendar(),
-        weather=GHWeather(),
+        calendar={},
+        weather={},
         locations={},
         currentLocation=None,
     ):
-        if not isinstance(locations, dict):
-            currentLocation = locations.name
-            locations = {locations.name: locations}
-
-        self.calendar = calendar
-        self.weather = weather
-        self.locations = locations
+        self.calendar = (
+            GHCalendar.__from_dict__(calendar)
+            if isinstance(calendar, dict)
+            else calendar
+        )
+        self.weather = (
+            GHWeather.__from_dict__(weather) if isinstance(weather, dict) else weather
+        )
+        self.locations = {
+            k: GHLocation.__from_dict__(v) if isinstance(v, dict) else v
+            for k, v in locations.items()
+        }
         self.currentLocation = None
-
         self.set_current_location(currentLocation)
 
+        self.advance_days(0)
+
+    def reset_weather(self):
+        self.weather = GHWeather()
+        self.advance_days(0)
+
+    def set_date(self, days):
+        self.calendar = GHCalendar(days)
         self.advance_days(0)
 
     def advance_days(self, days=1):
@@ -56,33 +69,18 @@ class GHWorld:
         return self.locations[self.currentLocation]
 
     def set_current_location(self, k):
-        if k in self.locations or not None:
+        if len(self.locations) == 0:
+            self.currentLocation = None
+            return
+
+        if k is None:
+            self.currentLocation = list(self.locations.keys())[0]
+            return
+
+        if k in self.locations:
             self.currentLocation = k
-        else:
-            loc = ", ".join([i for i in self.locations])
-            raise ItemNotFound(f"Location {k} not found in [{loc}]")
+            return
 
-    def __to_json__(self):
-        return {
-            i: getattr(self, i)
-            for i in dir(self)
-            if not i.startswith("_") and not callable(getattr(self, i))
-        }
+        loc = ", ".join([i for i in self.locations])
+        raise ItemNotFound(f"Location {k} not found in [{loc}]")
 
-    @classmethod
-    def __from_dict__(cls, d):
-        calendar = GHCalendar.__from_dict__(d.get("calendar", {}))
-        weather = GHWeather.__from_dict__(d["weather"])
-        if "locations" in d:
-            locations = {
-                k: GHLocation.__from_dict__(v) for k, v in d["locations"].items()
-            }
-        else:
-            locations = {}
-        currentLocation = d.get("currentLocation", None)
-        return GHWorld(calendar, weather, locations, currentLocation)
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, type(self)) and self.__to_json__() == other.__to_json__()
-        )

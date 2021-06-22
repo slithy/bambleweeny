@@ -4,9 +4,10 @@ from cogscc.funcs.dice import roll
 from cogscc.funcs import utils
 from cogscc.calendar import GHCalendar
 from cogscc.location import GHLocation
+from cogscc.base_obj import BaseObj
 
 
-class GHWeatherReport:
+class GHWeatherReport(BaseObj):
     def __init__(self, day, T, sky, precipitation, specialPrecipitation):
         self.day = day
         self.T = T
@@ -16,28 +17,6 @@ class GHWeatherReport:
 
     def __str__(self):
         return self.__to_json__().__str__()
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, type(self)) and self.__to_json__() == other.__to_json__()
-        )
-
-    def __to_json__(self):
-        return {
-            i: getattr(self, i)
-            for i in dir(self)
-            if not i.startswith("_") and not callable(getattr(self, i))
-        }
-
-    @classmethod
-    def __from_dict__(cls, d):
-        return GHWeatherReport(
-            day=d["day"],
-            T=d["T"],
-            sky=d["sky"],
-            precipitation=d["precipitation"],
-            specialPrecipitation=d["specialPrecipitation"],
-        )
 
     def perceived_T(self):
         return [
@@ -209,7 +188,7 @@ class GHWeatherReport:
     }
 
 
-class GHWeather:
+class GHWeather(BaseObj):
     _n_reports = 14
 
     def __init__(
@@ -219,40 +198,15 @@ class GHWeather:
         ongoingPrecipitation=[],
         ongoingSpecialPrecipitation=[],
     ):
-        self.reports = reports
+        self.reports = [
+            GHWeatherReport.__from_dict__(i) if isinstance(i, dict) else i
+            for i in reports
+        ]
         self.ongoingExtremeT = ongoingExtremeT  # [endDay, modifier] or None
         self.ongoingPrecipitation = ongoingPrecipitation
         self.ongoingSpecialPrecipitation = ongoingSpecialPrecipitation
 
-    def __to_json__(self):
-        return {
-            i: getattr(self, i)
-            for i in dir(self)
-            if not i.startswith("_") and not callable(getattr(self, i))
-        }
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, type(self)) and self.__to_json__() == other.__to_json__()
-        )
-
-    @classmethod
-    def __from_dict__(cls, d):
-        if len(d) == 0:
-            return GHWeather()
-
-        reports = [GHWeatherReport.__from_dict__(i) for i in d.get("reports", [])]
-        ongoingExtremeT = d.get("ongoingExtremeT", [])
-        ongoingPrecipitation = d.get("ongoingPrecipitation", [])
-        ongoingSpecialPrecipitation = d.get("ongoingSpecialPrecipitation", [])
-        return GHWeather(
-            reports=reports,
-            ongoingExtremeT=ongoingExtremeT,
-            ongoingPrecipitation=ongoingPrecipitation,
-            ongoingSpecialPrecipitation=ongoingSpecialPrecipitation,
-        )
-
-    def generate_weather(self, day, location):
+    def generate_weather(self, day, location, is_reset=False):
         self.reports = [i for i in self.reports if i.day >= day]
         while len(self.reports) < self._n_reports:
             self.reports.append(self.generate_day(day + len(self.reports), location))
@@ -378,6 +332,7 @@ class GHWeather:
                 1 + (terrain in terrainData.doubled)
             )
             amount = roll(precipitationData.amount).total
+            area = roll(precipitationData.area).total
             windSpeed = max(
                 roll(precipitationData.windSpeed).total + terrainData.windSpeed, 0
             )
@@ -387,7 +342,7 @@ class GHWeather:
                 rainbow = self._rainbowData[1][k]
 
             self.ongoingPrecipitation.append(
-                [day + duration, precipitation, amount, windSpeed, rainbow]
+                [day + duration, precipitation, amount, windSpeed, rainbow, area]
             )
 
             morphing = roll("1d10").total
@@ -477,6 +432,7 @@ class GHWeather:
             ("amount", "0"),
             ("durationH", "0"),
             ("windSpeed", "0"),
+            ("area", "0"),
         ],
     )
     _precipitationData = {
@@ -606,6 +562,51 @@ class GHWeather:
             amount="1d10 [per day]",
             durationH="24*(1d4)",
             windSpeed="7d10+70",
+        ),
+        "sand storm": PrecipitationData(
+            durationH="1d8",
+            windSpeed="5d10",
+        ),
+        "dust storm": PrecipitationData(
+            durationH="1d8",
+            windSpeed="5d10",
+        ),
+        "wind storm": PrecipitationData(
+            durationH="1d10",
+            windSpeed="8d10+20",
+        ),
+        "earthquake": PrecipitationData(
+            durationH="1d10",
+            windSpeed="1d20",
+        ),
+        "avalanche": PrecipitationData(
+            amount="5d10",
+            durationH="(1d10)/60",
+            windSpeed="1d20",
+        ),
+        "volcano": PrecipitationData(
+            amount="5d10",
+            durationH="(1d10)/60",
+            windSpeed="1d20",
+        ),
+        "tsunami": PrecipitationData(
+            amount="10d20 [wave ht. feet]",
+            durationH="1d2",
+            windSpeed="5d10+10",
+        ),
+        "quicksand": PrecipitationData(
+            area="1d20 [radius]",
+            durationH="24",
+            windSpeed="1d20",
+        ),
+        "flash flood": PrecipitationData(
+            durationH="1d6+2",
+            windSpeed="1d20",
+        ),
+        "rain forest downpour": PrecipitationData(
+            amount="",
+            durationH="3d4",
+            windSpeed="1d20",
         ),
     }
 

@@ -16,7 +16,7 @@ def test_save_load():
     c = GHCalendar(25)
     w = GHWeather()
     l = GHLocation("new town", "plains", 40, 0)
-    world = GHWorld(c, w, l)
+    world = GHWorld(c, w, {l.name: l})
     d = json.dumps(world, cls=ToJson, indent=2, ensure_ascii=False)
     world_n = GHWorld.__from_dict__(json.loads(d))
     assert world == world_n
@@ -26,7 +26,7 @@ def test_locations():
     c = GHCalendar(25)
     w = GHWeather()
     l = GHLocation("new town", "plains", 40, 0)
-    world = GHWorld(c, w, l)
+    world = GHWorld(c, w, {"new town": l})
     assert world.get_current_location() == l
     l2 = GHLocation("graveyard", "hill", 30, 200)
     world.add_location(l2)

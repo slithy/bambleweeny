@@ -2,30 +2,16 @@ from recordtype import recordtype
 
 from cogscc.models.errors import InvalidArgument
 
+from cogscc.base_obj import BaseObj
 
-class GHLocation:
+
+class GHLocation(BaseObj):
     def __init__(self, name="new place", terrain="plains", latitude=40, altitude=0):
         self.name = name
         self.terrain = ""
         self.set_terrain(terrain)
         self.latitude = latitude
         self.altitude = altitude
-
-    def __to_json__(self):
-        return {
-            i: getattr(self, i)
-            for i in dir(self)
-            if not i.startswith("_") and not callable(getattr(self, i))
-        }
-
-    @classmethod
-    def __from_dict__(cls, d):
-        return GHLocation(d["name"], d["terrain"], d["latitude"], d["altitude"])
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, type(self)) and self.__to_json__() == other.__to_json__()
-        )
 
     def __str__(self):
         return (
