@@ -17,6 +17,7 @@ from cogscc.models.errors import (
 )
 from cogscc.calendar import GHCalendar
 from cogscc.world import GHWorld
+from cogscc.location import GHLocation
 
 
 def getArgDict(*args):
@@ -865,6 +866,11 @@ class Game(commands.Cog):
     async def resetWeather(self, ctx):
         """Reset weather"""
         await ctx.send(self.world.reset_weather())
+
+    async def addLocation(self, ctx, name, terrain, latitude, altitude):
+        """Add location"""
+        l = GHLocation(name, terrain, latitude, altitude)
+        await ctx.send(self.world.add_location(self, l))
 
 
 def setup(bot):
