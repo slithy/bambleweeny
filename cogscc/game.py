@@ -868,13 +868,13 @@ class Game(commands.Cog):
         await ctx.send(self.world.reset_weather())
 
     @commands.command(name="add_location")
-    async def addLocation(self, ctx, name, terrain, latitude, altitude):
+    async def addLocation(self, ctx, name: str, terrain: str, latitude: float, altitude: float):
         """Add location"""
         l = GHLocation(name, terrain, latitude, altitude)
         await ctx.send(self.world.add_location(l))
 
     @commands.command(name="set_current_location")
-    async def setCurrentLocation(self, ctx, name):
+    async def setCurrentLocation(self, ctx, name: str):
         """Set current location"""
         await ctx.send(self.world.set_current_location(name))
 

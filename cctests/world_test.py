@@ -53,7 +53,11 @@ def test_fill_empty_world():
     w.advance_days(0)
     assert len(w.weather.reports) == w.weather._n_reports
 
-    for i in range(14):
-        print(w.get_weather_report(i))
+def test_fill_empty_world2():
+    w = GHWorld()
+    w.calendar = GHCalendar(545365)
+    w.
 
-test_fill_empty_world()
+
+test_fill_empty_world2()
+
