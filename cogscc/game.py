@@ -862,11 +862,12 @@ class Game(commands.Cog):
         """Print weather"""
         await ctx.send(str(self.world.get_weather_report(n_days_in_the_future)))
 
-    @commands.command(name="add_location")
+    @commands.command(name="reset_weather")
     async def resetWeather(self, ctx):
         """Reset weather"""
         await ctx.send(self.world.reset_weather())
 
+    @commands.command(name="add_location")
     async def addLocation(self, ctx, name, terrain, latitude, altitude):
         """Add location"""
         l = GHLocation(name, terrain, latitude, altitude)
