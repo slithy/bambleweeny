@@ -883,6 +883,15 @@ class Game(commands.Cog):
         """Set current location"""
         await ctx.send(self.world.get_current_location())
 
+    @commands.command(name="locations")
+    async def getLocations(self, ctx):
+        """Get all locations"""
+        await ctx.send(self.world.get_locations())
+
+    @commands.command(name="remove_location")
+    async def removeLocation(self, ctx, name):
+        """Get all locations"""
+        await ctx.send(self.world.remove_location())
 
 def setup(bot):
     bot.add_cog(Game(bot))

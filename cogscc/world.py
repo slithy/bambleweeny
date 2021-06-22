@@ -68,6 +68,8 @@ class GHWorld(BaseObj):
     def remove_location(self, k):
         if self.currentLocation == k:
             self.currentLocation = None
+        if k not in self.locations:
+            return f"Location {k} was not inserted!"
         del self.locations[k]
         return f"Location {k} successfully removed"
 
@@ -76,6 +78,12 @@ class GHWorld(BaseObj):
             return None
 
         return self.locations[self.currentLocation]
+
+    def get_locations(self):
+        out = ""
+        for i in self.locations:
+            out += str(i) + "\n"
+        return out
 
     def set_current_location(self, k):
         if len(self.locations) == 0:
