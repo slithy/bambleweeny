@@ -873,6 +873,11 @@ class Game(commands.Cog):
         l = GHLocation(name, terrain, latitude, altitude)
         await ctx.send(self.world.add_location(l))
 
+    @commands.command(name="set_current_location")
+    async def addLocation(self, ctx, name):
+        """Add location"""
+        await ctx.send(self.world.set_current_location(name))
+
 
 def setup(bot):
     bot.add_cog(Game(bot))
