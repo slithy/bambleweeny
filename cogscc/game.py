@@ -878,6 +878,11 @@ class Game(commands.Cog):
         """Set current location"""
         await ctx.send(self.world.set_current_location(name))
 
+    @commands.command(name="get_current_location", alias=["location"])
+    async def getCurrentLocation(self, ctx):
+        """Set current location"""
+        await ctx.send(self.world.get_current_location())
+
 
 def setup(bot):
     bot.add_cog(Game(bot))
