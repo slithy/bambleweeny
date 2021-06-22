@@ -80,15 +80,15 @@ class GHWorld(BaseObj):
     def set_current_location(self, k):
         if len(self.locations) == 0:
             self.currentLocation = None
-            return
+            return self.get_current_location()
 
         if k is None:
             self.currentLocation = list(self.locations.keys())[0]
-            return
+            return self.get_current_location()
 
         if k in self.locations:
             self.currentLocation = k
-            return
+            return self.get_current_location()
 
         loc = ", ".join([i for i in self.locations])
         raise ItemNotFound(f"Location {k} not found in [{loc}]")
