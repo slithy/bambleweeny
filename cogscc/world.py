@@ -75,13 +75,13 @@ class GHWorld(BaseObj):
 
     def get_current_location(self):
         if self.currentLocation is None:
-            return None
+            return "None"
 
         return self.locations[self.currentLocation]
 
     def get_locations(self):
         out = ""
-        for i in self.locations:
+        for i in self.locations.values():
             out += str(i) + "\n"
         return out
 
