@@ -54,3 +54,13 @@ def test_fill_empty_world():
     assert len(w.weather.reports) == w.weather._n_reports
 
 
+def test_get_locations():
+    w = GHWorld()
+    w.add_location(GHLocation("test", "hill", 40, 0))
+    w.add_location(GHLocation("test2", "hill", 40, 0))
+    print(w.get_locations())
+
+test_get_locations()
+
+
+
