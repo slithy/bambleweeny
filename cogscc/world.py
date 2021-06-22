@@ -73,7 +73,7 @@ class GHWorld(BaseObj):
 
     def get_current_location(self):
         if self.currentLocation is None:
-            raise InvalidArgument("Current location not set!")
+            return None
 
         return self.locations[self.currentLocation]
 
