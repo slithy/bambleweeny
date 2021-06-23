@@ -1,6 +1,6 @@
-from cogscc.calendar import GHCalendar
-from cogscc.weather import GHWeather
-from cogscc.location import GHLocation
+from cogscc.world.calendar import GHCalendar
+from cogscc.world.weather import GHWeather
+from cogscc.world.location import GHLocation
 from cogscc.models.errors import ItemNotFound, InvalidArgument
 from cogscc.base_obj import BaseObj
 
@@ -30,18 +30,20 @@ class GHWorld(BaseObj):
 
         self.advance_days(0)
 
-
-# Weather
+    # Weather
     def reset_weather(self):
         self.weather = GHWeather()
         self.advance_days(0)
         return f"Weather reset successfully"
 
     def get_weather_report(self, day=0):
+        if day < 0:
+            return "I cannot forecast in the past!"
+        if day >= len(self.weather.reports):
+            return "Either weather was not reset or you are trying to forecast too much in the future!!"
         return self.weather.reports[day]
 
-
-# Date
+    # Date
     def set_date(self, days):
         self.calendar = GHCalendar(days)
         self.advance_days(0)
@@ -56,7 +58,7 @@ class GHWorld(BaseObj):
         else:
             return f"Missing location. Weather not set!\n{str(self.calendar)}"
 
-# Location
+    # Location
     def add_location(self, l):
         k = l.name
         out = f"Location {k} {'replaced' if k in self.locations else 'added'}"
@@ -75,7 +77,7 @@ class GHWorld(BaseObj):
 
     def get_current_location(self):
         if self.currentLocation is None:
-            return "None"
+            return "Current location is not set!"
 
         return self.locations[self.currentLocation]
 
@@ -100,4 +102,3 @@ class GHWorld(BaseObj):
 
         loc = ", ".join([i for i in self.locations])
         raise ItemNotFound(f"Location {k} not found in [{loc}]")
-

@@ -15,9 +15,9 @@ from cogscc.models.errors import (
     NotAllowed,
     NotWieldingItems,
 )
-from cogscc.calendar import GHCalendar
-from cogscc.world import GHWorld
-from cogscc.location import GHLocation
+from cogscc.world.calendar import GHCalendar
+from cogscc.world.world import GHWorld
+from cogscc.world.location import GHLocation
 
 
 def getArgDict(*args):

@@ -6,10 +6,10 @@ if rootpath not in sys.path:
 
 import json
 from cogscc.game import ToJson
-from cogscc.world import GHWorld
-from cogscc.calendar import GHCalendar
-from cogscc.weather import GHWeather, GHWeatherReport
-from cogscc.location import GHLocation
+from cogscc.world.world import GHWorld
+from cogscc.world.calendar import GHCalendar
+from cogscc.world.weather import GHWeather, GHWeatherReport
+from cogscc.world.location import GHLocation
 
 
 def test_save_load():
@@ -45,22 +45,21 @@ def test_locations():
 
 def test_fill_empty_world():
     w = GHWorld()
-    w.calendar = GHCalendar(545365)
+    w.calendar = GHCalendar(0)
     w.advance_days(0)
     assert len(w.weather.reports) == 0
-    l = GHLocation("graveyard", "hill", 30, 200)
+    l = GHLocation("graveyard", "hill", 30, 20000)
     w.add_location(l)
     w.advance_days(0)
     assert len(w.weather.reports) == w.weather._n_reports
-
+    print(w.get_weather_report())
+test_fill_empty_world()
 
 def test_get_locations():
     w = GHWorld()
     w.add_location(GHLocation("test", "hill", 40, 0))
     w.add_location(GHLocation("test2", "hill", 40, 0))
-    print(w.get_locations())
-
-test_get_locations()
+    assert len(w.locations) == 2
 
 
 

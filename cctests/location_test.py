@@ -6,7 +6,7 @@ if rootpath not in sys.path:
 
 import pytest
 from cogscc.models.errors import InvalidArgument
-from cogscc.location import GHLocation
+from cogscc.world.location import GHLocation
 
 
 def test_eq():

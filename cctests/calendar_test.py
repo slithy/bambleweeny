@@ -4,7 +4,7 @@ rootpath = os.path.realpath(os.path.dirname(__file__) + "/..")
 if rootpath not in sys.path:
     sys.path.append(rootpath)
 
-from cogscc.calendar import GHCalendar, MoonCalendar
+from cogscc.world.calendar import GHCalendar, MoonCalendar
 
 
 def test_getYear():

@@ -4,9 +4,9 @@ rootpath = os.path.realpath(os.path.dirname(__file__) + "/..")
 if rootpath not in sys.path:
     sys.path.append(rootpath)
 
-from cogscc.weather import GHWeather
-from cogscc.calendar import GHCalendar
-from cogscc.location import GHLocation
+from cogscc.world.weather import GHWeather
+from cogscc.world.calendar import GHCalendar
+from cogscc.world.location import GHLocation
 
 
 def check_reports(c, w):
