@@ -24,3 +24,8 @@ def h2d(h):
 def m2d(m):
     return m/(60*24)
 
+def d2std_time(d):
+    h = (d-int(d))*24
+    m = (h-int(h))*60
+    return [int(d),int(h),int(m)]
+

@@ -2,11 +2,11 @@ from recordtype import recordtype
 from bisect import bisect_left
 from cogscc.funcs.dice import roll
 from cogscc.funcs import utils
-from cogscc.calendar import GHCalendar
-from cogscc.location import GHLocation
-from cogscc.precipitation import GHPrecipitation
+from cogscc.world.calendar import GHCalendar
+from cogscc.world.temperature import GHTemperature
+from cogscc.world.weather_data import GHWeatherData
+from cogscc.world.precipitation import GHPrecipitation
 from cogscc.base_obj import BaseObj
-
 
 
 class GHWeatherReport(BaseObj):
@@ -14,58 +14,25 @@ class GHWeatherReport(BaseObj):
         self.day = day
         self.T = T
         self.sky = sky
-        self.precipitation = [GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i for i in precipitation]
-        self.specialPrecipitation = [GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i for i in
-                                     specialPrecipitation]
+        self.precipitation = [
+            GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i
+            for i in precipitation
+        ]
+        self.specialPrecipitation = [
+            GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i
+            for i in specialPrecipitation
+        ]
 
     def __str__(self):
-        out = f"**Weather Report** date: {GHCalendar(self.day).__str__()} T: {utils.F2C(self.T[0])} C (min)" \
-              f" {utils.F2C(self.T[1])} C (max) " \
-              f"Sky: {self.sky}\n"
+        out = f"**Weather Report** date: {GHCalendar(self.day).__str__()}\n"
+        Tc = [utils.F2C(self.T[0]), utils.F2C(self.T[1])]
+        out += f"T: {str(GHTemperature(self.T))} "
+        out += f"Sky: {self.sky}\n"
         for i in self.precipitation:
-            out += str(i)
+            out += i.__str__(self.T)
         for i in self.specialPrecipitation:
             out += str(i)
         return out
-
-    def perceived_T(self):
-        return [
-            self._correctForWindChill(self.T[0]),
-            self._correctForWindChill(self.T[1]),
-        ]
-
-    def _correctForWindChill(self, T):
-        i_wind = int(abs(self.windSpeed) / 5)
-        if i_wind > len(self._windChillData):
-            i_wind = -1
-        j_T = int((T + 20) / 5)
-        if j_T < 0:
-            j_T = 0
-        if j_T >= len(self._windChillData[0]):
-            return T
-
-        delta = self._windChillData[i_wind][j_T] - self._windChillData[0][j_T]
-
-        return T + delta
-
-    # base Temperature -20 -15 -10 -5 0 5 10 15 20 25 30 35
-    _windChillData = [
-        [-20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35],  # 0 mph
-        [-28, -22, -15, -11, -6, 1, 7, 12, 16, 21, 27, 33],  # 5 mph
-        [-43, -37, -31, -27, -22, -15, -9, -2, 2, 9, 16, 21],  # 10 mph
-        [-58, -51, -45, -40, -33, -25, -18, -11, -6, 1, 11, 16],  # 15 mph
-        [-64, -58, -52, -46, -40, -32, -24, -17, -9, -4, 3, 12],  # 20 mph
-        [-72, -65, -58, -52, -45, -37, -29, -22, -15, -7, 0, 7],  # 25 mph
-        [-78, -70, -63, -56, -49, -41, -33, -26, -18, -11, -2, 5],  # 30 mph
-        [-82, -75, -67, -60, -52, -43, -35, -27, -20, -13, -4, 3],  # 35 mph
-        [-83, -76, -69, -62, -54, 45, -36, -29, -22, -13, -4, 1],  # 40 mph
-        [-84, -77, -70, -63, -55, 46, -38, -31, -24, -15, -4, 1],  # 45 mph
-        [-85, -78, -71, -64, -56, 47, -38, -31, -24, -17, -7, 0],  # 50 mph
-        [-86, -79, -72, -65, -57, -48, -39, -33, -25, -19, -8, -1],  # 55 mph
-        [-87, -80, -73, -66, -58, -49, -40, -34, -27, -21, -10, -3],  # 60 mph
-    ]
-
-
 
 
 class GHWeather(BaseObj):
@@ -83,9 +50,14 @@ class GHWeather(BaseObj):
             for i in reports
         ]
         self.ongoingExtremeT = ongoingExtremeT  # [endDay, modifier] or None
-        self.ongoingPrecipitation = [GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i for i in ongoingPrecipitation]
-        self.ongoingSpecialPrecipitation = [GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i for i in
-                                            ongoingSpecialPrecipitation]
+        self.ongoingPrecipitation = [
+            GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i
+            for i in ongoingPrecipitation
+        ]
+        self.ongoingSpecialPrecipitation = [
+            GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i
+            for i in ongoingSpecialPrecipitation
+        ]
 
     def generate_weather(self, day, location, is_reset=False):
         self.reports = [i for i in self.reports if i.day >= day]
@@ -93,9 +65,9 @@ class GHWeather(BaseObj):
             self.reports.append(self.generate_day(day + len(self.reports), location))
 
     def generate_day(self, day, location):
-        T = self.get_temperature(day, location, False)
+        T = self.get_temperature(day, location)
         sky = self.get_sky_conditions(day)
-        precipitation, specialPrecipitation, T = self.getPrecipitation(
+        precipitation, specialPrecipitation, T = self.get_precipitation(
             day, location.terrain, T
         )
         return GHWeatherReport(day, T, sky, precipitation, specialPrecipitation)
@@ -124,35 +96,21 @@ class GHWeather(BaseObj):
         duration = self._extremeTdata.duration[1][k]
         self.ongoingExtremeT.append([day + duration, modifier])
 
-    def get_temperature(self, day, location, is_celsius=False):
-        c = GHCalendar(day)
-        monthData = utils.smart_find(self._monthData, c.getMonthFest())
-        baseT = monthData.T[0]
-        # correct for latitude
-        T = baseT + 2 * (40 - location.latitude)
-        # correct for extreme effects
+    def get_temperature(self, day, location):
         self.update_ongoingExtremeT(day)
+
+        T = GHTemperature.get_temperature(day, location)
         if len(self.ongoingExtremeT) != 0:
-            T += self.ongoingExtremeT[0][1]
+            T[0] += self.ongoingExtremeT[0][1]
+            T[1] += self.ongoingExtremeT[0][1]
 
-        # terrain
-        terrainData = utils.smart_find(GHLocation._terrainData, location.terrain)
-        terrainTmod = terrainData.T(location.altitude)
-
-        # daily spread -
-        T_min = T + roll(monthData.T[1]).total + terrainTmod[0]
-        # daily spread +
-        T_max = T + roll(monthData.T[2]).total + terrainTmod[1]
-
-        return [utils.F2C(T_min), utils.F2C(T_max)] if is_celsius else [T_min, T_max]
+        return T
 
     def get_sky_conditions(self, day):
         c = GHCalendar(day)
         monthData = utils.smart_find(self._monthData, c.getMonthFest())
         k = bisect_left(monthData.sky, roll("1d100").total)
         return ["clear", "partly cloudy", "cloudy"][k]
-
-
 
     def update_ongoingSpecialPrecipitation(self, day):
         self.ongoingSpecialPrecipitation = [
@@ -168,15 +126,14 @@ class GHWeather(BaseObj):
 
         c = GHCalendar(day)
         monthData = utils.smart_find(self._monthData, c.getMonthFest())
-        terrainData = utils.smart_find(GHLocation._terrainData, terrain)
+        terrainData = utils.smart_find(GHWeatherData._terrainData, terrain)
 
         if roll("1d100").total <= monthData.precipitation + terrainData.precipitation:
-            self.ongoingPrecipitation.extend(GHPrecipitation.get_precipitation(day, T, terrain))
+            self.ongoingPrecipitation.extend(
+                GHPrecipitation.get_precipitation(day, T, terrain)
+            )
 
-
-
-
-    def getPrecipitation(self, day, terrain, T):
+    def get_precipitation(self, day, terrain, T):
         self.update_ongoingSpecialPrecipitation(day)
         self.update_ongoingPrecipitation(day, terrain, T)
 
@@ -239,7 +196,6 @@ class GHWeather(BaseObj):
         ),
         "sunsebb": MonthData([33, "-1d20", "1d8+5"], [25, 50], 43, ["7:19", "16:36"]),
     }
-
     ExtremeTData = recordtype("ExtremeTData", "duration modifier")
     _extremeTdata = ExtremeTData(
         [[1, 3, 10, 14, 17, 19, 20], range(1, 8)],
