@@ -21,10 +21,10 @@ class GHLocation(BaseObj):
         )
 
     def set_terrain(self, terrain):
-        if terrain in GHWeatherData._terrainData:
+        if terrain in GHWeatherData.terrain_data:
             self.terrain = terrain
         else:
-            ter = ", ".join([i for i in GHWeatherData._terrainData])
+            ter = ", ".join([i for i in GHWeatherData.terrain_data])
             raise InvalidArgument(
                 f"I do not recognize the terrain: {terrain}\nAvailable terrains: {ter}"
             )

@@ -10,28 +10,44 @@ from cogscc.base_obj import BaseObj
 
 
 class GHWeatherReport(BaseObj):
-    def __init__(self, day, T, sky, precipitation, specialPrecipitation):
+    def __init__(self, day, T, sky, humidity, precipitation):
         self.day = day
         self.T = T
         self.sky = sky
+        self.humidity = humidity
         self.precipitation = [
             GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i
             for i in precipitation
         ]
-        self.specialPrecipitation = [
-            GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i
-            for i in specialPrecipitation
-        ]
 
     def __str__(self):
         out = f"**Weather Report** date: {GHCalendar(self.day).__str__()}\n"
-        Tc = [utils.F2C(self.T[0]), utils.F2C(self.T[1])]
         out += f"T: {str(GHTemperature(self.T))} "
+        if self.T[1] > 75:
+            out += f"Rel. Humidity: {self.humidity}%\n"
+            kTH = bisect_left(GHWeatherData.THData[0], self.humidity + self.T[1])
+            TH = GHWeatherData.THData[1][kTH]
+            if TH != "normal weather":
+                THdata = GHWeatherData.TH_table_data[TH]
+                std = GHWeatherData.TH_table_data["normal weather"]
+                out += TH + ":\n"
+                if std.movement_speed != THdata.movement_speed:
+                    out += f"   movement speed (all types): {THdata.movement_speed}\n"
+                if std.AC != THdata.AC:
+                    out += f"   AC: {THdata.AC}\n"
+                if std.BtH != THdata.BtH:
+                    out += f"   BtH: {THdata.BtH}\n"
+                if std.dex != THdata.dex:
+                    out += f"   dex: {THdata.dex}\n"
+                if std.vision != THdata.vision:
+                    out += f"   vision (all types): {THdata.vision}\n"
+                if std.rest_per_hour != THdata.rest_per_hour:
+                    out += f"   rest needed per hour: {THdata.rest_per_hour}\n"
+                if std.spell_failure_chance != THdata.spell_failure_chance:
+                    out += f"   spell failure chance (if somatic): {THdata.spell_failure_chance}\n"
         out += f"Sky: {self.sky}\n"
         for i in self.precipitation:
             out += i.__str__(self.T)
-        for i in self.specialPrecipitation:
-            out += str(i)
         return out
 
 
@@ -41,25 +57,20 @@ class GHWeather(BaseObj):
     def __init__(
         self,
         reports=[],
-        ongoingExtremeT=[],
-        ongoingPrecipitation=[],
-        ongoingSpecialPrecipitation=[],
+        extreme_T_chain=[],
+        precipitation_chain=[],
     ):
         self.reports = [
             GHWeatherReport.__from_dict__(i) if isinstance(i, dict) else i
             for i in reports
         ]
-        self.ongoingExtremeT = ongoingExtremeT  # [endDay, modifier] or None
-        self.ongoingPrecipitation = [
+        self.extreme_T_chain = extreme_T_chain  # [endDay, modifier] or None
+        self.precipitation_chain = [
             GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i
-            for i in ongoingPrecipitation
-        ]
-        self.ongoingSpecialPrecipitation = [
-            GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i
-            for i in ongoingSpecialPrecipitation
+            for i in precipitation_chain
         ]
 
-    def generate_weather(self, day, location, is_reset=False):
+    def generate_weather(self, day, location):
         self.reports = [i for i in self.reports if i.day >= day]
         while len(self.reports) < self._n_reports:
             self.reports.append(self.generate_day(day + len(self.reports), location))
@@ -67,23 +78,23 @@ class GHWeather(BaseObj):
     def generate_day(self, day, location):
         T = self.get_temperature(day, location)
         sky = self.get_sky_conditions(day)
-        precipitation, specialPrecipitation, T = self.get_precipitation(
-            day, location.terrain, T
-        )
-        return GHWeatherReport(day, T, sky, precipitation, specialPrecipitation)
+        humidity = self.get_humidity()
+        precipitation, T = self.get_precipitation(day, location.terrain, T)
 
-    def update_ongoingExtremeT(self, day):
-        self.ongoingExtremeT = [i for i in self.ongoingExtremeT if i[0] >= day]
-        if len(self.ongoingExtremeT) != 0:
+        return GHWeatherReport(day, T, sky, humidity, precipitation)
+
+    def update_extreme_T_chain(self, day):
+        self.extreme_T_chain = [i for i in self.extreme_T_chain if i[0] >= day]
+        if len(self.extreme_T_chain) != 0:
             return
 
         c = GHCalendar(day)
 
-        k = bisect_left(self._extremeTdata.modifier[0], roll("1d100").total)
-        multi = self._extremeTdata.modifier[1][k]
+        k = bisect_left(GHWeatherData.extreme_T_data.modifier[0], roll("1d100").total)
+        multi = GHWeatherData.extreme_T_data.modifier[1][k]
         modifier = (
             eval(
-                utils.smart_find(self._monthData, c.getMonthFest())
+                utils.smart_find(GHWeatherData.month_data, c.getMonthFest())
                 .T[1 + int(multi < 0)]
                 .replace("1d", "")
             )
@@ -92,60 +103,59 @@ class GHWeather(BaseObj):
         if modifier == 0:
             return
 
-        k = bisect_left(self._extremeTdata.duration[0], roll("1d20").total)
-        duration = self._extremeTdata.duration[1][k]
-        self.ongoingExtremeT.append([day + duration, modifier])
+        k = bisect_left(GHWeatherData.extreme_T_data.duration[0], roll("1d20").total)
+        duration = GHWeatherData.extreme_T_data.duration[1][k]
+        self.extreme_T_chain.append([day + duration, modifier])
 
     def get_temperature(self, day, location):
-        self.update_ongoingExtremeT(day)
+        self.update_extreme_T_chain(day)
 
         T = GHTemperature.get_temperature(day, location)
-        if len(self.ongoingExtremeT) != 0:
-            T[0] += self.ongoingExtremeT[0][1]
-            T[1] += self.ongoingExtremeT[0][1]
+        if len(self.extreme_T_chain) != 0:
+            T[0] += self.extreme_T_chain[0][1]
+            T[1] += self.extreme_T_chain[0][1]
 
         return T
 
     def get_sky_conditions(self, day):
         c = GHCalendar(day)
-        monthData = utils.smart_find(self._monthData, c.getMonthFest())
+        monthData = utils.smart_find(GHWeatherData.month_data, c.getMonthFest())
         k = bisect_left(monthData.sky, roll("1d100").total)
         return ["clear", "partly cloudy", "cloudy"][k]
 
-    def update_ongoingSpecialPrecipitation(self, day):
-        self.ongoingSpecialPrecipitation = [
-            i for i in self.ongoingSpecialPrecipitation if i[0] >= day
-        ]
+    def get_humidity(self):
+        return roll("1d100").total
 
-    def update_ongoingPrecipitation(self, day, terrain, T):
-        self.ongoingPrecipitation = [
-            i for i in self.ongoingPrecipitation if i.end_time >= day
+    def update_precipitation_chain(self, day, terrain, T):
+        self.precipitation_chain = [
+            i for i in self.precipitation_chain if i.end_time >= day
         ]
-        if len(self.ongoingPrecipitation) != 0:
+        if len(self.precipitation_chain) != 0:
             return
 
         c = GHCalendar(day)
-        monthData = utils.smart_find(self._monthData, c.getMonthFest())
-        terrainData = utils.smart_find(GHWeatherData._terrainData, terrain)
+        monthData = utils.smart_find(GHWeatherData.month_data, c.getMonthFest())
+        terrainData = utils.smart_find(GHWeatherData.terrain_data, terrain)
 
-        if roll("1d100").total <= monthData.precipitation + terrainData.precipitation:
-            self.ongoingPrecipitation.extend(
-                GHPrecipitation.get_precipitation(day, T, terrain)
+        self.precipitation_chain = GHPrecipitation.get_precipitation_chain(
+            day, T, terrain, monthData.precipitation + terrainData.precipitation
+        )
+
+        if (
+            len(self.precipitation_chain) != 0
+            and self.precipitation_chain[0].occurrence_idx() == -1
+        ):
+            self.precipitation_chain.extend(
+                GHPrecipitation.get_precipitation_chain(
+                    day, T, terrain, monthData.precipitation + terrainData.precipitation
+                )
             )
 
     def get_precipitation(self, day, terrain, T):
-        self.update_ongoingSpecialPrecipitation(day)
-        self.update_ongoingPrecipitation(day, terrain, T)
+        self.update_precipitation_chain(day, terrain, T)
 
         precipitation = [
-            i
-            for idx, i in enumerate(self.ongoingPrecipitation)
-            if idx == 0 or self.ongoingPrecipitation[idx - 1].end_time < day + 1
-        ]
-        specialPrecipitation = [
-            i
-            for idx, i in enumerate(self.ongoingSpecialPrecipitation)
-            if idx == 0 or self.ongoingPrecipitation[idx - 1][0] < day + 1
+            i for i in self.precipitation_chain if i.end_time - i.duration <= day + 1
         ]
 
         if len(precipitation) == 0:
@@ -154,50 +164,4 @@ class GHWeather(BaseObj):
         for i in precipitation:
             T = i.correct_T(T)
 
-        return precipitation, specialPrecipitation, T
-
-    """Data Tables"""
-    MonthData = recordtype("MonthData", "T sky precipitation sunriseAndSunset")
-    _monthData = {
-        "needfest": MonthData(
-            [32.5, "-1d20", "1d10+2"], [24, 50, 100], 44, ["7:20", "17:48"]
-        ),
-        "fireseek": MonthData([32, "-1d20", "1d10"], [23, 50], 46, ["7:21", "17:01"]),
-        "readying": MonthData(
-            [34, "-1d10-4", "1d6+4"], [25, 50], 40, ["6:55", "17:36"]
-        ),
-        "coldeven": MonthData(
-            [42, "-1d10-4", "1d8+4"], [27, 54], 44, ["6:12", "18:09"]
-        ),
-        "growfest": MonthData([47, "-1d9-4", "1d9+5"], [23, 54], 43, ["5:48", "18:24"]),
-        "planting": MonthData(
-            [52, "-1d8-4", "1d10+6"], [20, 55], 42, ["5:24", "18:39"]
-        ),
-        "flocktime": MonthData(
-            [63, "-1d10-6", "1d10+6"], [20, 53], 42, ["4:45", "19:10"]
-        ),
-        "wealsun": MonthData([71, "-1d6-6", "1d8+8"], [20, 60], 36, ["4:32", "19:32"]),
-        "richfest": MonthData([74, "-1d6-6", "1d7+6"], [21, 61], 34, ["4:38", "19:30"]),
-        "reaping": MonthData([77, "-1d6-6", "1d6+4"], [22, 62], 33, ["4:45", "19:29"]),
-        "goodmonth": MonthData(
-            [75, "-1d6-6", "1d4+6"], [25, 60], 33, ["5:13", "18:57"]
-        ),
-        "harvester": MonthData(
-            [68, "-1d8-6", "1d8+6"], [33, 55], 33, ["5:42", "18:10"]
-        ),
-        "brewfest": MonthData(
-            [62, "-1d10-5", "1d10+5"], [34, 57], 34, ["5:57", "17:45"]
-        ),
-        "patchwall": MonthData(
-            [57, "-1d10-5", "1d10+5"], [35, 60], 36, ["6:12", "17:21"]
-        ),
-        "ready'reat": MonthData(
-            [46, "-1d10-4", "1d10+6"], [20, 50], 40, ["6:46", "16:45"]
-        ),
-        "sunsebb": MonthData([33, "-1d20", "1d8+5"], [25, 50], 43, ["7:19", "16:36"]),
-    }
-    ExtremeTData = recordtype("ExtremeTData", "duration modifier")
-    _extremeTdata = ExtremeTData(
-        [[1, 3, 10, 14, 17, 19, 20], range(1, 8)],
-        [[1, 2, 4, 96, 98, 99, 100], range(-3, 4)],
-    )
+        return precipitation, T
