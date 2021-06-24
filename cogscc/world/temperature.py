@@ -10,10 +10,10 @@ class GHTemperature:
     def __init__(self, T):
         self.T = T
 
-    def perceived_T(self, windSpeed):
+    def perceived_T(self, wind_speed):
         return [
-            self._correctForWindChill(self.T[0], windSpeed),
-            self._correctForWindChill(self.T[1], windSpeed),
+            self._correct_for_windchill(self.T[0], wind_speed),
+            self._correct_for_windchill(self.T[1], wind_speed),
         ]
 
     def F2C(self):
@@ -27,19 +27,20 @@ class GHTemperature:
             return f"{self.T[0]}:{self.T[1]} F (min:max)"
 
     @staticmethod
-    def _correctForWindChill(T, ws):
+    def _correct_for_windchill(T, ws):
+
         i_wind = int(abs(ws) / 5)
-        if i_wind > len(GHWeatherData._windChillData):
+        if i_wind >= len(GHWeatherData.windchill_data):
             i_wind = -1
         j_T = int((T + 20) / 5)
         if j_T < 0:
             j_T = 0
-        if j_T >= len(GHWeatherData._windChillData[0]):
+        if j_T >= len(GHWeatherData.windchill_data[0]):
             return T
 
         delta = (
-            GHWeatherData._windChillData[i_wind][j_T]
-            - GHWeatherData._windChillData[0][j_T]
+            GHWeatherData.windchill_data[i_wind][j_T]
+            - GHWeatherData.windchill_data[0][j_T]
         )
 
         return T + delta
@@ -47,13 +48,13 @@ class GHTemperature:
     @staticmethod
     def get_temperature(day, location):
         c = GHCalendar(day)
-        monthData = utils.smart_find(GHWeatherData._monthData, c.getMonthFest())
+        monthData = utils.smart_find(GHWeatherData.month_data, c.getMonthFest())
         baseT = monthData.T[0]
         # correct for latitude
         T = baseT + 2 * (40 - location.latitude)
 
         # terrain
-        terrainData = utils.smart_find(GHWeatherData._terrainData, location.terrain)
+        terrainData = utils.smart_find(GHWeatherData.terrain_data, location.terrain)
         terrainTmod = terrainData.T(location.altitude)
 
         # daily spread -

@@ -1,7 +1,9 @@
 from cogscc.world.calendar import GHCalendar
 from cogscc.world.weather import GHWeather
+from cogscc.world.weather_data import GHWeatherData
+from cogscc.world.precipitation import GHPrecipitation
 from cogscc.world.location import GHLocation
-from cogscc.models.errors import ItemNotFound, InvalidArgument
+from cogscc.models.errors import ItemNotFound
 from cogscc.base_obj import BaseObj
 
 
@@ -42,6 +44,12 @@ class GHWorld(BaseObj):
         if day >= len(self.weather.reports):
             return "Either weather was not reset or you are trying to forecast too much in the future!!"
         return self.weather.reports[day]
+
+    def get_precipitation_chain(self, precipitation, day=0):
+        wr = self.get_weather_report(day)
+        return GHPrecipitation.get_precipitation_chain(
+            wr.day, wr.T, self.get_current_location().terrain, 100, precipitation
+        )
 
     # Date
     def set_date(self, days):
