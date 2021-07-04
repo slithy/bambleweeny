@@ -6,9 +6,10 @@ if rootpath not in sys.path:
 
 from cogscc.funcs import utils
 
+
 def d2std_time():
     t = [0, 12, 0]
-    assert t == utils.d2std_time(t[0]+t[1]/24+t[2]/(60*24))
+    assert t == utils.d2std_time(t[0] + t[1] / 24 + t[2] / (60 * 24))
     t = [0, 0, 0]
     assert t == utils.d2std_time(t[0] + t[1] / 24 + t[2] / (60 * 24))
     t = [34, 0, 0]

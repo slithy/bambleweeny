@@ -1,4 +1,3 @@
-from recordtype import recordtype
 from bisect import bisect_left
 from cogscc.funcs.dice import roll
 from cogscc.funcs import utils
@@ -7,6 +6,9 @@ from cogscc.world.temperature import GHTemperature
 from cogscc.world.weather_data import GHWeatherData
 from cogscc.world.precipitation import GHPrecipitation
 from cogscc.base_obj import BaseObj
+from cogscc.models.errors import (
+    InvalidArgument,
+)
 
 
 class GHWeatherReport(BaseObj):
@@ -69,6 +71,16 @@ class GHWeather(BaseObj):
             GHPrecipitation.__from_dict__(i) if isinstance(i, dict) else i
             for i in precipitation_chain
         ]
+
+    def get_weather_report(self, day=0):
+        if day < 0:
+            raise InvalidArgument("I cannot forecast in the past!")
+        if day >= len(self.reports):
+            raise InvalidArgument(
+                f"Either weather was not reset or you are trying to forecast too much in the "
+                f"future!! Max possible forecast {len(self.reports)-1}"
+            )
+        return self.reports[day]
 
     def generate_weather(self, day, location):
         self.reports = [i for i in self.reports if i.day >= day]

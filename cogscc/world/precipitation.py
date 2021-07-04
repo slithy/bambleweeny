@@ -123,7 +123,7 @@ class GHPrecipitation(BaseObj):
     @staticmethod
     def get_precipitation_chain(day, T, terrain, precipitationChance, precipitation=""):
         pChain = []
-        if roll("1d100").total > precipitationChance:
+        if roll("1d100").total > precipitationChance and len(precipitation) == 0:
             return pChain
 
         while len(precipitation) == 0:

@@ -47,19 +47,28 @@ def test_fill_empty_world():
     w = GHWorld()
     w.calendar = GHCalendar(0)
     w.advance_days(0)
-    assert len(w.weather.reports) == 0
     l = GHLocation("graveyard", "hill", 30, 20000)
     w.add_location(l)
     w.advance_days(0)
-    assert len(w.weather.reports) == w.weather._n_reports
-    print(w.get_weather_report())
-test_fill_empty_world()
+    assert len(w.get_current_location().weather.reports) == GHWeather._n_reports
+
 
 def test_get_locations():
     w = GHWorld()
     w.add_location(GHLocation("test", "hill", 40, 0))
     w.add_location(GHLocation("test2", "hill", 40, 0))
+    w.reset_weather()
     assert len(w.locations) == 2
+    for v in w.locations.values():
+        assert len(v.weather.reports) == GHWeather._n_reports
 
 
-
+#
+# w = GHWorld()
+# w.calendar = GHCalendar(364 / 2)
+# w.advance_days(0)
+# l = GHLocation("graveyard", "hill", 30, 100)
+# w.add_location(l)
+# w.advance_days(0)
+# for i in w.get_precipitation_chain("light snowstorm"):
+#     print(i)
