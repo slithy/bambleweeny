@@ -1,6 +1,5 @@
 from cogscc.funcs import utils
 from cogscc.world.calendar import GHCalendar
-from cogscc.world.location import GHLocation
 from cogscc.world.weather_data import GHWeatherData
 
 from cogscc.funcs.dice import roll

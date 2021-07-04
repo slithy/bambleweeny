@@ -1,10 +1,10 @@
 from cogscc.world.calendar import GHCalendar
-from cogscc.world.weather import GHWeather
 from cogscc.world.weather_data import GHWeatherData
 from cogscc.world.precipitation import GHPrecipitation
 from cogscc.world.location import GHLocation
 from cogscc.models.errors import ItemNotFound
 from cogscc.base_obj import BaseObj
+from cogscc.funcs import utils
 
 
 class GHWorld(BaseObj):
@@ -20,9 +20,6 @@ class GHWorld(BaseObj):
             if isinstance(calendar, dict)
             else calendar
         )
-        self.weather = (
-            GHWeather.__from_dict__(weather) if isinstance(weather, dict) else weather
-        )
         self.locations = {
             k: GHLocation.__from_dict__(v) if isinstance(v, dict) else v
             for k, v in locations.items()
@@ -30,41 +27,10 @@ class GHWorld(BaseObj):
         self.currentLocation = None
         self.set_current_location(currentLocation)
 
-        self.advance_days(0)
-
-    # Weather
-    def reset_weather(self):
-        self.weather = GHWeather()
-        self.advance_days(0)
-        return f"Weather reset successfully"
-
-    def get_weather_report(self, day=0):
-        if day < 0:
-            return "I cannot forecast in the past!"
-        if day >= len(self.weather.reports):
-            return "Either weather was not reset or you are trying to forecast too much in the future!!"
-        return self.weather.reports[day]
-
-    def get_precipitation_chain(self, precipitation, day=0):
-        wr = self.get_weather_report(day)
-        return GHPrecipitation.get_precipitation_chain(
-            wr.day, wr.T, self.get_current_location().terrain, 100, precipitation
-        )
-
     # Date
     def set_date(self, days):
         self.calendar = GHCalendar(days)
         self.advance_days(0)
-
-    def advance_days(self, days=1):
-        self.calendar.advance(days)
-        if self.currentLocation is not None:
-            self.weather.generate_weather(
-                self.calendar.day, self.get_current_location()
-            )
-            return str(self.calendar)
-        else:
-            return f"Missing location. Weather not set!\n{str(self.calendar)}"
 
     # Location
     def add_location(self, l):
@@ -110,3 +76,36 @@ class GHWorld(BaseObj):
 
         loc = ", ".join([i for i in self.locations])
         raise ItemNotFound(f"Location {k} not found in [{loc}]")
+
+    # Weather
+    def reset_weather(self):
+        for v in self.locations.values():
+            v.reset_weather(self.calendar.day)
+        return f"Weather reset successfully"
+
+    def get_weather_report(self, day=0):
+        return self.get_current_location().weather.get_weather_report(day)
+
+    def get_precipitation_chain(self, precipitation, day=0):
+        wr = self.get_weather_report(day)
+
+        c = GHCalendar(day)
+        monthData = utils.smart_find(GHWeatherData.month_data, c.getMonthFest())
+        terrainData = utils.smart_find(
+            GHWeatherData.terrain_data, self.get_current_location().terrain
+        )
+
+        return GHPrecipitation.get_precipitation_chain(
+            wr.day,
+            wr.T,
+            self.get_current_location().terrain,
+            monthData.precipitation + terrainData.precipitation,
+            precipitation,
+        )
+
+    def advance_days(self, days=1):
+        self.calendar.advance(days)
+        for v in self.locations.values():
+            v.generate_weather(self.calendar.day)
+
+        return str(self.calendar)

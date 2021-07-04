@@ -13,9 +13,7 @@ from cogscc.models.errors import (
     InvalidArgument,
     MissingArgument,
     NotAllowed,
-    NotWieldingItems,
 )
-from cogscc.world.calendar import GHCalendar
 from cogscc.world.world import GHWorld
 from cogscc.world.location import GHLocation
 
@@ -69,6 +67,39 @@ class Game(commands.Cog):
         self.monsters = []
         self.world = GHWorld()
 
+    @commands.command(name="save")
+    async def saveJson(self, ctx, filename: str = "characters.json"):
+        """Save characters to a file in JSON format."""
+        with open(f"/save/{basename(filename)}", "w") as f:
+            json.dump({"characters": self.characters, "world": self.world}, f, cls=ToJson, indent=2,
+                      ensure_ascii=False)
+        ts = time.gmtime()
+        timestamp = time.strftime("%Y%m%d%H%M%S", ts)
+        filename_backup = f"{basename(filename)}.{timestamp}"
+        with open(f"/save/{filename_backup}", "w") as f:
+            json.dump({"characters": self.characters, "world": self.world}, f, cls=ToJson)
+        await ctx.send(f"Characters and calendar saved as {filename_backup}")
+
+    @commands.command(name="load")
+    async def loadJson(self, ctx, filename: str = "characters.json"):
+        """Load characters from a JSON-formatted file."""
+        self.gmOnly(ctx)
+        with open(f"/save/{basename(filename)}", "r") as f:
+            raw = json.load(f)
+            if "world" not in raw:
+                chars = raw
+            else:
+                chars = raw["characters"]
+                self.world = GHWorld.__from_dict__(raw["world"])
+
+            for player, character in chars.items():
+                if character.get("type", ""):
+                    self.characters[player] = Monster.__from_dict__(character)
+                else:
+                    self.characters[player] = Character.__from_dict__(character)
+
+        await ctx.send(f"Characters, calendar and NPCs loaded from {filename}.")
+
 
     def isGm(self, ctx):
         # return ctx.author.name == 'slithy'
@@ -116,21 +147,7 @@ class Game(commands.Cog):
             f"{ctx.message.author.mention}\nGenerated random stats:\n:game_die: {stat_summary}\nTotal = `{total}`"
         )
 
-    # Save, create and destroy characters
-
-    @commands.command(name="save")
-    async def saveJson(self, ctx, filename: str = "characters.json"):
-        """Save characters to a file in JSON format."""
-        with open(f"/save/{basename(filename)}", "w") as f:
-            json.dump({"characters":self.characters, "world":self.world}, f, cls=ToJson, indent=2,
-                      ensure_ascii=False)
-        ts = time.gmtime()
-        timestamp = time.strftime("%Y%m%d%H%M%S", ts)
-        filename_backup = f"{basename(filename)}.{timestamp}"
-        with open(f"/save/{filename_backup}", "w") as f:
-            json.dump({"characters":self.characters, "world":self.world}, f, cls=ToJson)
-        await ctx.send(f"Characters and calendar saved as {filename_backup}")
-
+    # create and destroy characters
     @commands.command(name="create")
     async def create(self, ctx, name: str, race: str, xclass: str, level: int = 1):
         """Create a new character.
@@ -659,28 +676,7 @@ class Game(commands.Cog):
 
     ### GM-only commands ###
 
-    @commands.command(name="load")
-    async def loadJson(self, ctx, filename: str = "characters.json"):
-        """Load characters from a JSON-formatted file."""
-        self.gmOnly(ctx)
-        with open(f"/save/{basename(filename)}", "r") as f:
-            raw = json.load(f)
-            if "calendar" not in raw:
-                chars = raw
-            else:
-                chars = raw["characters"]
-                if "calendar" in raw:
-                    self.world = GHWorld.__from_dict__({"calendar":raw["calendar"]})
-                else:
-                    self.world = GHWorld.__from_dict__(raw["world"])
 
-            for player, character in chars.items():
-                if character.get("type", ""):
-                    self.characters[player] = Monster.__from_dict__(character)
-                else:
-                    self.characters[player] = Character.__from_dict__(character)
-
-        await ctx.send(f"Characters, calendar and NPCs loaded from {filename}.")
 
     @commands.command(name="load_npc")
     async def loadNPC(self, ctx):
@@ -861,6 +857,13 @@ class Game(commands.Cog):
     async def getWeather(self, ctx, n_days_in_the_future=0):
         """Print weather"""
         await ctx.send(str(self.world.get_weather_report(n_days_in_the_future)))
+
+    @commands.command(name="generate_precipitation_chain")
+    async def generatePrecipitationChain(self, ctx, precipitation, day=0):
+        """Print weather"""
+        pc = self.world.get_precipitation_chain(precipitation, day)
+        out = "\n".join([str(i) for i in pc])
+        await ctx.send(out)
 
     @commands.command(name="reset_weather")
     async def resetWeather(self, ctx):

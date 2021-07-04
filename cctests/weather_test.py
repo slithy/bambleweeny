@@ -16,11 +16,11 @@ def check_reports(c, w):
 
 
 def test_generate_weather_days():
-    c = GHCalendar(25)
+    c = GHCalendar(364 / 2)
     w = GHWeather()
     assert len(w.reports) == 0
 
-    l = GHLocation("home", "hill", 30, 2500)
+    l = GHLocation("home", "hill", 0, 0)
     w.generate_weather(c.day, l)
     check_reports(c, w)
 
@@ -39,4 +39,3 @@ def test_generate_weather_days():
     c.advance(w._n_reports + 1)
     w.generate_weather(c.day, l)
     check_reports(c, w)
-
