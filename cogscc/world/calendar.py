@@ -151,7 +151,7 @@ class GHCalendar(BaseObj):
 
     def getDate(self):
         return (
-            f"**Date:**\n{self.getWeekDay()}, {self.getMonthDay()} {self.getMonthFest()} {self.getYear()}\n"
+            f"**{self.getWeekDay()}, {self.getMonthDay()} {self.getMonthFest()} {self.getYear()}**\n"
             f"Season: {self.getSeason()}\nLuna Phase: {self.getLunaPhase()}\n"
             f"Celene Phase: {self.getCelenePhase()}"
         )

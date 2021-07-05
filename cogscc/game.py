@@ -676,8 +676,6 @@ class Game(commands.Cog):
 
     ### GM-only commands ###
 
-
-
     @commands.command(name="load_npc")
     async def loadNPC(self, ctx):
         """Load new NPCs, animal companions, familiars, mounts, etc."""
@@ -775,7 +773,7 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name="get_type", aliases=[""])
+    @commands.command(name="get_type")
     async def getItemType(self, ctx, description: str = None):
         """Get the type (Equipment, weapon, etc.) of an item."""
         player = str(ctx.author)
@@ -839,6 +837,8 @@ class Game(commands.Cog):
         player = str(ctx.author)
         await ctx.send(self.characters.get(player).equipment.getTags(description))
 
+    # World and Weather commands
+
     @commands.command(name="set_date")
     async def setDate(self, ctx, day: int):
         """Set calendar day. Effectively resets the whole calendar"""
@@ -848,12 +848,12 @@ class Game(commands.Cog):
         self.world.set_date(day)
         await ctx.send(f"The calendar is set to: \n{self.world.calendar.getDate()}")
 
-    @commands.command(name="get_date", alias=["date"])
+    @commands.command(name="get_date", aliases=["date", "sky"])
     async def getDate(self, ctx):
         """Get date"""
         await ctx.send(f"{self.world.calendar.getDate()}")
 
-    @commands.command(name="get_weather", alias=["weather"])
+    @commands.command(name="get_weather", aliases=["weather", "forecast"])
     async def getWeather(self, ctx, n_days_in_the_future=0):
         """Print weather"""
         await ctx.send(str(self.world.get_weather_report(n_days_in_the_future)))
@@ -876,12 +876,12 @@ class Game(commands.Cog):
         l = GHLocation(name, terrain, latitude, altitude)
         await ctx.send(self.world.add_location(l))
 
-    @commands.command(name="set_current_location")
+    @commands.command(name="set_current_location", aliases=["set_location"])
     async def setCurrentLocation(self, ctx, name: str):
         """Set current location"""
         await ctx.send(self.world.set_current_location(name))
 
-    @commands.command(name="get_current_location", alias=["location"])
+    @commands.command(name="get_current_location", aliases=["location"])
     async def getCurrentLocation(self, ctx):
         """Set current location"""
         await ctx.send(self.world.get_current_location())
