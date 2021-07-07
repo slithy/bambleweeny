@@ -4,6 +4,7 @@ import random
 from os.path import basename
 from discord.ext import commands
 from cogscc.funcs.dice import roll
+from cogscc.funcs import utils
 from cogscc.character import Character
 from cogscc.monster import Monster
 import cogscc.npc
@@ -422,6 +423,11 @@ class Game(commands.Cog):
 
     # Manage inventory
 
+    async def sendLongMessage(self, ctx, s):
+        s = utils.split_long_message(s)
+        for i in s:
+            await ctx.send(i)
+
     @commands.command(name="inventory", aliases=["inv"])
     async def inventory(self, ctx, *args):
         """List your inventory.
@@ -454,12 +460,12 @@ class Game(commands.Cog):
             if player not in self.characters:
                 await ctx.send(f"{player} does not have a character.")
                 return
-            await ctx.send(self.characters.get(player).showInventory(section, options))
+            self.sendLongMessage(ctx, self.characters.get(player).showInventory(section, options))
         else:
             self.gmOnly(ctx)
             player = self.getPlayer(character)
             options.append("gm_note")
-            await ctx.send(self.characters.get(player).showInventory(section, options))
+            self.sendLongMessage(ctx, self.characters.get(player).showInventory(section, options))
 
     @commands.command(name="equip", aliases=["get"])
     async def addEquipment(self, ctx, description: str, *args):

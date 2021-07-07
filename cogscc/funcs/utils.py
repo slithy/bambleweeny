@@ -1,3 +1,5 @@
+import math
+
 from cogscc.models.errors import *
 
 def smart_find(d, key):
@@ -28,4 +30,22 @@ def d2std_time(d):
     h = (d-int(d))*24
     m = (h-int(h))*60
     return [int(d),int(h),int(m)]
+
+def feet2m(f):
+    return 0.3048*f
+
+def m2feet(m):
+    return m/0.3048
+
+
+def split_long_message(s):
+    s = s.split("\n")
+    out = []
+    print(len(s))
+    for i in range(math.ceil(len(s)/20)):
+        out.append("\n".join(s[i*20:(i+1)*20]))
+    return out
+
+
+
 
