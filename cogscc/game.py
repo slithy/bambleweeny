@@ -460,12 +460,12 @@ class Game(commands.Cog):
             if player not in self.characters:
                 await ctx.send(f"{player} does not have a character.")
                 return
-            self.sendLongMessage(ctx, self.characters.get(player).showInventory(section, options))
+            await self.sendLongMessage(ctx, self.characters.get(player).showInventory(section, options))
         else:
             self.gmOnly(ctx)
             player = self.getPlayer(character)
             options.append("gm_note")
-            self.sendLongMessage(ctx, self.characters.get(player).showInventory(section, options))
+            await self.sendLongMessage(ctx, self.characters.get(player).showInventory(section, options))
 
     @commands.command(name="equip", aliases=["get"])
     async def addEquipment(self, ctx, description: str, *args):
