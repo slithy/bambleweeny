@@ -421,12 +421,6 @@ class Game(commands.Cog):
         result += f"\n{calendar_report}"
         await ctx.send(result)
 
-    # Manage inventory
-
-    async def sendLongMessage(self, ctx, s):
-        s = utils.split_long_message(s)
-        for i in s:
-            await ctx.send(i)
 
     @commands.command(name="inventory", aliases=["inv"])
     async def inventory(self, ctx, *args):
@@ -460,12 +454,18 @@ class Game(commands.Cog):
             if player not in self.characters:
                 await ctx.send(f"{player} does not have a character.")
                 return
-            await self.sendLongMessage(ctx, self.characters.get(player).showInventory(section, options))
+            s = self.characters.get(player).showInventory(section, options)
+            s = utils.split_long_message(s)
+            for i in s:
+                await ctx.send(i)
         else:
             self.gmOnly(ctx)
             player = self.getPlayer(character)
             options.append("gm_note")
-            await self.sendLongMessage(ctx, self.characters.get(player).showInventory(section, options))
+            s = self.characters.get(player).showInventory(section, options)
+            s = utils.split_long_message(s)
+            for i in s:
+                await ctx.send(i)
 
     @commands.command(name="equip", aliases=["get"])
     async def addEquipment(self, ctx, description: str, *args):
