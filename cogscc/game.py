@@ -4,6 +4,7 @@ import random
 from os.path import basename
 from discord.ext import commands
 from cogscc.funcs.dice import roll
+from cogscc.funcs import utils
 from cogscc.character import Character
 from cogscc.monster import Monster
 import cogscc.npc
@@ -13,8 +14,9 @@ from cogscc.models.errors import (
     InvalidArgument,
     MissingArgument,
     NotAllowed,
-    NotWieldingItems,
 )
+from cogscc.world.world import GHWorld
+from cogscc.world.location import GHLocation
 
 
 def getArgDict(*args):
@@ -64,6 +66,41 @@ class Game(commands.Cog):
         self.bot = bot
         self.characters = {}
         self.monsters = []
+        self.world = GHWorld()
+
+    @commands.command(name="save")
+    async def saveJson(self, ctx, filename: str = "characters.json"):
+        """Save characters to a file in JSON format."""
+        with open(f"/save/{basename(filename)}", "w") as f:
+            json.dump({"characters": self.characters, "world": self.world}, f, cls=ToJson, indent=2,
+                      ensure_ascii=False)
+        ts = time.gmtime()
+        timestamp = time.strftime("%Y%m%d%H%M%S", ts)
+        filename_backup = f"{basename(filename)}.{timestamp}"
+        with open(f"/save/{filename_backup}", "w") as f:
+            json.dump({"characters": self.characters, "world": self.world}, f, cls=ToJson)
+        await ctx.send(f"Characters and calendar saved as {filename_backup}")
+
+    @commands.command(name="load")
+    async def loadJson(self, ctx, filename: str = "characters.json"):
+        """Load characters from a JSON-formatted file."""
+        self.gmOnly(ctx)
+        with open(f"/save/{basename(filename)}", "r") as f:
+            raw = json.load(f)
+            if "world" not in raw:
+                chars = raw
+            else:
+                chars = raw["characters"]
+                self.world = GHWorld.__from_dict__(raw["world"])
+
+            for player, character in chars.items():
+                if character.get("type", ""):
+                    self.characters[player] = Monster.__from_dict__(character)
+                else:
+                    self.characters[player] = Character.__from_dict__(character)
+
+        await ctx.send(f"Characters, calendar and NPCs loaded from {filename}.")
+
 
     def isGm(self, ctx):
         # return ctx.author.name == 'slithy'
@@ -111,20 +148,7 @@ class Game(commands.Cog):
             f"{ctx.message.author.mention}\nGenerated random stats:\n:game_die: {stat_summary}\nTotal = `{total}`"
         )
 
-    # Save, create and destroy characters
-
-    @commands.command(name="save")
-    async def saveJson(self, ctx, filename: str = "characters.json"):
-        """Save characters to a file in JSON format."""
-        with open(f"/save/{basename(filename)}", "w") as f:
-            json.dump(self.characters, f, cls=ToJson, indent=2, ensure_ascii=False)
-        ts = time.gmtime()
-        timestamp = time.strftime("%Y%m%d%H%M%S", ts)
-        filename_backup = f"{basename(filename)}.{timestamp}"
-        with open(f"/save/{filename_backup}", "w") as f:
-            json.dump(self.characters, f, cls=ToJson)
-        await ctx.send(f"Characters saved as {filename_backup}")
-
+    # create and destroy characters
     @commands.command(name="create")
     async def create(self, ctx, name: str, race: str, xclass: str, level: int = 1):
         """Create a new character.
@@ -389,13 +413,14 @@ class Game(commands.Cog):
         result = ""
         if duration < 2:
             duration = 1
-            duration_text = "1 day has passed."
         for player, character in self.characters.items():
             result += character.rest(duration)
-        result += f"\n{duration} days have passed."
+
+        calendar_report = self.world.advance_days(duration)
+
+        result += f"\n{calendar_report}"
         await ctx.send(result)
 
-    # Manage inventory
 
     @commands.command(name="inventory", aliases=["inv"])
     async def inventory(self, ctx, *args):
@@ -429,12 +454,18 @@ class Game(commands.Cog):
             if player not in self.characters:
                 await ctx.send(f"{player} does not have a character.")
                 return
-            await ctx.send(self.characters.get(player).showInventory(section, options))
+            s = self.characters.get(player).showInventory(section, options)
+            s = utils.split_long_message(s)
+            for i in s:
+                await ctx.send(i)
         else:
             self.gmOnly(ctx)
             player = self.getPlayer(character)
             options.append("gm_note")
-            await ctx.send(self.characters.get(player).showInventory(section, options))
+            s = self.characters.get(player).showInventory(section, options)
+            s = utils.split_long_message(s)
+            for i in s:
+                await ctx.send(i)
 
     @commands.command(name="equip", aliases=["get"])
     async def addEquipment(self, ctx, description: str, *args):
@@ -651,19 +682,6 @@ class Game(commands.Cog):
 
     ### GM-only commands ###
 
-    @commands.command(name="load")
-    async def loadJson(self, ctx, filename: str = "characters.json"):
-        """Load characters from a JSON-formatted file."""
-        self.gmOnly(ctx)
-        with open(f"/save/{basename(filename)}", "r") as f:
-            chars = json.load(f)
-            for player, character in chars.items():
-                if character.get("type", ""):
-                    self.characters[player] = Monster.__from_dict__(character)
-                else:
-                    self.characters[player] = Character.__from_dict__(character)
-        await ctx.send(f"Characters and NPCs loaded from {filename}.")
-
     @commands.command(name="load_npc")
     async def loadNPC(self, ctx):
         """Load new NPCs, animal companions, familiars, mounts, etc."""
@@ -761,7 +779,7 @@ class Game(commands.Cog):
         else:
             await ctx.send(f"{player} does not have a character.")
 
-    @commands.command(name="get_type", aliases=[""])
+    @commands.command(name="get_type")
     async def getItemType(self, ctx, description: str = None):
         """Get the type (Equipment, weapon, etc.) of an item."""
         player = str(ctx.author)
@@ -825,6 +843,64 @@ class Game(commands.Cog):
         player = str(ctx.author)
         await ctx.send(self.characters.get(player).equipment.getTags(description))
 
+    # World and Weather commands
+
+    @commands.command(name="set_date")
+    async def setDate(self, ctx, day: int):
+        """Set calendar day. Effectively resets the whole calendar"""
+        if not isinstance(day, int):
+            raise InvalidArgument(f"To set the calendar you need to provide the number of days since day-0.")
+
+        self.world.set_date(day)
+        await ctx.send(f"The calendar is set to: \n{self.world.calendar.getDate()}")
+
+    @commands.command(name="get_date", aliases=["date", "sky"])
+    async def getDate(self, ctx):
+        """Get date"""
+        await ctx.send(f"{self.world.calendar.getDate()}")
+
+    @commands.command(name="get_weather", aliases=["weather", "forecast"])
+    async def getWeather(self, ctx, n_days_in_the_future=0):
+        """Print weather"""
+        await ctx.send(str(self.world.get_weather_report(n_days_in_the_future)))
+
+    @commands.command(name="generate_precipitation_chain")
+    async def generatePrecipitationChain(self, ctx, precipitation, day=0):
+        """Print weather"""
+        pc = self.world.get_precipitation_chain(precipitation, day)
+        out = "\n".join([str(i) for i in pc])
+        await ctx.send(out)
+
+    @commands.command(name="reset_weather")
+    async def resetWeather(self, ctx):
+        """Reset weather"""
+        await ctx.send(self.world.reset_weather())
+
+    @commands.command(name="add_location")
+    async def addLocation(self, ctx, name: str, terrain: str, latitude: float, altitude: float):
+        """Add location"""
+        l = GHLocation(name, terrain, latitude, altitude)
+        await ctx.send(self.world.add_location(l))
+
+    @commands.command(name="set_current_location", aliases=["set_location"])
+    async def setCurrentLocation(self, ctx, name: str):
+        """Set current location"""
+        await ctx.send(self.world.set_current_location(name))
+
+    @commands.command(name="get_current_location", aliases=["location"])
+    async def getCurrentLocation(self, ctx):
+        """Set current location"""
+        await ctx.send(self.world.get_current_location())
+
+    @commands.command(name="locations")
+    async def getLocations(self, ctx):
+        """Get all locations"""
+        await ctx.send(self.world.get_locations())
+
+    @commands.command(name="remove_location")
+    async def removeLocation(self, ctx, name):
+        """Get all locations"""
+        await ctx.send(self.world.remove_location())
 
 def setup(bot):
     bot.add_cog(Game(bot))
