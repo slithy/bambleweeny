@@ -398,6 +398,16 @@ class Game(commands.Cog):
         player = self.getPlayer(character)
         await ctx.send(self.characters[player].heal(hp))
 
+    @commands.command(name="heal_all")
+    async def heal_all(self, ctx, hp: str):
+        """Heals all.
+        Usage: !heal_all <healing_dice>"""
+        for player, character in sorted(self.characters.items()):
+            if character.disabled:
+                continue
+            elif character.isActive():
+                self.heal(ctx, character, hp)
+
     @commands.command(name="first_aid", aliases=["firstaid", "aid"])
     async def firstAid(self, ctx, character: str):
         """Perform first aid on the specified character.
