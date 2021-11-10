@@ -406,7 +406,7 @@ class Game(commands.Cog):
             if character.disabled:
                 continue
             elif character.isActive():
-                self.heal(ctx, character, hp)
+                await ctx.send(self.characters[player].heal(hp))
 
     @commands.command(name="first_aid", aliases=["firstaid", "aid"])
     async def firstAid(self, ctx, character: str):
