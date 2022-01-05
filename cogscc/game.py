@@ -402,11 +402,13 @@ class Game(commands.Cog):
     async def heal_all(self, ctx, hp: str):
         """Heals all.
         Usage: !heal_all <healing_dice>"""
+        val = roll(f"{hp}").total
+        
         for player, character in sorted(self.characters.items()):
             if character.disabled:
                 continue
             elif character.isActive():
-                await ctx.send(self.characters[player].heal(hp))
+                await ctx.send(self.characters[player].heal(val))
 
     @commands.command(name="first_aid", aliases=["firstaid", "aid"])
     async def firstAid(self, ctx, character: str):
