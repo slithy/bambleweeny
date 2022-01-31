@@ -1,8 +1,10 @@
 import sys, os
 
-sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
+rootpath = os.path.realpath(os.path.dirname(__file__) + "/..")
+if rootpath not in sys.path:
+    sys.path.append(rootpath)
 
-from cogscc.calendar import GHCalendar, MoonCalendar
+from cogscc.world.calendar import GHCalendar, MoonCalendar
 
 
 def test_getYear():
@@ -100,4 +102,4 @@ def test_getMonthDay():
             name = c.getMonthFest()
         n += 1
         assert c.getMonthDay() == n
-        c.addDays(1)
+        c.advance()
