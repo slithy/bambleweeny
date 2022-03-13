@@ -14,6 +14,7 @@ from cogscc.models.errors import (
     InvalidArgument,
     MissingArgument,
     NotAllowed,
+    OutOfRange
 )
 from cogscc.world.world import GHWorld
 from cogscc.world.location import GHLocation
@@ -913,6 +914,43 @@ class Game(commands.Cog):
     async def removeLocation(self, ctx, name):
         """Get all locations"""
         await ctx.send(self.world.remove_location())
+
+    @commands.command(name='draw', aliases=['deck'])
+    async def drawCard(self, ctx, number: int):
+        """Draw one or more cards from the Deck of Many Things"""
+        if number < 1 or number > 4:
+            raise OutOfRange(f"You can draw between 1 and 4 cards from the deck.")
+        cards = ('Balance',
+                 'Comet',
+                 'Donjon',
+                 'Euryale',
+                 'The Fates',
+                 'Flames',
+                 'Fool',
+                 'Gem',
+                 'Idiot',
+                 'Jester',
+                 'Key',
+                 'Knight',
+                 'Moon',
+                 'Rogue',
+                 'Ruin',
+                 'Skull',
+                 'Star',
+                 'Sun',
+                 'Talons',
+                 'Throne',
+                 'Vizier',
+                 'The Void')
+        draw = ''
+        punctuation = ' '
+        for r in range(number):
+            card = random.choice(cards)
+            while card in draw:
+                card = random.choice(cards)
+            draw = draw + f'{punctuation}**{card}**'
+            punctuation = ', '
+        await ctx.send(f'You draw{draw}.')
 
 def setup(bot):
     bot.add_cog(Game(bot))
