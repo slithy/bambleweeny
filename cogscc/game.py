@@ -917,40 +917,47 @@ class Game(commands.Cog):
 
     @commands.command(name='draw', aliases=['deck'])
     async def drawCard(self, ctx, number: int):
-        """Draw one or more cards from the Deck of Many Things"""
-        if number < 1 or number > 4:
+        """Draw one or more cards from the Deck of Many Things
+        Usage: !draw <number_of_cards>"""
+        player = str(ctx.author)
+        if player not in self.characters:
+            await ctx.send(f"{player} does not have a character.")
+        elif self.characters.get(player).equipment.find("deck of many things") == -1:
+            await ctx.send('You must have a Deck of Many Things in order to draw cards from the Deck of Many Things.')
+        elif number < 1 or number > 4:
             raise OutOfRange(f"You can draw between 1 and 4 cards from the deck.")
-        cards = ('Balance',
-                 'Comet',
-                 'Donjon',
-                 'Euryale',
-                 'The Fates',
-                 'Flames',
-                 'Fool',
-                 'Gem',
-                 'Idiot',
-                 'Jester',
-                 'Key',
-                 'Knight',
-                 'Moon',
-                 'Rogue',
-                 'Ruin',
-                 'Skull',
-                 'Star',
-                 'Sun',
-                 'Talons',
-                 'Throne',
-                 'Vizier',
-                 'The Void')
-        draw = ''
-        punctuation = ' '
-        for r in range(number):
-            card = random.choice(cards)
-            while card in draw:
+        else:
+            cards = ('Balance',
+                     'Comet',
+                     'Donjon',
+                     'Euryale',
+                     'The Fates',
+                     'Flames',
+                     'Fool',
+                     'Gem',
+                     'Idiot',
+                     'Jester',
+                     'Key',
+                     'Knight',
+                     'Moon',
+                     'Rogue',
+                     'Ruin',
+                     'Skull',
+                     'Star',
+                     'Sun',
+                     'Talons',
+                     'Throne',
+                     'Vizier',
+                     'The Void')
+            draw = ''
+            punctuation = ' '
+            for r in range(number):
                 card = random.choice(cards)
-            draw = draw + f'{punctuation}**{card}**'
-            punctuation = ', '
-        await ctx.send(f'You draw{draw}.')
+                while card in draw:
+                    card = random.choice(cards)
+                draw = draw + f'{punctuation}**{card}**'
+                punctuation = ', '
+            await ctx.send(f'You draw{draw}.')
 
 def setup(bot):
     bot.add_cog(Game(bot))
